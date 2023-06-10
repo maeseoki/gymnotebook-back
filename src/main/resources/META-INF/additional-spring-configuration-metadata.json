@@ -1,5 +1,17 @@
-{"properties": [{
-  "name": "jwt.secret",
-  "type": "java.lang.String",
-  "description": "512-bit key to encrypt JWT tokens"
-}]}
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "512-bit key to encrypt JWT tokens"
+  },
+  {
+    "name": "gymnotebook.jwtSecret",
+    "type": "java.lang.String",
+    "description": "512-bit key base64 encoded to encrypt JWT tokens"
+  },
+  {
+    "name": "gymnotebook.jwtExpirationMs",
+    "type": "java.lang.String",
+    "description": "JWT token expiration time in milliseconds"
+  }
+]}
