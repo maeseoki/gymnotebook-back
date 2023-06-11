@@ -1,0 +1,22 @@
+package com.victorc.gymnotebook.models;
+
+public enum EMuscleGroup {
+	ABDOMINALS,
+	ABDUCTORS,
+	BICEPS,
+	CALVES,
+	CARDIO,
+	CHEST,
+	FOREARMS,
+	FULL_BODY,
+	GLUTES,
+	HAMSTRINGS,
+	LATS,
+	LOWER_BACK,
+	QUADRICEPS,
+	SHOULDERS,
+	TRAPS,
+	TRICEPS,
+	UPPER_BACK,
+	OTHER
+}
