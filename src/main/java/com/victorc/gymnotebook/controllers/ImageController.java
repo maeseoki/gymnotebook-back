@@ -1,11 +1,13 @@
 package com.victorc.gymnotebook.controllers;
 
 import java.io.IOException;
+import java.security.Principal;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,7 +47,7 @@ public class ImageController {
 	@PostMapping
 	public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile image) throws IOException {
 		if (image.isEmpty()) {
-			return ResponseEntity.badRequest().build();
+			return ResponseEntity.badRequest().body("Solictud sin imagen");
 		}
 
 		try {
@@ -59,7 +61,7 @@ public class ImageController {
 			return ResponseEntity.status(HttpStatus.CREATED).body(savedImageData.getId());
 
 		} catch (IOException e) {
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while saving the image");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al guardar la imagen");
 		}
 	}
 

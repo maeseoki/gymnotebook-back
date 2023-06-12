@@ -1,6 +1,8 @@
 package com.victorc.gymnotebook.controllers;
 
 import java.security.Principal;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,8 @@ import com.victorc.gymnotebook.models.Exercise;
 import com.victorc.gymnotebook.models.ImageData;
 import com.victorc.gymnotebook.models.User;
 import com.victorc.gymnotebook.payload.request.CreateExerciseRequest;
+import com.victorc.gymnotebook.payload.request.UpdateExerciseRequest;
+import com.victorc.gymnotebook.payload.response.ExerciseResponse;
 import com.victorc.gymnotebook.repository.ExerciseRepository;
 import com.victorc.gymnotebook.repository.ImageDataRepository;
 import com.victorc.gymnotebook.repository.UserRepository;
@@ -47,6 +51,33 @@ public class ExerciseController {
 		this.userRepository = userRepository;
 	}
 
+	@GetMapping
+	public ResponseEntity<List<ExerciseResponse>> getExercises(Principal principal) {
+		User user = userRepository.findByUsername(principal.getName())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Usuario no encontrado con nombre: " + principal.getName()));
+
+		List<Exercise> exercises = exerciseRepository.findByUser(user);
+
+		List<ExerciseResponse> response = exercises.stream().map(exercise -> {
+			ExerciseResponse exerciseResponse = new ExerciseResponse();
+			exerciseResponse.setId(exercise.getId());
+			exerciseResponse.setName(exercise.getName());
+			exerciseResponse.setDescription(exercise.getDescription());
+			if (exercise.getImage() != null) {
+				exerciseResponse.setImageId(exercise.getImage().getId());
+			}
+			exerciseResponse.setType(exercise.getType().name());
+			exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup().name());
+			if (exercise.getSecondaryMuscleGroup() != null) {
+				exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup().name());
+			}
+			return exerciseResponse;
+		}).collect(Collectors.toList());
+
+		return ResponseEntity.ok(response);
+	}
+
 	@GetMapping("/{id}")
 	public ResponseEntity<?> getExercise(@PathVariable Long id, Principal principal) {
 		if (!exerciseRepository.existsById(id)) {
@@ -63,7 +94,21 @@ public class ExerciseController {
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 		}
 
-		return ResponseEntity.ok().body(exercise);
+		// Mapeamos a ExerciseResponse
+		ExerciseResponse exerciseResponse = new ExerciseResponse();
+		exerciseResponse.setId(exercise.getId());
+		exerciseResponse.setName(exercise.getName());
+		exerciseResponse.setDescription(exercise.getDescription());
+		if (exercise.getImage() != null) {
+			exerciseResponse.setImageId(exercise.getImage().getId());
+		}
+		exerciseResponse.setType(exercise.getType().name());
+		exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup().name());
+		if (exercise.getSecondaryMuscleGroup() != null) {
+			exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup().name());
+		}
+
+		return ResponseEntity.ok().body(exerciseResponse);
 	}
 
 	@PostMapping
@@ -90,13 +135,13 @@ public class ExerciseController {
 		newExercise.setSecondaryMuscleGroup(createExerciseRequest.getSecondaryMuscleGroup());
 		newExercise.setUser(user);
 
-		Exercise savedExercise = exerciseRepository.save(newExercise);
+		exerciseRepository.save(newExercise);
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(savedExercise);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
 	@PutMapping("/{id}")
-	public ResponseEntity<Exercise> updateExercise(@Valid @RequestBody CreateExerciseRequest createExerciseRequest,
+	public ResponseEntity<Exercise> updateExercise(@Valid @RequestBody UpdateExerciseRequest createExerciseRequest,
 			@PathVariable Long id, Principal principal) {
 
 		User user = userRepository.findByUsername(principal.getName())
@@ -127,9 +172,9 @@ public class ExerciseController {
 		exercise.setPrimaryMuscleGroup(createExerciseRequest.getPrimaryMuscleGroup());
 		exercise.setSecondaryMuscleGroup(createExerciseRequest.getSecondaryMuscleGroup());
 
-		Exercise savedExercise = exerciseRepository.save(exercise);
+		exerciseRepository.save(exercise);
 
-		return ResponseEntity.status(HttpStatus.CREATED).body(savedExercise);
+		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
 	@DeleteMapping("/{id}")

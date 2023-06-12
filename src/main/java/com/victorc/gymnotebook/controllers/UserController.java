@@ -1,11 +1,13 @@
 package com.victorc.gymnotebook.controllers;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +20,7 @@ import com.victorc.gymnotebook.models.User;
 import com.victorc.gymnotebook.payload.request.ModifyRoleRequest;
 import com.victorc.gymnotebook.payload.response.GetUserDtoResponse;
 import com.victorc.gymnotebook.payload.response.MessageResponse;
+import com.victorc.gymnotebook.payload.response.UserResponse;
 import com.victorc.gymnotebook.repository.RoleRepository;
 import com.victorc.gymnotebook.repository.UserRepository;
 import com.victorc.gymnotebook.security.services.UserDetailsServiceImpl;
@@ -37,6 +40,18 @@ public class UserController {
 
   @Autowired
   UserDetailsServiceImpl userDetailsService;
+
+  @GetMapping
+  @PreAuthorize("hasRole('ADMIN') or hasRole('MODERATOR')")
+  public ResponseEntity<List<UserResponse>> getAllUsers() {
+    List<User> users = userRepository.findAll();
+
+    List<UserResponse> usersResponse = users.stream().map(user -> {
+      return new UserResponse(user.getId(), user.getUsername(), user.getEmail(), user.getRoles());
+    }).toList();
+
+    return ResponseEntity.ok(usersResponse);
+  }
 
   @GetMapping("/verifyuser/{username}/{email}")
   public ResponseEntity<?> verifyUsernameAndEmail(@PathVariable String username, @PathVariable String email) {
@@ -136,5 +151,19 @@ public class UserController {
           .body(new MessageResponse("Error: El rol no existe."));
     }
     return null;
+  }
+
+  @DeleteMapping("/{id}")
+  @PreAuthorize("hasRole('ADMIN')")
+  public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    if (!userRepository.existsById(id)) {
+      return ResponseEntity
+          .badRequest()
+          .body(new MessageResponse("Error: El usuario no existe."));
+    }
+
+    userRepository.deleteById(id);
+
+    return ResponseEntity.ok(new MessageResponse("Usuario eliminado correctamente."));
   }
 }

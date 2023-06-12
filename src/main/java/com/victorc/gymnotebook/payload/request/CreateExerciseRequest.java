@@ -12,6 +12,7 @@ import lombok.Data;
 public class CreateExerciseRequest {
 	
 	@NotBlank
+    @Size(max = 200)
 	private String name;
 
     private Long imageId;

@@ -36,7 +36,7 @@ public class Exercise {
 	@NotNull
 	private String name;
 
-	@OneToOne
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private ImageData image;
 
 	private String description;
