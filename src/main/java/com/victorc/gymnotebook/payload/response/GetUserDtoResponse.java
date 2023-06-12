@@ -1,4 +1,4 @@
-package com.victorc.gymnotebook.dtos;
+package com.victorc.gymnotebook.payload.response;
 
 import java.util.Set;
 

@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.victorc.gymnotebook.dtos.GetUserDtoResponse;
 import com.victorc.gymnotebook.models.User;
+import com.victorc.gymnotebook.payload.response.GetUserDtoResponse;
 import com.victorc.gymnotebook.security.services.UserDetailsServiceImpl;
 
 @CrossOrigin(origins = "*", maxAge = 3600)

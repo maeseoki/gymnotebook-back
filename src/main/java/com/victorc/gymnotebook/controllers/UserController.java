@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.victorc.gymnotebook.dtos.GetUserDtoResponse;
 import com.victorc.gymnotebook.models.ERole;
 import com.victorc.gymnotebook.models.User;
 import com.victorc.gymnotebook.payload.request.ModifyRoleRequest;
+import com.victorc.gymnotebook.payload.response.GetUserDtoResponse;
 import com.victorc.gymnotebook.payload.response.MessageResponse;
 import com.victorc.gymnotebook.repository.RoleRepository;
 import com.victorc.gymnotebook.repository.UserRepository;
