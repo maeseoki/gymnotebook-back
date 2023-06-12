@@ -36,8 +36,7 @@ public class Set {
 
 	private String notes;
 
-	@ManyToOne(optional = false)
-	private Exercise exercise;
+	private boolean isDropSet;
 
 	@ManyToOne
 	@JoinColumn(name="workoutSet_id", nullable=false)

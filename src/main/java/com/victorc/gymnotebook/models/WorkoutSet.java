@@ -29,12 +29,15 @@ public class WorkoutSet {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@OneToMany(mappedBy = "workoutSet")
-	private List <Set> sets;
-
 	@ManyToOne
 	@JoinColumn(name="workout_id", nullable=false)
 	private Workout workout;
+
+	@ManyToOne(optional = false)
+	private Exercise exercise;
+
+	@OneToMany(mappedBy = "workoutSet")
+	private List <Set> sets;
 
 	private LocalDateTime startDate;
 

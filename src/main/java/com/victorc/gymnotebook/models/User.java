@@ -46,8 +46,11 @@ public class User {
         inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
   private List<Workout> workouts = new ArrayList<Workout>();
+
+  @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  private List<Exercise> exercises = new ArrayList<Exercise>();
 
 
   public User(String username, String email, String password) {
