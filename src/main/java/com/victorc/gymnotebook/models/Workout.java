@@ -27,6 +27,8 @@ public class Workout {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	private String uuid;
+
 	@OneToMany(mappedBy = "workout")
 	private List <WorkoutSet> workoutSets;
 
