@@ -1,11 +1,16 @@
 package com.victorc.gymnotebook.controllers;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,10 +69,12 @@ public class WorkoutController {
 		User user = userRepository.findByUsername(principal.getName())
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Usuario no encontrado con nombre: " + principal.getName()));
-		
-		// Comprobamos que el UUID del workout recibido no existe, y devolvemos un 409 Conflict si existe
+
+		// Comprobamos que el UUID del workout recibido no existe, y devolvemos un 409
+		// Conflict si existe
 		if (workoutRepository.existsByUuid(createWorkoutRequest.getUuid())) {
-			return ResponseEntity.status(409).body("Ya existe un workout con el UUID: " + createWorkoutRequest.getUuid());
+			return ResponseEntity.status(409)
+					.body("Ya existe un workout con el UUID: " + createWorkoutRequest.getUuid());
 		}
 
 		// Creamos el workout
@@ -91,8 +98,9 @@ public class WorkoutController {
 			WorkoutSet workoutSet = new WorkoutSet();
 			workoutSet.setWorkout(workout);
 			workoutSet.setExercise(exercise);
-			if (workoutSetRequest.getStartDate() != null){
-				workoutSet.setStartDate(workoutSetRequest.getStartDate().atZone(ZoneId.systemDefault()).toLocalDateTime());
+			if (workoutSetRequest.getStartDate() != null) {
+				workoutSet.setStartDate(
+						workoutSetRequest.getStartDate().atZone(ZoneId.systemDefault()).toLocalDateTime());
 			}
 			if (workoutSetRequest.getEndDate() != null) {
 				workoutSet.setEndDate(workoutSetRequest.getEndDate().atZone(ZoneId.systemDefault()).toLocalDateTime());
@@ -111,7 +119,7 @@ public class WorkoutController {
 				set.setDistance(setRequest.getDistance());
 				set.setNotes(setRequest.getNotes());
 				set.setDropSet(setRequest.isDropSet());
-				if (setRequest.getStartDate() != null){
+				if (setRequest.getStartDate() != null) {
 					set.setStartDate(setRequest.getStartDate().atZone(ZoneId.systemDefault()).toLocalDateTime());
 				}
 				set.setWorkoutSet(workoutSet);
@@ -121,5 +129,36 @@ public class WorkoutController {
 
 		// Todo guardado. Devolvemos un 201 Created
 		return ResponseEntity.status(201).build();
+	}
+
+	// Recuperamos los días que hay workouts para el mes y año indicados
+	@GetMapping("/days/{month}/{year}")
+	public ResponseEntity<?> getWorkoutDays(@PathVariable int month, @PathVariable int year, Principal principal) {
+		// Recuperamos el usuario
+		User user = userRepository.findByUsername(principal.getName())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"Usuario no encontrado con nombre: " + principal.getName()));
+
+		// Recuperamos los días
+		List<Integer> days = workoutRepository.findWorkoutDaysByMonthAndYear(user.getId(), month, year);
+		return ResponseEntity.ok(days);
+	}
+
+	@GetMapping("/workouts/{date}")
+	public ResponseEntity<?> getWorkoutsByDate(@PathVariable String date, Principal principal) {
+		// Parseamos la fecha a LocalDateTime
+		LocalDateTime startOfDay = LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME).toLocalDate()
+				.atStartOfDay();
+		LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+
+		// Recuperamos el usuario
+		User user = userRepository.findByUsername(principal.getName())
+				.orElseThrow(() -> new ResourceNotFoundException(
+						"User not found with name: " + principal.getName()));
+
+		// Recuperamos los workouts
+		List<Workout> workouts = workoutRepository.findWorkoutsByUserAndDateBetween(user, startOfDay, endOfDay);
+
+		return ResponseEntity.ok(workouts);
 	}
 }

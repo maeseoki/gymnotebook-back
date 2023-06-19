@@ -9,4 +9,6 @@ import com.victorc.gymnotebook.models.User;
 
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
 	List<Exercise> findByUser(User user);
+
+	Exercise findByIdAndUserId(Long exerciseId, Long id);
 }

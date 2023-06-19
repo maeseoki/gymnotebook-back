@@ -67,10 +67,10 @@ public class ExerciseController {
 			if (exercise.getImage() != null) {
 				exerciseResponse.setImageId(exercise.getImage().getId());
 			}
-			exerciseResponse.setType(exercise.getType().name());
-			exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup().name());
+			exerciseResponse.setType(exercise.getType());
+			exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup());
 			if (exercise.getSecondaryMuscleGroup() != null) {
-				exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup().name());
+				exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup());
 			}
 			return exerciseResponse;
 		}).collect(Collectors.toList());
@@ -102,10 +102,10 @@ public class ExerciseController {
 		if (exercise.getImage() != null) {
 			exerciseResponse.setImageId(exercise.getImage().getId());
 		}
-		exerciseResponse.setType(exercise.getType().name());
-		exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup().name());
+		exerciseResponse.setType(exercise.getType());
+		exerciseResponse.setPrimaryMuscleGroup(exercise.getPrimaryMuscleGroup());
 		if (exercise.getSecondaryMuscleGroup() != null) {
-			exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup().name());
+			exerciseResponse.setSecondaryMuscleGroup(exercise.getSecondaryMuscleGroup());
 		}
 
 		return ResponseEntity.ok().body(exerciseResponse);

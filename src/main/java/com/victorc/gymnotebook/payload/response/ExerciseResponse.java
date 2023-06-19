@@ -1,5 +1,8 @@
 package com.victorc.gymnotebook.payload.response;
 
+import com.victorc.gymnotebook.models.EExerciseType;
+import com.victorc.gymnotebook.models.EMuscleGroup;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,9 +20,9 @@ public class ExerciseResponse {
 
 	public Long imageId;
 
-	public String type;
+	public EExerciseType type;
 
-	public String primaryMuscleGroup;
+	public EMuscleGroup primaryMuscleGroup;
 
-	public String secondaryMuscleGroup;
+	public EMuscleGroup secondaryMuscleGroup;
 }
