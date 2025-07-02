@@ -8,7 +8,9 @@ import { type FastifyInstance, fastify } from 'fastify';
 
 import { config } from '@/config/env';
 import { authRoutes } from '@/features/auth';
+import { exerciseRoutes } from '@/features/exercises';
 import { userRoutes } from '@/features/users';
+import { workoutRoutes } from '@/features/workouts';
 import {
   authenticate,
   registerErrorHandler,
@@ -93,6 +95,8 @@ async function buildApp() {
     // Register route modules
     await app.register(authRoutes, { prefix: '/api/auth' });
     await app.register(userRoutes, { prefix: '/api/user' });
+    await app.register(exerciseRoutes, { prefix: '/api/exercise' });
+    await app.register(workoutRoutes, { prefix: '/api/workout' });
 
     // Test routes (similar to the original TestController)
     app.get('/api/test/all', async () => {
