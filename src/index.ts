@@ -8,22 +8,18 @@ import { type FastifyInstance, fastify } from 'fastify';
 
 import { config } from '@/config/env';
 import { authRoutes } from '@/features/auth';
-import { registerErrorHandler } from '@/shared/middleware';
+import { userRoutes } from '@/features/users';
+import {
+  authenticate,
+  registerErrorHandler,
+  requireAdmin,
+  requireModerator,
+} from '@/shared/middleware';
+import { createSuccessResponse } from '@/shared/utils';
 
 // Create Fastify instance
 const app: FastifyInstance = fastify({
-  logger: {
-    level: config.NODE_ENV === 'production' ? 'info' : 'debug',
-    transport:
-      config.NODE_ENV === 'development'
-        ? {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-            },
-          }
-        : undefined,
-  },
+  logger: config.NODE_ENV === 'production' ? true : { level: 'info' },
 });
 
 async function buildApp() {
@@ -96,10 +92,27 @@ async function buildApp() {
 
     // Register route modules
     await app.register(authRoutes, { prefix: '/api/auth' });
+    await app.register(userRoutes, { prefix: '/api/user' });
 
     // Test routes (similar to the original TestController)
     app.get('/api/test/all', async () => {
       return { message: 'Public Content.' };
+    });
+
+    app.get('/api/test/user', { preHandler: [authenticate] }, async () => {
+      return { message: 'User Content.' };
+    });
+
+    app.get('/api/test/mod', { preHandler: [authenticate, requireModerator()] }, async () => {
+      return { message: 'Moderator Board.' };
+    });
+
+    app.get('/api/test/admin', { preHandler: [authenticate, requireAdmin()] }, async (request) => {
+      return { message: `Admin Board for: ${request.user!.username}` };
+    });
+
+    app.get('/api/test/me', { preHandler: [authenticate] }, async (request) => {
+      return createSuccessResponse(request.user);
     });
 
     return app;
