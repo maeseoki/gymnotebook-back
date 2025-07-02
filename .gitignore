@@ -37,3 +37,17 @@ application.properties
 application-dev.properties
 application-prod.properties
 application.yml
+
+### Node.js ###
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.local
+.env.production
+dist/
+*.tsbuildinfo
+
+### Bun ###
+bun.lockb

@@ -1,0 +1,134 @@
+import cors from '@fastify/cors';
+import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
+import rateLimit from '@fastify/rate-limit';
+import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
+import { type FastifyInstance, fastify } from 'fastify';
+
+import { config } from '@/config/env';
+import { authRoutes } from '@/features/auth';
+import { registerErrorHandler } from '@/shared/middleware';
+
+// Create Fastify instance
+const app: FastifyInstance = fastify({
+  logger: {
+    level: config.NODE_ENV === 'production' ? 'info' : 'debug',
+    transport:
+      config.NODE_ENV === 'development'
+        ? {
+            target: 'pino-pretty',
+            options: {
+              colorize: true,
+            },
+          }
+        : undefined,
+  },
+});
+
+async function buildApp() {
+  try {
+    // Register CORS
+    await app.register(cors, {
+      origin: config.CORS_ORIGIN === '*' ? true : config.CORS_ORIGIN.split(','),
+      credentials: true,
+    });
+
+    // Register JWT
+    await app.register(jwt, {
+      secret: config.JWT_SECRET,
+      sign: {
+        expiresIn: config.JWT_EXPIRES_IN,
+      },
+    });
+
+    // Register multipart (for file uploads)
+    await app.register(multipart);
+
+    // Register rate limiting
+    await app.register(rateLimit, {
+      max: config.RATE_LIMIT_MAX,
+      timeWindow: config.RATE_LIMIT_WINDOW,
+    });
+
+    // Register Swagger for API documentation
+    await app.register(swagger, {
+      swagger: {
+        info: {
+          title: 'Gym Notebook API',
+          description: 'REST API for Gym Notebook application',
+          version: '0.1.0',
+        },
+        host: `localhost:${config.PORT}`,
+        schemes: ['http', 'https'],
+        consumes: ['application/json'],
+        produces: ['application/json'],
+        securityDefinitions: {
+          bearerAuth: {
+            type: 'apiKey',
+            name: 'Authorization',
+            in: 'header',
+            description: 'Enter: Bearer <token>',
+          },
+        },
+      },
+    });
+
+    await app.register(swaggerUi, {
+      routePrefix: '/docs',
+      uiConfig: {
+        docExpansion: 'list',
+        deepLinking: false,
+      },
+    });
+
+    // Register error handler
+    registerErrorHandler(app);
+
+    // Health check endpoint
+    app.get('/health', async () => {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: config.NODE_ENV,
+      };
+    });
+
+    // Register route modules
+    await app.register(authRoutes, { prefix: '/api/auth' });
+
+    // Test routes (similar to the original TestController)
+    app.get('/api/test/all', async () => {
+      return { message: 'Public Content.' };
+    });
+
+    return app;
+  } catch (error) {
+    app.log.error(error);
+    process.exit(1);
+  }
+}
+
+async function start() {
+  try {
+    const server = await buildApp();
+
+    await server.listen({
+      port: config.PORT,
+      host: '0.0.0.0',
+    });
+
+    console.log(`🚀 Server running on http://localhost:${config.PORT}`);
+    console.log(`📚 API Documentation: http://localhost:${config.PORT}/docs`);
+  } catch (error) {
+    console.error('Error starting server:', error);
+    process.exit(1);
+  }
+}
+
+// Start the server
+if (import.meta.main) {
+  start();
+}
+
+export { buildApp };
