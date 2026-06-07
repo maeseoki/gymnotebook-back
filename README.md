@@ -104,3 +104,40 @@ pnpm test:coverage
 The old `GET /health` endpoint is not registered. The new explicit liveness/readiness paths are used to avoid ambiguity.
 
 `server.ts` handles `SIGINT` and `SIGTERM`, stops accepting requests with `app.close()`, and relies on Fastify lifecycle hooks to close the MySQL pool.
+
+## Authentication And Users
+
+Authentication uses stateless Bearer JWTs. The JWT payload is:
+
+```ts
+{
+  sub: string;
+  userId: number;
+  roles: ERole[];
+}
+```
+
+`userId` is the authoritative lookup key for current-user operations. `sub` remains the username for compatibility.
+
+New passwords are hashed with Argon2id using explicit parameters in `Argon2PasswordHasher`. Legacy Spring users with BCrypt hashes can still sign in: BCrypt hashes are detected by prefix, verified, and transparently rehashed to Argon2id after a successful signin. Invalid passwords never trigger migration.
+
+Signup is transactional: username/email checks, default role lookup, password hashing, user creation, and `ROLE_USER` assignment succeed or fail together. Database unique constraints remain the race-condition backstop.
+
+Role rules:
+
+- Signup always assigns `ROLE_USER`; unexpected signup fields such as `role` are rejected.
+- Only admins can assign/remove elevated roles.
+- Only `ROLE_ADMIN` and `ROLE_MODERATOR` can be changed through role-management endpoints.
+- Admins cannot delete themselves.
+- The final admin cannot be removed or deleted.
+
+`GET /api/auth/logout` is retained only as a stateless compatibility endpoint. Clients must discard the token locally; server-side revocation and refresh tokens are intentionally not implemented.
+
+Auth/user compatibility details are documented in `docs/migrations/auth-users-compatibility.md`.
+
+Relevant tests:
+
+```bash
+pnpm test
+pnpm test:integration
+```

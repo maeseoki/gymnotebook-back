@@ -1,31 +1,24 @@
-export interface UserRole {
-  id: number;
-  name: string;
-}
-
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  password: string;
-  roles: UserRole[];
-}
+import type { ERole } from './role.js';
+import type { AuthenticatedUserCredentials, UserWithRoles } from './user.js';
 
 export interface CreateUserInput {
   username: string;
   email: string;
-  password: string;
-  roleIds: number[];
+  passwordHash: string;
 }
 
 export interface UserRepository {
-  findByUsername(username: string): Promise<User | null>;
-  findById(id: number): Promise<User | null>;
-  findAll(): Promise<User[]>;
+  findCredentialsByUsername(username: string): Promise<AuthenticatedUserCredentials | null>;
+  findById(id: number): Promise<UserWithRoles | null>;
+  findAll(): Promise<UserWithRoles[]>;
   existsByUsername(username: string): Promise<boolean>;
   existsByEmail(email: string): Promise<boolean>;
   existsById(id: number): Promise<boolean>;
-  create(input: CreateUserInput): Promise<User>;
-  updateRoles(userId: number, roleIds: number[]): Promise<void>;
+  createUser(input: CreateUserInput): Promise<number>;
+  updatePasswordHash(userId: number, passwordHash: string): Promise<void>;
+  assignRole(userId: number, roleId: number): Promise<void>;
+  removeRole(userId: number, roleId: number): Promise<void>;
+  hasRole(userId: number, role: ERole): Promise<boolean>;
+  countUsersByRole(role: ERole): Promise<number>;
   deleteById(id: number): Promise<void>;
 }

@@ -1,12 +1,13 @@
 import { z } from 'zod';
+import { ERoleSchema } from '../users/index.js';
 
-export const LoginRequestSchema = z.object({
+export const LoginRequestSchema = z.strictObject({
   username: z.string().min(1),
   password: z.string().min(1),
 });
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
-export const SignupRequestSchema = z.object({
+export const SignupRequestSchema = z.strictObject({
   username: z
     .string()
     .min(3)
@@ -23,6 +24,6 @@ export const JwtResponseSchema = z.object({
   id: z.number().int(),
   username: z.string(),
   email: z.string(),
-  roles: z.array(z.string()),
+  roles: z.array(ERoleSchema),
 });
 export type JwtResponse = z.infer<typeof JwtResponseSchema>;

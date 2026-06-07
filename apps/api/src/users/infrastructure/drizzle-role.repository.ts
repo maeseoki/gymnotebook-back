@@ -1,18 +1,17 @@
 import { eq } from 'drizzle-orm';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import * as schema from '../../../drizzle/schema.js';
-import type { Role, RoleRepository } from '../domain/role.repository.js';
-
-type DB = MySql2Database<typeof schema>;
+import type { DbExecutor } from '../../shared/transaction.js';
+import type { ERole, Role } from '../domain/role.js';
+import type { RoleRepository } from '../domain/role.repository.js';
 
 export class DrizzleRoleRepository implements RoleRepository {
-  constructor(private readonly db: DB) {}
+  constructor(private readonly db: DbExecutor) {}
 
-  async findByName(name: string): Promise<Role | null> {
+  async findByName(name: ERole): Promise<Role | null> {
     const rows = await this.db
       .select()
       .from(schema.roles)
-      .where(eq(schema.roles.name, name as 'ROLE_USER' | 'ROLE_MODERATOR' | 'ROLE_ADMIN'))
+      .where(eq(schema.roles.name, name))
       .limit(1);
     return rows[0] ?? null;
   }

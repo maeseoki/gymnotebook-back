@@ -87,6 +87,11 @@ function mapError(error: unknown): Omit<ErrorResponse, 'requestId'> {
     };
   }
 
+  const applicationError = getApplicationError(error);
+  if (applicationError) {
+    return applicationError;
+  }
+
   if (hasZodFastifySchemaValidationErrors(error)) {
     return {
       statusCode: 400,
@@ -165,6 +170,34 @@ function getErrorCode(error: unknown): string | undefined {
   }
   const maybeError = error as { code?: unknown };
   return typeof maybeError.code === 'string' ? maybeError.code : undefined;
+}
+
+function getApplicationError(error: unknown): Omit<ErrorResponse, 'requestId'> | undefined {
+  if (typeof error !== 'object' || error === null) {
+    return undefined;
+  }
+  const maybeError = error as {
+    statusCode?: unknown;
+    code?: unknown;
+    message?: unknown;
+    details?: unknown;
+  };
+  if (
+    typeof maybeError.statusCode === 'number' &&
+    typeof maybeError.code === 'string' &&
+    typeof maybeError.message === 'string'
+  ) {
+    if (maybeError.code.startsWith('FST_')) {
+      return undefined;
+    }
+    return {
+      statusCode: maybeError.statusCode,
+      code: maybeError.code,
+      message: maybeError.message,
+      ...(maybeError.details === undefined ? {} : { details: maybeError.details }),
+    };
+  }
+  return undefined;
 }
 
 function getStatusCode(error: unknown): number | undefined {

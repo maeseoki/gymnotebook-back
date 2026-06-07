@@ -1,32 +1,39 @@
 import {
+  ErrorResponseSchema,
   JwtResponseSchema,
-  type LoginRequest,
   LoginRequestSchema,
   MessageResponseSchema,
-  type SignupRequest,
   SignupRequestSchema,
 } from '@gymnotebook/contracts';
 import type { FastifyInstance } from 'fastify';
-import { ConflictError, UnauthorizedError } from '../../shared/errors.js';
-import type { JwtPayload } from '../../shared/jwt.js';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
+import { inTransaction } from '../../shared/transaction.js';
 import { DrizzleRoleRepository } from '../../users/infrastructure/drizzle-role.repository.js';
 import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
-import { signIn } from '../application/signin.js';
-import { signUp } from '../application/signup.js';
-import {
-  DuplicateEmailError,
-  DuplicateUsernameError,
-  InvalidCredentialsError,
-} from '../domain/auth.errors.js';
+import { signIn } from '../application/sign-in.js';
+import { signUp } from '../application/sign-up.js';
+import { Argon2PasswordHasher } from '../infrastructure/argon2-password-hasher.js';
+import { BcryptPasswordHasher } from '../infrastructure/bcrypt-password-hasher.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
-  fastify.post(
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
+  const passwordHasher = new Argon2PasswordHasher();
+  const legacyPasswordHasher = new BcryptPasswordHasher();
+  const userRepository = new DrizzleUserRepository(fastify.db);
+
+  app.post(
     '/signin',
     {
       schema: {
+        tags: ['auth'],
+        summary: 'Sign in',
+        description: 'Authenticates a user with username and password and returns a Bearer JWT.',
         body: LoginRequestSchema,
         response: {
           200: JwtResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
         },
       },
       config: {
@@ -37,31 +44,31 @@ export async function authRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const generateToken = (payload: JwtPayload) => fastify.jwt.sign(payload);
-
-      try {
-        const result = await signIn(request.body as LoginRequest, {
-          userRepository,
-          generateToken,
-        });
-        return reply.send(result);
-      } catch (err) {
-        if (err instanceof InvalidCredentialsError) {
-          throw new UnauthorizedError(err.message);
-        }
-        throw err;
-      }
+      const result = await signIn(request.body, {
+        userRepository,
+        passwordHasher,
+        legacyPasswordHasher,
+        tokenIssuer: {
+          issue: (payload) => fastify.jwt.sign(payload),
+        },
+      });
+      return reply.send(result);
     },
   );
 
-  fastify.post(
+  app.post(
     '/signup',
     {
       schema: {
+        tags: ['auth'],
+        summary: 'Sign up',
+        description: 'Creates a user account with the default user role.',
         body: SignupRequestSchema,
         response: {
           201: MessageResponseSchema,
+          400: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+          409: ErrorResponseSchema,
         },
       },
       config: {
@@ -72,31 +79,32 @@ export async function authRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const roleRepository = new DrizzleRoleRepository(fastify.db);
+      await signUp(request.body, {
+        passwordHasher,
+        transaction: (work) =>
+          inTransaction(fastify.db, (tx) =>
+            work({
+              users: new DrizzleUserRepository(tx),
+              roles: new DrizzleRoleRepository(tx),
+            }),
+          ),
+        isDuplicateUsernameError: (error) =>
+          isUniqueConstraintError(error, ['users_username_unique', 'username']),
+        isDuplicateEmailError: (error) =>
+          isUniqueConstraintError(error, ['users_email_unique', 'email']),
+      });
 
-      try {
-        const result = await signUp(request.body as SignupRequest, {
-          userRepository,
-          roleRepository,
-        });
-        return reply
-          .code(201)
-          .header('Location', `/api/users/${result.username}`)
-          .send({ message: '¡Usuario registrado correctamente!' });
-      } catch (err) {
-        if (err instanceof DuplicateUsernameError || err instanceof DuplicateEmailError) {
-          throw new ConflictError(err.message);
-        }
-        throw err;
-      }
+      return reply.code(201).send({ message: '¡Usuario registrado correctamente!' });
     },
   );
 
-  fastify.get(
+  app.get(
     '/logout',
     {
       schema: {
+        tags: ['auth'],
+        summary: 'Stateless logout compatibility endpoint',
+        description: 'Clears no server-side state. Clients should discard their Bearer token.',
         response: {
           200: MessageResponseSchema,
         },

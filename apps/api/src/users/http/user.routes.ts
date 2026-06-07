@@ -1,71 +1,108 @@
 import {
-  type ERole,
+  ErrorResponseSchema,
+  IdParamSchema,
   MeResponseSchema,
   MessageResponseSchema,
   ModifyRoleRequestSchema,
+  UserAvailabilityResponseSchema,
+  UserParamSchema,
   UserResponseSchema,
+  VerifyUserAvailabilityQuerySchema,
 } from '@gymnotebook/contracts';
 import type { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { ResourceNotFoundError } from '../../shared/errors.js';
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
+import { inTransaction } from '../../shared/transaction.js';
+import { assignRole } from '../application/assign-role.js';
+import { deleteUser } from '../application/delete-user.js';
+import { getCurrentUser } from '../application/get-current-user.js';
+import { listUsers } from '../application/list-users.js';
+import { removeRole } from '../application/remove-role.js';
+import { verifyUserAvailability } from '../application/verify-user-availability.js';
 import { DrizzleRoleRepository } from '../infrastructure/drizzle-role.repository.js';
 import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js';
+import { toMeResponse, toUserResponse } from './user.mapper.js';
 
 export async function userRoutes(fastify: FastifyInstance) {
-  // GET /api/user - admin or moderator
-  fastify.get(
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
+  const userRepository = new DrizzleUserRepository(fastify.db);
+
+  app.get(
     '/',
     {
       preHandler: [fastify.authenticate, fastify.requireRole(['ROLE_ADMIN', 'ROLE_MODERATOR'])],
       schema: {
+        tags: ['users'],
+        summary: 'List users',
+        description: 'Lists public user profiles. Password hashes are never returned.',
+        security: [{ bearerAuth: [] }],
         response: {
           200: z.array(UserResponseSchema),
+          401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
         },
       },
     },
     async (_request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const users = await userRepository.findAll();
-      return reply.send(
-        users.map((u) => ({
-          id: u.id,
-          username: u.username,
-          email: u.email,
-          roles: u.roles.map((r) => r.name),
-        })),
-      );
+      const users = await listUsers(userRepository);
+      return reply.send(users.map(toUserResponse));
     },
   );
 
-  // GET /api/user/verifyuser/:username/:email - any authenticated user
-  fastify.get(
+  app.get(
     '/verifyuser/:username/:email',
     {
       preHandler: [fastify.authenticate],
       schema: {
-        params: z.object({ username: z.string(), email: z.string() }),
+        tags: ['users'],
+        summary: 'Verify username and email availability',
+        description:
+          'Legacy path-parameter compatibility endpoint. Prefer GET /api/user/verifyuser?username=&email=.',
+        security: [{ bearerAuth: [] }],
+        params: UserParamSchema,
         response: {
           200: MessageResponseSchema,
           400: MessageResponseSchema,
+          401: ErrorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const { username, email } = request.params as { username: string; email: string };
-
-      if (await userRepository.existsByUsername(username)) {
+      const availability = await verifyUserAvailability(request.params, userRepository);
+      if (!availability.usernameAvailable) {
         return reply.status(400).send({ message: 'Error: El nombre de usuario ya está en uso!' });
       }
-      if (await userRepository.existsByEmail(email)) {
+      if (!availability.emailAvailable) {
         return reply.status(400).send({ message: 'Error: El email ya está en uso!' });
       }
       return reply.send({ message: '¡Usuario y email disponibles!' });
     },
   );
 
-  // GET /api/user/me
-  fastify.get(
+  app.get(
+    '/verifyuser',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        tags: ['users'],
+        summary: 'Verify username and email availability',
+        description: 'Future-facing query-parameter availability endpoint.',
+        security: [{ bearerAuth: [] }],
+        querystring: VerifyUserAvailabilityQuerySchema,
+        response: {
+          200: UserAvailabilityResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      return reply.send(await verifyUserAvailability(request.query, userRepository));
+    },
+  );
+
+  app.get(
     '/me',
     {
       preHandler: [
@@ -73,132 +110,139 @@ export async function userRoutes(fastify: FastifyInstance) {
         fastify.requireRole(['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN']),
       ],
       schema: {
+        tags: ['users'],
+        summary: 'Get current user',
+        description: 'Returns the current user using the immutable userId from the JWT payload.',
+        security: [{ bearerAuth: [] }],
         response: {
           200: MeResponseSchema,
+          401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
+          404: ErrorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const jwtUser = request.user;
-      const user = await userRepository.findByUsername(jwtUser.sub);
-      if (!user) {
-        throw new ResourceNotFoundError('User not found');
-      }
-      return reply.send({
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        roles: user.roles.map((r) => r.name),
-      });
+      const user = await getCurrentUser(request.user.userId, userRepository);
+      return reply.send(toMeResponse(user));
     },
   );
 
-  // PUT /api/user/setpermissions - admin only
-  fastify.put(
+  app.put(
     '/setpermissions',
     {
       preHandler: [fastify.authenticate, fastify.requireRole(['ROLE_ADMIN'])],
       schema: {
+        tags: ['users'],
+        summary: 'Assign elevated role',
+        description:
+          'Assigns ROLE_ADMIN or ROLE_MODERATOR to a user while preserving existing roles.',
+        security: [{ bearerAuth: [] }],
         body: ModifyRoleRequestSchema,
         response: {
           200: MessageResponseSchema,
-          400: MessageResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+          409: ErrorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const roleRepository = new DrizzleRoleRepository(fastify.db);
-      const { userId, newRole } = request.body as { userId: number; newRole: ERole };
-
-      const user = await userRepository.findById(userId);
-      if (!user) {
-        return reply.status(400).send({ message: 'Error: El usuario no existe.' });
-      }
-
-      if (!['ROLE_ADMIN', 'ROLE_MODERATOR'].includes(newRole)) {
-        return reply.status(400).send({ message: 'Error: El rol no existe.' });
-      }
-
-      if (user.roles.some((r) => r.name === newRole)) {
-        const roleLabel = newRole === 'ROLE_ADMIN' ? 'administrador' : 'moderador';
-        return reply.status(400).send({ message: `Error: El usuario ya es ${roleLabel}.` });
-      }
-
-      const role = await roleRepository.findByName(newRole);
-      if (!role) {
-        return reply.status(400).send({ message: 'Error: El rol no existe.' });
-      }
-
-      const newRoleIds = [...user.roles.map((r) => r.id), role.id];
-      await userRepository.updateRoles(userId, newRoleIds);
+      await assignRole(
+        { userId: request.body.userId, role: request.body.newRole },
+        {
+          transaction: (work) =>
+            inTransaction(fastify.db, (tx) =>
+              work({
+                users: new DrizzleUserRepository(tx),
+                roles: new DrizzleRoleRepository(tx),
+              }),
+            ),
+          isDuplicateUserRoleError: (error) =>
+            isUniqueConstraintError(error, ['user_roles_user_id_role_id_pk', 'PRIMARY']),
+        },
+      );
 
       return reply.send({ message: 'Permisos actualizados correctamente.' });
     },
   );
 
-  // PUT /api/user/removepermissions - admin only
-  fastify.put(
+  app.put(
     '/removepermissions',
     {
       preHandler: [fastify.authenticate, fastify.requireRole(['ROLE_ADMIN'])],
       schema: {
+        tags: ['users'],
+        summary: 'Remove elevated role',
+        description:
+          'Removes ROLE_ADMIN or ROLE_MODERATOR from a user. ROLE_USER cannot be removed here.',
+        security: [{ bearerAuth: [] }],
         body: ModifyRoleRequestSchema,
         response: {
           200: MessageResponseSchema,
-          400: MessageResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+          409: ErrorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const { userId, newRole } = request.body as { userId: number; newRole: ERole };
-
-      const user = await userRepository.findById(userId);
-      if (!user) {
-        return reply.status(400).send({ message: 'Error: El usuario no existe.' });
-      }
-
-      if (!['ROLE_ADMIN', 'ROLE_MODERATOR'].includes(newRole)) {
-        return reply.status(400).send({ message: 'Error: El rol no existe.' });
-      }
-
-      if (!user.roles.some((r) => r.name === newRole)) {
-        const roleLabel = newRole === 'ROLE_ADMIN' ? 'administrador' : 'moderador';
-        return reply.status(400).send({ message: `Error: El usuario no es ${roleLabel}.` });
-      }
-
-      const newRoleIds = user.roles.filter((r) => r.name !== newRole).map((r) => r.id);
-      await userRepository.updateRoles(userId, newRoleIds);
+      await removeRole(
+        { userId: request.body.userId, role: request.body.newRole },
+        {
+          transaction: (work) =>
+            inTransaction(fastify.db, (tx) =>
+              work({
+                users: new DrizzleUserRepository(tx),
+                roles: new DrizzleRoleRepository(tx),
+              }),
+            ),
+        },
+      );
 
       return reply.send({ message: 'Permisos eliminados correctamente.' });
     },
   );
 
-  // DELETE /api/user/:id - admin only
-  fastify.delete(
+  app.delete(
     '/:id',
     {
       preHandler: [fastify.authenticate, fastify.requireRole(['ROLE_ADMIN'])],
       schema: {
-        params: z.object({ id: z.coerce.number().int().positive() }),
+        tags: ['users'],
+        summary: 'Delete user',
+        description:
+          'Deletes a user. Administrators cannot delete themselves or the final administrator.',
+        security: [{ bearerAuth: [] }],
+        params: IdParamSchema,
         response: {
-          200: MessageResponseSchema,
-          400: MessageResponseSchema,
+          204: z.null(),
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          403: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+          409: ErrorResponseSchema,
         },
       },
     },
     async (request, reply) => {
-      const userRepository = new DrizzleUserRepository(fastify.db);
-      const { id } = request.params as { id: number };
+      await deleteUser(
+        { actorUserId: request.user.userId, targetUserId: request.params.id },
+        {
+          transaction: (work) =>
+            inTransaction(fastify.db, (tx) =>
+              work({
+                users: new DrizzleUserRepository(tx),
+              }),
+            ),
+        },
+      );
 
-      if (!(await userRepository.existsById(id))) {
-        return reply.status(400).send({ message: 'Error: El usuario no existe.' });
-      }
-
-      await userRepository.deleteById(id);
-      return reply.send({ message: 'Usuario eliminado correctamente.' });
+      return reply.status(204).send(null);
     },
   );
 }

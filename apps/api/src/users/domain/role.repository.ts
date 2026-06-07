@@ -1,9 +1,6 @@
-export interface Role {
-  id: number;
-  name: string;
-}
+import type { ERole, Role } from './role.js';
 
 export interface RoleRepository {
-  findByName(name: string): Promise<Role | null>;
+  findByName(name: ERole): Promise<Role | null>;
   findById(id: number): Promise<Role | null>;
 }
