@@ -4,6 +4,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import * as schema from '../../../drizzle/schema.js';
 import { DrizzleExerciseRepository } from '../../exercises/infrastructure/drizzle-exercise.repository.js';
+import { ResourceNotFoundError } from '../../shared/errors.js';
 import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
 
 export async function workoutHistoryRoutes(fastify: FastifyInstance) {
@@ -23,20 +24,18 @@ export async function workoutHistoryRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user as { sub: string };
+      const jwtUser = request.user;
       const { exerciseId } = request.params as { exerciseId: number };
       const { page, size } = request.query as { page: number; size: number };
 
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) return (reply as any).status(404).send({ message: 'User not found' });
+      if (!user) throw new ResourceNotFoundError('User not found');
 
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
       const exercise = await exerciseRepo.findByIdAndUserId(exerciseId, user.id);
       if (!exercise) {
-        return (reply as any)
-          .status(404)
-          .send({ message: 'Exercise not found or not owned by user' });
+        throw new ResourceNotFoundError('Exercise not found or not owned by user');
       }
 
       // Count total

@@ -1,14 +1,41 @@
 import { buildApp } from './app.js';
+import { parseEnv } from './shared/env.js';
 
-const app = await buildApp();
+const config = parseEnv(process.env);
+const app = await buildApp({ config });
 
-const host = process.env['HOST'] ?? '0.0.0.0';
-const port = Number(process.env['PORT'] ?? 8080);
+let shutdownStarted = false;
+
+async function shutdown(signal: NodeJS.Signals) {
+  if (shutdownStarted) {
+    return;
+  }
+  shutdownStarted = true;
+
+  app.log.info({ signal }, 'Shutting down');
+
+  try {
+    await app.close();
+    app.log.info({ signal }, 'Shutdown complete');
+    process.exit(0);
+  } catch (err) {
+    app.log.error({ err, signal }, 'Shutdown failed');
+    process.exit(1);
+  }
+}
+
+process.once('SIGINT', () => {
+  void shutdown('SIGINT');
+});
+
+process.once('SIGTERM', () => {
+  void shutdown('SIGTERM');
+});
 
 try {
-  await app.listen({ host, port });
-  console.log(`GymNotebook API listening on http://${host}:${port}`);
+  await app.listen({ host: config.HOST, port: config.PORT });
+  app.log.info({ host: config.HOST, port: config.PORT }, 'GymNotebook API listening');
 } catch (err) {
-  app.log.error(err);
+  app.log.fatal({ err }, 'Failed to start GymNotebook API');
   process.exit(1);
 }

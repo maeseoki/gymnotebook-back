@@ -1,20 +1,28 @@
 import jwtPlugin from '@fastify/jwt';
+import type { ERole } from '@gymnotebook/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
+import { ForbiddenError, UnauthorizedError } from './errors.js';
+
+export interface JwtPayload {
+  sub: string;
+  userId: number;
+  roles: ERole[];
+}
 
 declare module 'fastify' {
   interface FastifyInstance {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (
-      roles: string[],
+      roles: ERole[],
     ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 
 declare module '@fastify/jwt' {
   interface FastifyJWT {
-    payload: { sub: string; roles: string[] };
-    user: { sub: string; roles: string[] };
+    payload: JwtPayload;
+    user: JwtPayload;
   }
 }
 
@@ -27,31 +35,21 @@ export const jwtAuthPlugin = fp(
       },
     });
 
-    fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
       try {
         await request.jwtVerify();
-      } catch (err) {
-        reply.status(401).send({
-          status: 401,
-          error: 'Unauthorized',
-          message: 'Invalid or missing token',
-          path: request.url,
-        });
+      } catch {
+        throw new UnauthorizedError('Invalid or missing token');
       }
     });
 
     fastify.decorate(
       'requireRole',
-      (roles: string[]) => async (request: FastifyRequest, reply: FastifyReply) => {
-        const user = request.user as { sub: string; roles: string[] };
+      (roles: ERole[]) => async (request: FastifyRequest, _reply: FastifyReply) => {
+        const user = request.user;
         const hasRole = roles.some((role) => user.roles?.includes(role));
         if (!hasRole) {
-          return reply.status(403).send({
-            status: 403,
-            error: 'Forbidden',
-            message: 'Insufficient permissions',
-            path: request.url,
-          });
+          throw new ForbiddenError('Insufficient permissions');
         }
       },
     );

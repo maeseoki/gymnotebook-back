@@ -1,21 +1,17 @@
 import {
-  ERoleSchema,
+  type ERole,
   MeResponseSchema,
   MessageResponseSchema,
   ModifyRoleRequestSchema,
   UserResponseSchema,
 } from '@gymnotebook/contracts';
 import type { FastifyInstance } from 'fastify';
-import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { ResourceNotFoundError } from '../../shared/errors.js';
 import { DrizzleRoleRepository } from '../infrastructure/drizzle-role.repository.js';
 import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js';
 
 export async function userRoutes(fastify: FastifyInstance) {
-  fastify.setValidatorCompiler(validatorCompiler);
-  fastify.setSerializerCompiler(serializerCompiler);
-
   // GET /api/user - admin or moderator
   fastify.get(
     '/',
@@ -84,10 +80,10 @@ export async function userRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const userRepository = new DrizzleUserRepository(fastify.db);
-      const jwtUser = request.user as { sub: string; roles: string[] };
+      const jwtUser = request.user;
       const user = await userRepository.findByUsername(jwtUser.sub);
       if (!user) {
-        return (reply as any).status(404).send({ message: 'User not found' });
+        throw new ResourceNotFoundError('User not found');
       }
       return reply.send({
         id: user.id,
@@ -114,7 +110,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const userRepository = new DrizzleUserRepository(fastify.db);
       const roleRepository = new DrizzleRoleRepository(fastify.db);
-      const { userId, newRole } = request.body as { userId: number; newRole: string };
+      const { userId, newRole } = request.body as { userId: number; newRole: ERole };
 
       const user = await userRepository.findById(userId);
       if (!user) {
@@ -157,7 +153,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const userRepository = new DrizzleUserRepository(fastify.db);
-      const { userId, newRole } = request.body as { userId: number; newRole: string };
+      const { userId, newRole } = request.body as { userId: number; newRole: ERole };
 
       const user = await userRepository.findById(userId);
       if (!user) {

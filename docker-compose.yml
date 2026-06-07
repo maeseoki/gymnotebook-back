@@ -25,14 +25,24 @@ services:
     ports:
       - '8080:8080'
     environment:
-      NODE_ENV: production
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 8080
       DB_HOST: db
       DB_PORT: 3306
       DB_NAME: gymnotebook
       DB_USER: gymnotebook
       DB_PASSWORD: gymnotebook
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: local-docker-jwt-secret-change-before-production
       JWT_EXPIRATION_MS: 86400000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      LOG_LEVEL: info
+      MAX_UPLOAD_SIZE: 10485760
+      RATE_LIMIT_MAX: 100
+      RATE_LIMIT_WINDOW_MS: 60000
+      AUTH_RATE_LIMIT_MAX: 10
+      AUTH_RATE_LIMIT_WINDOW_MS: 60000
+      SWAGGER_ENABLED: 'true'
     depends_on:
       db:
         condition: service_healthy

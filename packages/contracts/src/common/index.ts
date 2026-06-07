@@ -28,7 +28,9 @@ export type IdParam = z.infer<typeof IdParamSchema>;
 
 export const ErrorResponseSchema = z.object({
   statusCode: z.number().int(),
-  error: z.string(),
+  code: z.string(),
   message: z.string(),
+  details: z.unknown().optional(),
+  requestId: z.string().optional(),
 });
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;

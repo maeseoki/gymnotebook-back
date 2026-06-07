@@ -3,6 +3,7 @@ import { and, between, eq, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import * as schema from '../../../drizzle/schema.js';
+import { ConflictError, ResourceNotFoundError } from '../../shared/errors.js';
 import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
 
 export async function workoutRoutes(fastify: FastifyInstance) {
@@ -16,12 +17,12 @@ export async function workoutRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user as { sub: string };
+      const jwtUser = request.user;
       const body = request.body as z.infer<typeof CreateWorkoutRequestSchema>;
 
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) return (reply as any).status(404).send({ message: 'User not found' });
+      if (!user) throw new ResourceNotFoundError('User not found');
 
       // Check for duplicate UUID
       const existing = await fastify.db
@@ -31,7 +32,7 @@ export async function workoutRoutes(fastify: FastifyInstance) {
         .limit(1);
 
       if (existing.length > 0) {
-        return reply.status(409).send(`Ya existe un workout con el UUID: ${body.uuid}`);
+        throw new ConflictError(`Ya existe un workout con el UUID: ${body.uuid}`);
       }
 
       // Convert ISO datetime strings to local datetime format for MySQL
@@ -93,12 +94,12 @@ export async function workoutRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user as { sub: string };
+      const jwtUser = request.user;
       const { month, year } = request.params as { month: number; year: number };
 
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) return (reply as any).status(404).send({ message: 'User not found' });
+      if (!user) throw new ResourceNotFoundError('User not found');
 
       const rows = await fastify.db.execute(
         sql`SELECT DISTINCT DAY(start_date) as day FROM workouts WHERE user_id = ${user.id} AND MONTH(start_date) = ${month} AND YEAR(start_date) = ${year} ORDER BY day`,
@@ -120,7 +121,7 @@ export async function workoutRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user as { sub: string };
+      const jwtUser = request.user;
       const { date } = request.params as { date: string };
 
       // Parse date
@@ -134,7 +135,7 @@ export async function workoutRoutes(fastify: FastifyInstance) {
 
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) return (reply as any).status(404).send({ message: 'User not found' });
+      if (!user) throw new ResourceNotFoundError('User not found');
 
       // Fetch workouts with nested data
       const workoutRows = await fastify.db

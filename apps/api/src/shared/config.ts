@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
-import { type Env, parseEnv } from './env.js';
+import type { Env } from './env.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -8,9 +8,13 @@ declare module 'fastify' {
   }
 }
 
+export interface ConfigPluginOptions {
+  config: Env;
+}
+
 export const configPlugin = fp(
-  async (fastify: FastifyInstance) => {
-    const config = parseEnv();
+  async (fastify: FastifyInstance, options: ConfigPluginOptions) => {
+    const config = options.config;
     fastify.decorate('config', config);
   },
   { name: 'config' },

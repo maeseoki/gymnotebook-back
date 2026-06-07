@@ -1,11 +1,11 @@
-import type { JwtResponse, LoginRequest } from '@gymnotebook/contracts';
+import type { ERole, JwtResponse, LoginRequest } from '@gymnotebook/contracts';
 import * as argon2 from 'argon2';
 import type { UserRepository } from '../../users/domain/user.repository.js';
 import { InvalidCredentialsError } from '../domain/auth.errors.js';
 
 export interface SignInDeps {
   userRepository: UserRepository;
-  generateToken: (payload: { sub: string; roles: string[] }) => string;
+  generateToken: (payload: { sub: string; userId: number; roles: ERole[] }) => string;
 }
 
 export async function signIn(request: LoginRequest, deps: SignInDeps): Promise<JwtResponse> {
@@ -19,8 +19,8 @@ export async function signIn(request: LoginRequest, deps: SignInDeps): Promise<J
     throw new InvalidCredentialsError();
   }
 
-  const roles = user.roles.map((r) => r.name);
-  const token = deps.generateToken({ sub: user.username, roles });
+  const roles = user.roles.map((r) => r.name as ERole);
+  const token = deps.generateToken({ sub: user.username, userId: user.id, roles });
 
   return {
     token,

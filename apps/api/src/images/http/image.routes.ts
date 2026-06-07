@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import * as schema from '../../../drizzle/schema.js';
+import { ResourceNotFoundError, ValidationError } from '../../shared/errors.js';
 
 export async function imageRoutes(fastify: FastifyInstance) {
   // GET /api/image/:id - public
@@ -20,11 +21,11 @@ export async function imageRoutes(fastify: FastifyInstance) {
         .where(eq(schema.imageData.id, id))
         .limit(1);
 
-      if (rows.length === 0) {
-        return reply.status(404).send({ message: 'Image not found' });
+      const image = rows[0];
+      if (!image) {
+        throw new ResourceNotFoundError('Image not found');
       }
 
-      const image = rows[0]!;
       return reply.header('Content-Type', image.type).send(image.imageData);
     },
   );
@@ -38,12 +39,12 @@ export async function imageRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const data = await request.file();
       if (!data) {
-        return reply.status(400).send('No file uploaded');
+        throw new ValidationError('No file uploaded');
       }
 
       const buffer = await data.toBuffer();
       if (buffer.length === 0) {
-        return reply.status(400).send('File is empty');
+        throw new ValidationError('File is empty');
       }
 
       const result = await fastify.db.insert(schema.imageData).values({
@@ -75,7 +76,7 @@ export async function imageRoutes(fastify: FastifyInstance) {
         .limit(1);
 
       if (rows.length === 0) {
-        return reply.status(404).send({ message: 'Image not found' });
+        throw new ResourceNotFoundError('Image not found');
       }
 
       await fastify.db.delete(schema.imageData).where(eq(schema.imageData.id, id));
