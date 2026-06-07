@@ -1,43 +1,57 @@
 # Database Migrations
 
+This directory contains committed Drizzle migrations for MySQL. Do not use `drizzle-kit push` for production.
+
 ## Fresh Installation
 
-Run all migrations to create the schema from scratch:
+From the repository root:
 
 ```bash
 pnpm db:migrate
+pnpm db:seed
 ```
 
-Then seed the roles table:
+`pnpm db:migrate` applies the committed SQL files in `drizzle/migrations`. `pnpm db:seed` inserts the mandatory roles idempotently:
+
+- `ROLE_USER`
+- `ROLE_MODERATOR`
+- `ROLE_ADMIN`
+
+## Existing Spring Boot Database Adoption
+
+Take a verified backup first.
+
+For an existing Spring Boot database, do not run the baseline DDL against tables that already exist. Instead:
+
+```bash
+pnpm db:adopt-existing
+pnpm db:migrate
+pnpm db:seed
+```
+
+`db:adopt-existing` verifies the legacy table and column surface, creates Drizzle's `__drizzle_migrations` metadata table if needed, and records the committed `0000_legacy_baseline` migration hash using Drizzle's expected hash format. It does not modify business data.
+
+If verification fails, inspect the database with:
 
 ```sql
-INSERT INTO roles (name) VALUES ('ROLE_USER'), ('ROLE_MODERATOR'), ('ROLE_ADMIN')
-ON DUPLICATE KEY UPDATE name = VALUES(name);
+SHOW CREATE TABLE users;
+SHOW CREATE TABLE roles;
+SHOW CREATE TABLE user_roles;
+SHOW CREATE TABLE image_data;
+SHOW CREATE TABLE exercises;
+SHOW CREATE TABLE workouts;
+SHOW CREATE TABLE workout_sets;
+SHOW CREATE TABLE sets;
 ```
 
-## Existing Database (Baseline Strategy)
+After adoption, `pnpm db:migrate` applies post-baseline migrations such as unique workout UUIDs and nullable image ownership.
 
-If you have an existing Spring Boot database, the current schema is already in place.
-To mark it as already having the baseline migration applied, create the drizzle migrations
-metadata table and insert the baseline migration hash:
-
-```sql
-CREATE TABLE IF NOT EXISTS `__drizzle_migrations` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
-  `hash` VARCHAR(255) NOT NULL,
-  `created_at` BIGINT
-);
-```
-
-Then run `pnpm db:generate` to generate the migration files and record the baseline.
-
-## Future Migrations
-
-All future schema changes must be generated via:
+## Development Commands
 
 ```bash
 pnpm db:generate
-pnpm db:migrate
+pnpm db:check
+pnpm db:studio
 ```
 
-Never use `drizzle-kit push` in production.
+`db:generate` is for intentional schema changes only. CI should use `db:check` and the integration migration tests to detect drift.

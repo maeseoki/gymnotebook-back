@@ -5,13 +5,46 @@ import {
   datetime,
   index,
   int,
-  mysqlEnum,
   mysqlTable,
   primaryKey,
-  tinyint,
   uniqueIndex,
   varchar,
 } from 'drizzle-orm/mysql-core';
+
+export const roleNames = ['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN'] as const;
+export type RoleName = (typeof roleNames)[number];
+
+export const exerciseTypes = [
+  'WEIGHT',
+  'REPS',
+  'TIME',
+  'DISTANCE',
+  'WEIGHT_REPS',
+  'TIME_DISTANCE',
+] as const;
+export type ExerciseType = (typeof exerciseTypes)[number];
+
+export const muscleGroups = [
+  'ABDOMINALS',
+  'ABDUCTORS',
+  'BICEPS',
+  'CALVES',
+  'CARDIO',
+  'CHEST',
+  'FOREARMS',
+  'FULL_BODY',
+  'GLUTES',
+  'HAMSTRINGS',
+  'LATS',
+  'LOWER_BACK',
+  'QUADRICEPS',
+  'SHOULDERS',
+  'TRAPS',
+  'TRICEPS',
+  'UPPER_BACK',
+  'OTHER',
+] as const;
+export type MuscleGroup = (typeof muscleGroups)[number];
 
 const mediumblob = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {
@@ -19,164 +52,131 @@ const mediumblob = customType<{ data: Buffer; driverData: Buffer }>({
   },
 });
 
-export const roles = mysqlTable('roles', {
-  id: tinyint('id').primaryKey().autoincrement(),
-  name: mysqlEnum('name', ['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN']).notNull().unique(),
-});
+const id = (name = 'id') => bigint(name, { mode: 'number', unsigned: false });
+
+export const roles = mysqlTable(
+  'roles',
+  {
+    id: int('id').primaryKey().autoincrement(),
+    name: varchar('name', { length: 20 }).notNull().$type<RoleName>(),
+  },
+  (table) => [uniqueIndex('roles_name_unique').on(table.name)],
+);
 
 export const users = mysqlTable(
   'users',
   {
-    id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
+    id: id().primaryKey().autoincrement(),
     username: varchar('username', { length: 20 }).notNull(),
     email: varchar('email', { length: 50 }).notNull(),
     password: varchar('password', { length: 120 }).notNull(),
   },
-  (table) => ({
-    usernameIdx: uniqueIndex('users_username_unique').on(table.username),
-    emailIdx: uniqueIndex('users_email_unique').on(table.email),
-  }),
+  (table) => [
+    uniqueIndex('users_username_unique').on(table.username),
+    uniqueIndex('users_email_unique').on(table.email),
+  ],
 );
 
 export const userRoles = mysqlTable(
   'user_roles',
   {
-    userId: bigint('user_id', { mode: 'number', unsigned: false })
+    userId: id('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    roleId: tinyint('role_id')
+    roleId: int('role_id')
       .notNull()
       .references(() => roles.id, { onDelete: 'restrict' }),
   },
-  (table) => ({
-    pk: primaryKey({ columns: [table.userId, table.roleId] }),
-  }),
+  (table) => [
+    primaryKey({ columns: [table.userId, table.roleId] }),
+    index('user_roles_role_id_idx').on(table.roleId),
+  ],
 );
 
-export const imageData = mysqlTable('image_data', {
-  id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
-  name: varchar('name', { length: 255 }).notNull(),
-  type: varchar('type', { length: 100 }).notNull(),
-  imageData: mediumblob('image_data').notNull(),
-});
+export const imageData = mysqlTable(
+  'image_data',
+  {
+    id: id().primaryKey().autoincrement(),
+    name: varchar('name', { length: 255 }).notNull(),
+    type: varchar('type', { length: 255 }).notNull(),
+    imageData: mediumblob('image_data').notNull(),
+    userId: id('user_id').references(() => users.id, { onDelete: 'set null' }),
+  },
+  (table) => [index('image_data_user_id_idx').on(table.userId)],
+);
 
 export const exercises = mysqlTable(
   'exercises',
   {
-    id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
-    name: varchar('name', { length: 200 }).notNull(),
-    imageId: bigint('image_id', { mode: 'number', unsigned: false }).references(
-      () => imageData.id,
-      {
-        onDelete: 'set null',
-      },
-    ),
-    description: varchar('description', { length: 500 }),
-    type: mysqlEnum('type', [
-      'WEIGHT',
-      'REPS',
-      'TIME',
-      'DISTANCE',
-      'WEIGHT_REPS',
-      'TIME_DISTANCE',
-    ]).notNull(),
-    primaryMuscleGroup: mysqlEnum('primary_muscle_group', [
-      'ABDOMINALS',
-      'ABDUCTORS',
-      'BICEPS',
-      'CALVES',
-      'CARDIO',
-      'CHEST',
-      'FOREARMS',
-      'FULL_BODY',
-      'GLUTES',
-      'HAMSTRINGS',
-      'LATS',
-      'LOWER_BACK',
-      'QUADRICEPS',
-      'SHOULDERS',
-      'TRAPS',
-      'TRICEPS',
-      'UPPER_BACK',
-      'OTHER',
-    ]).notNull(),
-    secondaryMuscleGroup: mysqlEnum('secondary_muscle_group', [
-      'ABDOMINALS',
-      'ABDUCTORS',
-      'BICEPS',
-      'CALVES',
-      'CARDIO',
-      'CHEST',
-      'FOREARMS',
-      'FULL_BODY',
-      'GLUTES',
-      'HAMSTRINGS',
-      'LATS',
-      'LOWER_BACK',
-      'QUADRICEPS',
-      'SHOULDERS',
-      'TRAPS',
-      'TRICEPS',
-      'UPPER_BACK',
-      'OTHER',
-    ]),
-    userId: bigint('user_id', { mode: 'number', unsigned: false })
+    id: id().primaryKey().autoincrement(),
+    name: varchar('name', { length: 255 }).notNull(),
+    imageId: id('image_id').references(() => imageData.id, { onDelete: 'set null' }),
+    description: varchar('description', { length: 255 }),
+    type: varchar('type', { length: 255 }).notNull().$type<ExerciseType>(),
+    primaryMuscleGroup: varchar('primary_muscle_group', { length: 255 })
+      .notNull()
+      .$type<MuscleGroup>(),
+    secondaryMuscleGroup: varchar('secondary_muscle_group', { length: 255 }).$type<MuscleGroup>(),
+    userId: id('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    userIdx: index('exercises_user_id_idx').on(table.userId),
-  }),
+  (table) => [
+    index('exercises_user_id_idx').on(table.userId),
+    index('exercises_image_id_idx').on(table.imageId),
+  ],
 );
 
 export const workouts = mysqlTable(
   'workouts',
   {
-    id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
-    uuid: varchar('uuid', { length: 36 }).notNull(),
-    userId: bigint('user_id', { mode: 'number', unsigned: false })
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    startDate: datetime('start_date', { mode: 'string' }).notNull(),
-    endDate: datetime('end_date', { mode: 'string' }).notNull(),
-    notes: varchar('notes', { length: 1000 }),
+    id: id().primaryKey().autoincrement(),
+    uuid: varchar('uuid', { length: 255 }).notNull(),
+    userId: id('user_id').references(() => users.id, { onDelete: 'cascade' }),
+    startDate: datetime('start_date', { mode: 'string' }),
+    endDate: datetime('end_date', { mode: 'string' }),
+    notes: varchar('notes', { length: 255 }),
   },
-  (table) => ({
-    uuidIdx: uniqueIndex('workouts_uuid_unique').on(table.uuid),
-    userDateIdx: index('workouts_user_date_idx').on(table.userId, table.startDate),
-  }),
+  (table) => [
+    uniqueIndex('workouts_uuid_unique').on(table.uuid),
+    index('workouts_user_start_date_idx').on(table.userId, table.startDate),
+  ],
 );
 
 export const workoutSets = mysqlTable(
   'workout_sets',
   {
-    id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
-    workoutId: bigint('workout_id', { mode: 'number', unsigned: false })
+    id: id().primaryKey().autoincrement(),
+    workoutId: id('workout_id')
       .notNull()
       .references(() => workouts.id, { onDelete: 'cascade' }),
-    exerciseId: bigint('exercise_id', { mode: 'number', unsigned: false })
+    exerciseId: id('exercise_id')
       .notNull()
       .references(() => exercises.id, { onDelete: 'restrict' }),
     startDate: datetime('start_date', { mode: 'string' }),
     endDate: datetime('end_date', { mode: 'string' }),
-    notes: varchar('notes', { length: 1000 }),
+    notes: varchar('notes', { length: 255 }),
   },
-  (table) => ({
-    exerciseIdx: index('workout_sets_exercise_id_idx').on(table.exerciseId),
-    workoutIdx: index('workout_sets_workout_id_idx').on(table.workoutId),
-  }),
+  (table) => [
+    index('workout_sets_workout_id_idx').on(table.workoutId),
+    index('workout_sets_exercise_id_idx').on(table.exerciseId),
+  ],
 );
 
-export const sets = mysqlTable('sets', {
-  id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
-  reps: int('reps').notNull().default(0),
-  weight: int('weight').notNull().default(0),
-  time: int('time').notNull().default(0),
-  distance: int('distance').notNull().default(0),
-  notes: varchar('notes', { length: 500 }),
-  isDropSet: boolean('is_drop_set').notNull().default(false),
-  workoutSetId: bigint('workout_set_id', { mode: 'number', unsigned: false })
-    .notNull()
-    .references(() => workoutSets.id, { onDelete: 'cascade' }),
-  startDate: datetime('start_date', { mode: 'string' }),
-});
+export const sets = mysqlTable(
+  'sets',
+  {
+    id: id().primaryKey().autoincrement(),
+    reps: int('reps').notNull(),
+    weight: int('weight').notNull(),
+    time: int('time').notNull(),
+    distance: int('distance').notNull(),
+    notes: varchar('notes', { length: 255 }),
+    isDropSet: boolean('is_drop_set').notNull(),
+    workoutSetId: id('workout_set_id')
+      .notNull()
+      .references(() => workoutSets.id, { onDelete: 'cascade' }),
+    startDate: datetime('start_date', { mode: 'string' }),
+  },
+  (table) => [index('sets_workout_set_id_idx').on(table.workoutSetId)],
+);

@@ -10,9 +10,16 @@
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
     "test:coverage": "turbo run test:coverage",
+    "db:generate": "pnpm --filter @gymnotebook/api db:generate",
+    "db:migrate": "pnpm --filter @gymnotebook/api db:migrate",
+    "db:seed": "pnpm --filter @gymnotebook/api db:seed",
+    "db:check": "pnpm --filter @gymnotebook/api db:check",
+    "db:studio": "pnpm --filter @gymnotebook/api db:studio",
+    "db:adopt-existing": "pnpm --filter @gymnotebook/api db:adopt-existing",
     "format": "biome format --write .",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm db:check"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",

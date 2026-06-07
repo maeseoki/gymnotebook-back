@@ -1,5 +1,7 @@
 # GymNotebook Backend Rewrite Instructions (Spring Boot -> Fastify)
 
+> Historical reference: the active Drizzle schema, committed migrations, and adoption procedure are documented in `docs/migrations/persistence-foundation.md` and `apps/api/drizzle/README.md`. Do not generate a deployment baseline from this file.
+
 This document is the complete implementation map I would follow to rewrite this backend in Fastify.
 
 ## 1) Current stack and runtime behavior to preserve

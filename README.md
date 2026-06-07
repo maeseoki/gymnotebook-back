@@ -16,6 +16,8 @@ corepack prepare pnpm@11.5.2 --activate
 
 ```bash
 pnpm install --frozen-lockfile
+pnpm db:migrate
+pnpm db:seed
 pnpm --filter @gymnotebook/api dev
 ```
 
@@ -25,7 +27,13 @@ For local Docker:
 docker compose up --build
 ```
 
-The Compose file intentionally uses `NODE_ENV=development` with local-only MySQL credentials.
+The Compose file intentionally uses `NODE_ENV=development` with local-only MySQL credentials. Startup order is:
+
+1. MySQL starts and passes its health check.
+2. `api-db-init` runs committed migrations and the idempotent role seed.
+3. The API starts and exposes `/health/ready` as its container health check.
+
+Compose publishes MySQL on host port `3307` to avoid clashing with a developer's local MySQL on `3306`. Containers use `db:3306` internally.
 
 ## API Configuration
 
@@ -48,6 +56,45 @@ The API validates configuration with Zod at startup and fails fast when required
 Requests without an `Origin` header are allowed for server-to-server calls. Browser origins must match `CORS_ORIGINS`; the API never falls back to wildcard CORS in production.
 
 A single `DATABASE_URL` was considered, but the current Docker Compose and Drizzle config already use separate MySQL fields. Keeping separate variables avoids changing the local MySQL setup in this bootstrap task.
+
+## Database
+
+Fresh database:
+
+```bash
+pnpm db:migrate
+pnpm db:seed
+```
+
+Existing Spring Boot database adoption:
+
+```bash
+pnpm db:adopt-existing
+pnpm db:migrate
+pnpm db:seed
+```
+
+Take a backup before adoption. The adoption command verifies the legacy table/column surface, records the committed Drizzle baseline in `__drizzle_migrations`, and leaves business data untouched. See `docs/migrations/persistence-foundation.md` for compatibility findings, unverified `SHOW CREATE TABLE` checks, rollback limitations, image ownership staging, and ID precision.
+
+Development-only migration commands:
+
+```bash
+pnpm db:generate
+pnpm db:check
+pnpm db:studio
+```
+
+Do not use `drizzle-kit push` for production.
+
+## Tests
+
+```bash
+pnpm test
+pnpm test:integration
+pnpm test:coverage
+```
+
+`pnpm test` runs unit/Fastify inject tests. `pnpm test:integration` starts MySQL through Testcontainers and requires Docker.
 
 ## Health And Shutdown
 

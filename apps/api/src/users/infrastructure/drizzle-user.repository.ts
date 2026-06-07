@@ -1,12 +1,10 @@
 import { eq } from 'drizzle-orm';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
 import * as schema from '../../../drizzle/schema.js';
+import type { DbExecutor } from '../../shared/transaction.js';
 import type { CreateUserInput, User, UserRepository } from '../domain/user.repository.js';
 
-type DB = MySql2Database<typeof schema>;
-
 export class DrizzleUserRepository implements UserRepository {
-  constructor(private readonly db: DB) {}
+  constructor(private readonly db: DbExecutor) {}
 
   async findByUsername(username: string): Promise<User | null> {
     const rows = await this.db
@@ -89,14 +87,18 @@ export class DrizzleUserRepository implements UserRepository {
   }
 
   async create(input: CreateUserInput): Promise<User> {
-    const result = await this.db.insert(schema.users).values({
-      username: input.username,
-      email: input.email,
-      password: input.password,
-    });
-
-    const insertId = (result as unknown as { insertId: number }).insertId;
-    const userId = insertId;
+    const inserted = await this.db
+      .insert(schema.users)
+      .values({
+        username: input.username,
+        email: input.email,
+        password: input.password,
+      })
+      .$returningId();
+    const userId = inserted[0]?.id;
+    if (typeof userId !== 'number') {
+      throw new Error('Failed to create user');
+    }
 
     if (input.roleIds.length > 0) {
       await this.db
@@ -131,10 +133,13 @@ export class DrizzleUserRepository implements UserRepository {
     }>,
   ): User | null {
     if (rows.length === 0) return null;
-    const first = rows[0]!;
+    const [first] = rows;
+    if (!first) return null;
     const roles = rows
-      .filter((r) => r.roleId != null)
-      .map((r) => ({ id: r.roleId!, name: r.roleName! }));
+      .filter((row): row is typeof row & { roleId: number; roleName: string } => {
+        return row.roleId !== null && row.roleName !== null;
+      })
+      .map((row) => ({ id: row.roleId, name: row.roleName }));
     return {
       id: first.id,
       username: first.username,
@@ -165,8 +170,9 @@ export class DrizzleUserRepository implements UserRepository {
           roles: [],
         });
       }
-      if (row.roleId != null) {
-        map.get(row.id)!.roles.push({ id: row.roleId, name: row.roleName! });
+      const user = map.get(row.id);
+      if (user && row.roleId !== null && row.roleName !== null) {
+        user.roles.push({ id: row.roleId, name: row.roleName });
       }
     }
     return Array.from(map.values());
