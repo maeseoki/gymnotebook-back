@@ -30,7 +30,7 @@ export async function deleteUser(
 
     if (
       (await users.hasRole(input.targetUserId, 'ROLE_ADMIN')) &&
-      (await users.countUsersByRole('ROLE_ADMIN')) <= 1
+      (await users.countUsersByRoleForUpdate('ROLE_ADMIN')) <= 1
     ) {
       throw new CannotDeleteLastAdminError();
     }

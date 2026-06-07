@@ -24,9 +24,8 @@ export async function signUp(
   request: SignupRequest,
   deps: SignUpDeps,
 ): Promise<{ userId: number; username: string }> {
-
   const passwordHash = await deps.passwordHasher.hash(request.password);
-  
+
   try {
     return await deps.transaction(async ({ users, roles }) => {
       if (await users.existsByUsername(request.username)) {

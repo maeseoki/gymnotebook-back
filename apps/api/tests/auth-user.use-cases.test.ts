@@ -167,6 +167,10 @@ class FakeUserRepository implements UserRepository {
     ).length;
   }
 
+  async countUsersByRoleForUpdate(role: ERole) {
+    return this.countUsersByRole(role);
+  }
+
   async deleteById(id: number) {
     this.users.delete(id);
   }

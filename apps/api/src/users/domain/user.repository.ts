@@ -20,5 +20,6 @@ export interface UserRepository {
   removeRole(userId: number, roleId: number): Promise<void>;
   hasRole(userId: number, role: ERole): Promise<boolean>;
   countUsersByRole(role: ERole): Promise<number>;
+  countUsersByRoleForUpdate(role: ERole): Promise<number>;
   deleteById(id: number): Promise<void>;
 }

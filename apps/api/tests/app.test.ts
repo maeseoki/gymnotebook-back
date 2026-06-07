@@ -44,6 +44,40 @@ describe('Fastify foundation', () => {
     expect(response.json()).toMatchObject({ status: 'ok' });
   });
 
+  it('does not rate-limit health endpoints', async () => {
+    const instance = await makeApp({
+      configOverrides: { RATE_LIMIT_MAX: 1, RATE_LIMIT_WINDOW_MS: 60000 },
+    });
+
+    const liveOne = await instance.inject({ method: 'GET', url: '/health/live' });
+    const liveTwo = await instance.inject({ method: 'GET', url: '/health/live' });
+    const readyOne = await instance.inject({ method: 'GET', url: '/health/ready' });
+    const readyTwo = await instance.inject({ method: 'GET', url: '/health/ready' });
+
+    expect([
+      liveOne.statusCode,
+      liveTwo.statusCode,
+      readyOne.statusCode,
+      readyTwo.statusCode,
+    ]).toEqual([200, 200, 200, 200]);
+  });
+
+  it('emits HSTS only in production', async () => {
+    const development = await makeApp({ configOverrides: { NODE_ENV: 'development' } });
+    const developmentResponse = await development.inject({ method: 'GET', url: '/health/live' });
+    await development.close();
+
+    const production = await makeApp({
+      configOverrides: { NODE_ENV: 'production', SWAGGER_ENABLED: false },
+    });
+    const productionResponse = await production.inject({ method: 'GET', url: '/health/live' });
+    await production.close();
+    app = undefined;
+
+    expect(developmentResponse.headers['strict-transport-security']).toBeUndefined();
+    expect(productionResponse.headers['strict-transport-security']).toBeDefined();
+  });
+
   it('returns readiness failure through the common error contract', async () => {
     const instance = await makeApp({
       databaseClient: createTestDatabase({

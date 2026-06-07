@@ -51,7 +51,10 @@ export async function buildApp(options: BuildAppOptions = {}) {
     credentials: true,
     maxAge: 3600,
   });
-  await fastify.register(helmet, { contentSecurityPolicy: false });
+  await fastify.register(helmet, {
+    contentSecurityPolicy: false,
+    hsts: config.NODE_ENV === 'production' ? undefined : false,
+  });
   await fastify.register(multipart, {
     attachFieldsToBody: false,
     limits: {

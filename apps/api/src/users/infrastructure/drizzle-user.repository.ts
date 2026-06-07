@@ -175,6 +175,16 @@ export class DrizzleUserRepository implements UserRepository {
     return rows[0]?.total ?? 0;
   }
 
+  async countUsersByRoleForUpdate(role: ERole): Promise<number> {
+    const rows = await this.db
+      .select({ userId: schema.userRoles.userId })
+      .from(schema.userRoles)
+      .innerJoin(schema.roles, eq(schema.roles.id, schema.userRoles.roleId))
+      .where(eq(schema.roles.name, role))
+      .for('update');
+    return rows.length;
+  }
+
   async deleteById(id: number): Promise<void> {
     await this.db.delete(schema.users).where(eq(schema.users.id, id));
   }

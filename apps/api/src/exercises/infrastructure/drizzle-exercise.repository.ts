@@ -1,24 +1,20 @@
-import type { EExerciseType, EMuscleGroup } from '@gymnotebook/contracts';
-import { and, eq } from 'drizzle-orm';
-import type { MySql2Database } from 'drizzle-orm/mysql2';
+import { and, asc, eq } from 'drizzle-orm';
+import type { ResultSetHeader } from 'mysql2';
 import * as schema from '../../../drizzle/schema.js';
-import type {
-  CreateExerciseInput,
-  Exercise,
-  ExerciseRepository,
-} from '../domain/exercise.repository.js';
-
-type DB = MySql2Database<typeof schema>;
+import type { DbExecutor } from '../../shared/transaction.js';
+import type { Exercise, ExerciseDraft, ExerciseUpdate } from '../domain/exercise.js';
+import type { ExerciseRepository } from '../domain/exercise.repository.js';
 
 export class DrizzleExerciseRepository implements ExerciseRepository {
-  constructor(private readonly db: DB) {}
+  constructor(private readonly db: DbExecutor) {}
 
-  async findByUserId(userId: number): Promise<Exercise[]> {
+  async listByUser(userId: number): Promise<Exercise[]> {
     const rows = await this.db
       .select()
       .from(schema.exercises)
-      .where(eq(schema.exercises.userId, userId));
-    return rows.map(this.mapRow);
+      .where(eq(schema.exercises.userId, userId))
+      .orderBy(asc(schema.exercises.name), asc(schema.exercises.id));
+    return rows.map(mapRow);
   }
 
   async findById(id: number): Promise<Exercise | null> {
@@ -27,76 +23,88 @@ export class DrizzleExerciseRepository implements ExerciseRepository {
       .from(schema.exercises)
       .where(eq(schema.exercises.id, id))
       .limit(1);
-    return rows[0] ? this.mapRow(rows[0]) : null;
+    return rows[0] ? mapRow(rows[0]) : null;
   }
 
-  async findByIdAndUserId(id: number, userId: number): Promise<Exercise | null> {
+  async findByIdForUser(id: number, userId: number): Promise<Exercise | null> {
     const rows = await this.db
       .select()
       .from(schema.exercises)
       .where(and(eq(schema.exercises.id, id), eq(schema.exercises.userId, userId)))
       .limit(1);
-    return rows[0] ? this.mapRow(rows[0]) : null;
+    return rows[0] ? mapRow(rows[0]) : null;
   }
 
-  async create(input: CreateExerciseInput): Promise<Exercise> {
-    const result = await this.db.insert(schema.exercises).values({
-      name: input.name,
-      description: input.description ?? null,
-      imageId: input.imageId ?? null,
-      type: input.type,
-      primaryMuscleGroup: input.primaryMuscleGroup,
-      secondaryMuscleGroup: input.secondaryMuscleGroup ?? null,
-      userId: input.userId,
-    });
-    const insertId = (result as unknown as { insertId: number }).insertId;
-    const created = await this.findById(insertId);
-    if (!created) throw new Error('Failed to create exercise');
+  async findByIdAndUserId(id: number, userId: number): Promise<Exercise | null> {
+    return this.findByIdForUser(id, userId);
+  }
+
+  async create(input: ExerciseDraft): Promise<Exercise> {
+    const inserted = await this.db
+      .insert(schema.exercises)
+      .values({
+        name: input.name,
+        description: input.description,
+        imageId: input.imageId,
+        type: input.type,
+        primaryMuscleGroup: input.primaryMuscleGroup,
+        secondaryMuscleGroup: input.secondaryMuscleGroup,
+        userId: input.userId,
+      })
+      .$returningId();
+    const id = inserted[0]?.id;
+    if (typeof id !== 'number') {
+      throw new Error('Failed to create exercise');
+    }
+    const created = await this.findByIdForUser(id, input.userId);
+    if (!created) {
+      throw new Error('Failed to create exercise');
+    }
     return created;
   }
 
-  async update(id: number, input: Partial<CreateExerciseInput>): Promise<Exercise | null> {
+  async updateForUser(id: number, userId: number, input: ExerciseUpdate): Promise<Exercise | null> {
     await this.db
       .update(schema.exercises)
       .set({
-        ...(input.name !== undefined && { name: input.name }),
-        ...(input.description !== undefined && { description: input.description ?? null }),
-        ...(input.imageId !== undefined && { imageId: input.imageId ?? null }),
-        ...(input.type !== undefined && { type: input.type }),
-        ...(input.primaryMuscleGroup !== undefined && {
-          primaryMuscleGroup: input.primaryMuscleGroup,
-        }),
-        ...(input.secondaryMuscleGroup !== undefined && {
-          secondaryMuscleGroup: input.secondaryMuscleGroup ?? null,
-        }),
+        name: input.name,
+        description: input.description,
+        imageId: input.imageId,
+        type: input.type,
+        primaryMuscleGroup: input.primaryMuscleGroup,
+        secondaryMuscleGroup: input.secondaryMuscleGroup,
       })
-      .where(eq(schema.exercises.id, id));
-    return this.findById(id);
+      .where(and(eq(schema.exercises.id, id), eq(schema.exercises.userId, userId)));
+
+    return this.findByIdForUser(id, userId);
   }
 
-  async delete(id: number): Promise<void> {
-    await this.db.delete(schema.exercises).where(eq(schema.exercises.id, id));
+  async deleteForUser(id: number, userId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.exercises)
+      .where(and(eq(schema.exercises.id, id), eq(schema.exercises.userId, userId)));
+    return getAffectedRows(result) > 0;
   }
+}
 
-  async existsById(id: number): Promise<boolean> {
-    const rows = await this.db
-      .select({ id: schema.exercises.id })
-      .from(schema.exercises)
-      .where(eq(schema.exercises.id, id))
-      .limit(1);
-    return rows.length > 0;
-  }
+function mapRow(row: typeof schema.exercises.$inferSelect): Exercise {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    imageId: row.imageId,
+    type: row.type,
+    primaryMuscleGroup: row.primaryMuscleGroup,
+    secondaryMuscleGroup: row.secondaryMuscleGroup,
+    userId: row.userId,
+  };
+}
 
-  private mapRow(row: typeof schema.exercises.$inferSelect): Exercise {
-    return {
-      id: row.id,
-      name: row.name,
-      description: row.description ?? null,
-      imageId: row.imageId ?? null,
-      type: row.type as EExerciseType,
-      primaryMuscleGroup: row.primaryMuscleGroup as EMuscleGroup,
-      secondaryMuscleGroup: (row.secondaryMuscleGroup as EMuscleGroup) ?? null,
-      userId: row.userId,
-    };
+function getAffectedRows(result: unknown): number {
+  if (Array.isArray(result)) {
+    const [header] = result;
+    return getAffectedRows(header);
   }
+  const header = result as Partial<ResultSetHeader>;
+  return typeof header.affectedRows === 'number' ? header.affectedRows : 0;
 }

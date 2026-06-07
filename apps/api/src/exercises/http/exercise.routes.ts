@@ -1,186 +1,162 @@
 import {
   CreateExerciseRequestSchema,
+  ErrorResponseSchema,
   ExerciseResponseSchema,
+  IdParamSchema,
   UpdateExerciseRequestSchema,
 } from '@gymnotebook/contracts';
 import type { FastifyInstance } from 'fastify';
+import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { ForbiddenError, ResourceNotFoundError } from '../../shared/errors.js';
+import { isForeignKeyConstraintError } from '../../shared/persistence-errors.js';
+import { createExercise } from '../application/create-exercise.js';
+import { deleteExercise } from '../application/delete-exercise.js';
+import { getExercise } from '../application/get-exercise.js';
+import { listExercises } from '../application/list-exercises.js';
+import { updateExercise } from '../application/update-exercise.js';
 import { DrizzleExerciseRepository } from '../infrastructure/drizzle-exercise.repository.js';
-
-const ExerciseIdParam = z.object({ id: z.coerce.number().int().positive() });
+import { DrizzleExerciseImageAccess } from '../infrastructure/drizzle-exercise-image-access.js';
+import { toExerciseResponse } from './exercise.mapper.js';
 
 export async function exerciseRoutes(fastify: FastifyInstance) {
-  // GET /api/exercise
-  fastify.get(
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
+  const exerciseRepository = new DrizzleExerciseRepository(fastify.db);
+  const imageAccess = new DrizzleExerciseImageAccess(fastify.db);
+
+  app.get(
     '/',
     {
       preHandler: [fastify.authenticate],
       schema: {
-        response: { 200: z.array(ExerciseResponseSchema) },
+        tags: ['exercises'],
+        summary: 'List exercises',
+        description: 'Lists exercises owned by the authenticated user.',
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: z.array(ExerciseResponseSchema),
+          401: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user;
-      const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
-
-      // Get user id from token - we need the numeric id
-      const { DrizzleUserRepository } = await import(
-        '../../users/infrastructure/drizzle-user.repository.js'
-      );
-      const userRepo = new DrizzleUserRepository(fastify.db);
-      const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) throw new ResourceNotFoundError('User not found');
-
-      const exercises = await exerciseRepo.findByUserId(user.id);
-      return reply.send(exercises);
+      const exercises = await listExercises({ userId: request.user.userId }, exerciseRepository);
+      return reply.send(exercises.map(toExerciseResponse));
     },
   );
 
-  // GET /api/exercise/:id
-  fastify.get(
+  app.get(
     '/:id',
     {
       preHandler: [fastify.authenticate],
       schema: {
-        params: ExerciseIdParam,
-        response: { 200: ExerciseResponseSchema },
+        tags: ['exercises'],
+        summary: 'Get exercise',
+        description: 'Returns one exercise owned by the authenticated user.',
+        security: [{ bearerAuth: [] }],
+        params: IdParamSchema,
+        response: {
+          200: ExerciseResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
-      const { id } = request.params as { id: number };
-      const jwtUser = request.user;
-      const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
-
-      const exists = await exerciseRepo.existsById(id);
-      if (!exists) throw new ResourceNotFoundError('Exercise not found');
-
-      const { DrizzleUserRepository } = await import(
-        '../../users/infrastructure/drizzle-user.repository.js'
+      const exercise = await getExercise(
+        { id: request.params.id, userId: request.user.userId },
+        exerciseRepository,
       );
-      const userRepo = new DrizzleUserRepository(fastify.db);
-      const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) throw new ResourceNotFoundError('User not found');
-
-      const exercise = await exerciseRepo.findById(id);
-      if (!exercise) throw new ResourceNotFoundError('Exercise not found');
-
-      if (exercise.userId !== user.id) {
-        throw new ForbiddenError('Insufficient permissions');
-      }
-
-      return reply.send(exercise);
+      return reply.send(toExerciseResponse(exercise));
     },
   );
 
-  // POST /api/exercise
-  fastify.post(
+  app.post(
     '/',
     {
       preHandler: [fastify.authenticate],
       schema: {
+        tags: ['exercises'],
+        summary: 'Create exercise',
+        description: 'Creates an exercise for the authenticated user.',
+        security: [{ bearerAuth: [] }],
         body: CreateExerciseRequestSchema,
+        response: {
+          201: ExerciseResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
-      const jwtUser = request.user;
-      const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
-      const body = request.body as z.infer<typeof CreateExerciseRequestSchema>;
-
-      const { DrizzleUserRepository } = await import(
-        '../../users/infrastructure/drizzle-user.repository.js'
+      const exercise = await createExercise(
+        { ...request.body, userId: request.user.userId },
+        { exercises: exerciseRepository, imageAccess },
       );
-      const userRepo = new DrizzleUserRepository(fastify.db);
-      const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) throw new ResourceNotFoundError('User not found');
-
-      await exerciseRepo.create({
-        name: body.name,
-        description: body.description,
-        imageId: body.imageId,
-        type: body.type,
-        primaryMuscleGroup: body.primaryMuscleGroup,
-        secondaryMuscleGroup: body.secondaryMuscleGroup,
-        userId: user.id,
-      });
-
-      return reply.status(201).send();
+      return reply.status(201).send(toExerciseResponse(exercise));
     },
   );
 
-  // PUT /api/exercise/:id
-  fastify.put(
+  app.put(
     '/:id',
     {
       preHandler: [fastify.authenticate],
       schema: {
-        params: ExerciseIdParam,
+        tags: ['exercises'],
+        summary: 'Update exercise',
+        description: 'Updates an exercise owned by the authenticated user.',
+        security: [{ bearerAuth: [] }],
+        params: IdParamSchema,
         body: UpdateExerciseRequestSchema,
+        response: {
+          200: ExerciseResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
-      const { id } = request.params as { id: number };
-      const jwtUser = request.user;
-      const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
-      const body = request.body as z.infer<typeof UpdateExerciseRequestSchema>;
-
-      const { DrizzleUserRepository } = await import(
-        '../../users/infrastructure/drizzle-user.repository.js'
+      const exercise = await updateExercise(
+        { ...request.body, id: request.params.id, userId: request.user.userId },
+        { exercises: exerciseRepository, imageAccess },
       );
-      const userRepo = new DrizzleUserRepository(fastify.db);
-      const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) throw new ResourceNotFoundError('User not found');
-
-      const exercise = await exerciseRepo.findById(id);
-      if (!exercise) throw new ResourceNotFoundError('Exercise not found');
-
-      if (exercise.userId !== user.id) {
-        throw new ForbiddenError('Insufficient permissions');
-      }
-
-      await exerciseRepo.update(id, {
-        name: body.name,
-        description: body.description,
-        imageId: body.imageId,
-        type: body.type,
-        primaryMuscleGroup: body.primaryMuscleGroup,
-        secondaryMuscleGroup: body.secondaryMuscleGroup,
-      });
-
-      return reply.status(201).send();
+      return reply.send(toExerciseResponse(exercise));
     },
   );
 
-  // DELETE /api/exercise/:id
-  fastify.delete(
+  app.delete(
     '/:id',
     {
       preHandler: [fastify.authenticate],
       schema: {
-        params: ExerciseIdParam,
+        tags: ['exercises'],
+        summary: 'Delete exercise',
+        description:
+          'Deletes an exercise owned by the authenticated user unless workout history references it.',
+        security: [{ bearerAuth: [] }],
+        params: IdParamSchema,
+        response: {
+          204: z.null(),
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+          409: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
-      const { id } = request.params as { id: number };
-      const jwtUser = request.user;
-      const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
-
-      const { DrizzleUserRepository } = await import(
-        '../../users/infrastructure/drizzle-user.repository.js'
+      await deleteExercise(
+        { id: request.params.id, userId: request.user.userId },
+        {
+          exercises: exerciseRepository,
+          isExerciseInUseError: (error) =>
+            isForeignKeyConstraintError(error, [
+              'workout_sets_exercise_id_exercises_id_fk',
+              'exercise_id',
+            ]),
+        },
       );
-      const userRepo = new DrizzleUserRepository(fastify.db);
-      const user = await userRepo.findByUsername(jwtUser.sub);
-      if (!user) throw new ResourceNotFoundError('User not found');
-
-      const exercise = await exerciseRepo.findById(id);
-      if (!exercise) throw new ResourceNotFoundError('Exercise not found');
-
-      if (exercise.userId !== user.id) {
-        throw new ForbiddenError('Insufficient permissions');
-      }
-
-      await exerciseRepo.delete(id);
-      return reply.status(204).send();
+      return reply.status(204).send(null);
     },
   );
 }

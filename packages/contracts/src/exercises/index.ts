@@ -32,26 +32,43 @@ export const EMuscleGroupSchema = z.enum([
 ]);
 export type EMuscleGroup = z.infer<typeof EMuscleGroupSchema>;
 
-export const CreateExerciseRequestSchema = z.object({
-  name: z.string().min(1).max(200),
-  imageId: z.number().int().positive().optional().nullable(),
-  description: z.string().max(500).optional().nullable(),
-  type: EExerciseTypeSchema,
-  primaryMuscleGroup: EMuscleGroupSchema,
-  secondaryMuscleGroup: EMuscleGroupSchema.optional().nullable(),
-});
+const ExerciseRequestBaseSchema = z
+  .strictObject({
+    name: z.string().trim().min(1).max(200),
+    imageId: z.number().int().positive().optional().nullable(),
+    description: z
+      .string()
+      .trim()
+      .max(500)
+      .transform((value) => (value.length === 0 ? null : value))
+      .optional()
+      .nullable(),
+    type: EExerciseTypeSchema,
+    primaryMuscleGroup: EMuscleGroupSchema,
+    secondaryMuscleGroup: EMuscleGroupSchema.optional().nullable(),
+  })
+  .refine(
+    (value) =>
+      value.secondaryMuscleGroup == null || value.secondaryMuscleGroup !== value.primaryMuscleGroup,
+    {
+      path: ['secondaryMuscleGroup'],
+      message: 'Secondary muscle group must differ from primary muscle group',
+    },
+  );
+
+export const CreateExerciseRequestSchema = ExerciseRequestBaseSchema;
 export type CreateExerciseRequest = z.infer<typeof CreateExerciseRequestSchema>;
 
-export const UpdateExerciseRequestSchema = CreateExerciseRequestSchema;
+export const UpdateExerciseRequestSchema = ExerciseRequestBaseSchema;
 export type UpdateExerciseRequest = z.infer<typeof UpdateExerciseRequestSchema>;
 
 export const ExerciseResponseSchema = z.object({
   id: z.number().int(),
   name: z.string(),
   description: z.string().nullable().optional(),
-  imageId: z.number().int().nullable().optional(),
+  imageId: z.number().int().positive().optional().nullable(),
   type: EExerciseTypeSchema,
   primaryMuscleGroup: EMuscleGroupSchema,
-  secondaryMuscleGroup: EMuscleGroupSchema.nullable().optional(),
+  secondaryMuscleGroup: EMuscleGroupSchema.optional().nullable(),
 });
 export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>;

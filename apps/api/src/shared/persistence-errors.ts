@@ -7,7 +7,9 @@ interface MySqlErrorShape {
 }
 
 export function isUniqueConstraintError(error: unknown, markers: readonly string[]): boolean {
-  const mysqlError = findMySqlError(error);
+  const mysqlError = findMySqlError(error, (candidate) => {
+    return candidate.code === 'ER_DUP_ENTRY' || candidate.errno === 1062;
+  });
   if (!mysqlError) {
     return false;
   }
@@ -21,15 +23,35 @@ export function isUniqueConstraintError(error: unknown, markers: readonly string
   return markers.some((marker) => text.includes(marker));
 }
 
-function findMySqlError(error: unknown): MySqlErrorShape | undefined {
+export function isForeignKeyConstraintError(error: unknown, markers: readonly string[]): boolean {
+  const mysqlError = findMySqlError(error, (candidate) => {
+    return (
+      candidate.code === 'ER_ROW_IS_REFERENCED_2' ||
+      candidate.code === 'ER_NO_REFERENCED_ROW_2' ||
+      candidate.errno === 1451 ||
+      candidate.errno === 1452
+    );
+  });
+  if (!mysqlError) {
+    return false;
+  }
+
+  const text = `${stringValue(mysqlError.sqlMessage)} ${stringValue(mysqlError.message)}`;
+  return markers.some((marker) => text.includes(marker));
+}
+
+function findMySqlError(
+  error: unknown,
+  predicate: (candidate: MySqlErrorShape) => boolean,
+): MySqlErrorShape | undefined {
   if (typeof error !== 'object' || error === null) {
     return undefined;
   }
   const candidate = error as MySqlErrorShape;
-  if (candidate.code === 'ER_DUP_ENTRY' || candidate.errno === 1062) {
+  if (predicate(candidate)) {
     return candidate;
   }
-  return findMySqlError(candidate.cause);
+  return findMySqlError(candidate.cause, predicate);
 }
 
 function stringValue(value: unknown): string {

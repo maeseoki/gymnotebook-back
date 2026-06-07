@@ -17,6 +17,9 @@ export async function healthRoutes(fastify: FastifyInstance) {
           200: HealthResponseSchema,
         },
       },
+      config: {
+        rateLimit: false,
+      },
     },
     async (_request, reply) => {
       return reply.send({
@@ -34,6 +37,9 @@ export async function healthRoutes(fastify: FastifyInstance) {
           200: HealthResponseSchema,
           503: ErrorResponseSchema,
         },
+      },
+      config: {
+        rateLimit: false,
       },
     },
     async (_request, reply) => {

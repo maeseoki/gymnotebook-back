@@ -135,6 +135,14 @@ Role rules:
 
 Auth/user compatibility details are documented in `docs/migrations/auth-users-compatibility.md`.
 
+## Exercises
+
+Exercise endpoints use the JWT `userId` for ownership. Missing and foreign-owned exercises both return `404 exercise_not_found` to avoid resource-existence leaks. Exercise lists are ordered by name and then ID.
+
+New exercise image assignments require the image to have `image_data.user_id` matching the authenticated user. Legacy unresolved images with `user_id = NULL` can still be read through existing exercise references, but cannot be newly assigned until ownership is resolved.
+
+Exercise updates return `200` with the updated exercise. Deletes return `204`, or `409 exercise_in_use` when workout history still references the exercise. Compatibility details are documented in `docs/migrations/exercises-compatibility.md`.
+
 Relevant tests:
 
 ```bash
