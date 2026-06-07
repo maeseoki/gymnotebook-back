@@ -1,5 +1,5 @@
+import type { JwtResponse, LoginRequest } from '@gymnotebook/contracts';
 import * as argon2 from 'argon2';
-import type { LoginRequest, JwtResponse } from '@gymnotebook/contracts';
 import type { UserRepository } from '../../users/domain/user.repository.js';
 import { InvalidCredentialsError } from '../domain/auth.errors.js';
 

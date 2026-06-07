@@ -65,9 +65,12 @@ export const exercises = mysqlTable(
   {
     id: bigint('id', { mode: 'number', unsigned: false }).primaryKey().autoincrement(),
     name: varchar('name', { length: 200 }).notNull(),
-    imageId: bigint('image_id', { mode: 'number', unsigned: false }).references(() => imageData.id, {
-      onDelete: 'set null',
-    }),
+    imageId: bigint('image_id', { mode: 'number', unsigned: false }).references(
+      () => imageData.id,
+      {
+        onDelete: 'set null',
+      },
+    ),
     description: varchar('description', { length: 500 }),
     type: mysqlEnum('type', [
       'WEIGHT',

@@ -2,7 +2,11 @@ import type { EExerciseType, EMuscleGroup } from '@gymnotebook/contracts';
 import { and, eq } from 'drizzle-orm';
 import type { MySql2Database } from 'drizzle-orm/mysql2';
 import * as schema from '../../../drizzle/schema.js';
-import type { CreateExerciseInput, Exercise, ExerciseRepository } from '../domain/exercise.repository.js';
+import type {
+  CreateExerciseInput,
+  Exercise,
+  ExerciseRepository,
+} from '../domain/exercise.repository.js';
 
 type DB = MySql2Database<typeof schema>;
 
@@ -10,12 +14,19 @@ export class DrizzleExerciseRepository implements ExerciseRepository {
   constructor(private readonly db: DB) {}
 
   async findByUserId(userId: number): Promise<Exercise[]> {
-    const rows = await this.db.select().from(schema.exercises).where(eq(schema.exercises.userId, userId));
+    const rows = await this.db
+      .select()
+      .from(schema.exercises)
+      .where(eq(schema.exercises.userId, userId));
     return rows.map(this.mapRow);
   }
 
   async findById(id: number): Promise<Exercise | null> {
-    const rows = await this.db.select().from(schema.exercises).where(eq(schema.exercises.id, id)).limit(1);
+    const rows = await this.db
+      .select()
+      .from(schema.exercises)
+      .where(eq(schema.exercises.id, id))
+      .limit(1);
     return rows[0] ? this.mapRow(rows[0]) : null;
   }
 

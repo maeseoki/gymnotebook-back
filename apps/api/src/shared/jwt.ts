@@ -5,7 +5,9 @@ import fp from 'fastify-plugin';
 declare module 'fastify' {
   interface FastifyInstance {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-    requireRole: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireRole: (
+      roles: string[],
+    ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 
@@ -25,7 +27,7 @@ export const jwtAuthPlugin = fp(
       },
     });
 
-    fastify.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
+    fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
       try {
         await request.jwtVerify();
       } catch (err) {
@@ -38,8 +40,9 @@ export const jwtAuthPlugin = fp(
       }
     });
 
-    fastify.decorate('requireRole', function (roles: string[]) {
-      return async function (request: FastifyRequest, reply: FastifyReply) {
+    fastify.decorate(
+      'requireRole',
+      (roles: string[]) => async (request: FastifyRequest, reply: FastifyReply) => {
         const user = request.user as { sub: string; roles: string[] };
         const hasRole = roles.some((role) => user.roles?.includes(role));
         if (!hasRole) {
@@ -50,8 +53,8 @@ export const jwtAuthPlugin = fp(
             path: request.url,
           });
         }
-      };
-    });
+      },
+    );
   },
   { name: 'jwt-auth', dependencies: ['config'] },
 );

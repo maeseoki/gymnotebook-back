@@ -1,6 +1,6 @@
-import fp from 'fastify-plugin';
 import type { FastifyInstance } from 'fastify';
-import { parseEnv, type Env } from './env.js';
+import fp from 'fastify-plugin';
+import { type Env, parseEnv } from './env.js';
 
 declare module 'fastify' {
   interface FastifyInstance {

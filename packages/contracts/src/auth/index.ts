@@ -7,7 +7,11 @@ export const LoginRequestSchema = z.object({
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 
 export const SignupRequestSchema = z.object({
-  username: z.string().min(3).max(20).regex(/^[a-zA-Z0-9]+$/, 'Username must be alphanumeric'),
+  username: z
+    .string()
+    .min(3)
+    .max(20)
+    .regex(/^[a-zA-Z0-9]+$/, 'Username must be alphanumeric'),
   email: z.string().email().max(50),
   password: z.string().min(6).max(40),
 });

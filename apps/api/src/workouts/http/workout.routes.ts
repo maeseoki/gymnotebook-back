@@ -143,7 +143,11 @@ export async function workoutRoutes(fastify: FastifyInstance) {
         .where(
           and(
             eq(schema.workouts.userId, user.id),
-            between(schema.workouts.startDate, toLocalDatetime(startOfDay), toLocalDatetime(endOfDay)),
+            between(
+              schema.workouts.startDate,
+              toLocalDatetime(startOfDay),
+              toLocalDatetime(endOfDay),
+            ),
           ),
         );
 
@@ -162,7 +166,10 @@ export async function workoutRoutes(fastify: FastifyInstance) {
             .where(eq(schema.exercises.id, ws.exerciseId))
             .limit(1);
 
-          const setRows = await fastify.db.select().from(schema.sets).where(eq(schema.sets.workoutSetId, ws.id));
+          const setRows = await fastify.db
+            .select()
+            .from(schema.sets)
+            .where(eq(schema.sets.workoutSetId, ws.id));
 
           workoutSetsResult.push({
             id: ws.id,

@@ -14,7 +14,11 @@ export async function imageRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       const { id } = request.params as { id: number };
-      const rows = await fastify.db.select().from(schema.imageData).where(eq(schema.imageData.id, id)).limit(1);
+      const rows = await fastify.db
+        .select()
+        .from(schema.imageData)
+        .where(eq(schema.imageData.id, id))
+        .limit(1);
 
       if (rows.length === 0) {
         return reply.status(404).send({ message: 'Image not found' });

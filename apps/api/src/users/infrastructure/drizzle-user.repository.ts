@@ -99,7 +99,9 @@ export class DrizzleUserRepository implements UserRepository {
     const userId = insertId;
 
     if (input.roleIds.length > 0) {
-      await this.db.insert(schema.userRoles).values(input.roleIds.map((roleId) => ({ userId, roleId })));
+      await this.db
+        .insert(schema.userRoles)
+        .values(input.roleIds.map((roleId) => ({ userId, roleId })));
     }
 
     const user = await this.findById(userId);

@@ -34,7 +34,9 @@ export async function workoutHistoryRoutes(fastify: FastifyInstance) {
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
       const exercise = await exerciseRepo.findByIdAndUserId(exerciseId, user.id);
       if (!exercise) {
-        return (reply as any).status(404).send({ message: 'Exercise not found or not owned by user' });
+        return (reply as any)
+          .status(404)
+          .send({ message: 'Exercise not found or not owned by user' });
       }
 
       // Count total
@@ -55,7 +57,10 @@ export async function workoutHistoryRoutes(fastify: FastifyInstance) {
 
       const content = [];
       for (const ws of workoutSetRows) {
-        const setRows = await fastify.db.select().from(schema.sets).where(eq(schema.sets.workoutSetId, ws.id));
+        const setRows = await fastify.db
+          .select()
+          .from(schema.sets)
+          .where(eq(schema.sets.workoutSetId, ws.id));
 
         content.push({
           id: ws.id,

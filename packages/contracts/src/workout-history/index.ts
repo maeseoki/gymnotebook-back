@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { WorkoutSetResponseSchema } from '../workouts/index.js';
 import { PaginationQuerySchema } from '../common/index.js';
+import { WorkoutSetResponseSchema } from '../workouts/index.js';
 
 export const WorkoutHistoryQuerySchema = PaginationQuerySchema;
 export type WorkoutHistoryQuery = z.infer<typeof WorkoutHistoryQuerySchema>;

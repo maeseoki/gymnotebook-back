@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/mysql2';
-import mysql from 'mysql2/promise';
-import fp from 'fastify-plugin';
 import type { FastifyInstance } from 'fastify';
+import fp from 'fastify-plugin';
+import mysql from 'mysql2/promise';
 import * as schema from '../../drizzle/schema.js';
 
 // Use ReturnType to capture the exact type drizzle() returns to avoid Pool dual-type conflict
@@ -27,8 +27,7 @@ export const dbPlugin = fp(
     });
 
     const db = drizzle(pool, { schema, mode: 'default' });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    fastify.decorate('db', db as any);
+    fastify.decorate('db', db as unknown as Database);
 
     fastify.addHook('onClose', async () => {
       await pool.end();

@@ -1,12 +1,14 @@
 import {
   JwtResponseSchema,
+  type LoginRequest,
   LoginRequestSchema,
   MessageResponseSchema,
-  SignupRequestSchema,
-  type LoginRequest,
   type SignupRequest,
+  SignupRequestSchema,
 } from '@gymnotebook/contracts';
 import type { FastifyInstance } from 'fastify';
+import { DrizzleRoleRepository } from '../../users/infrastructure/drizzle-role.repository.js';
+import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
 import { signIn } from '../application/signin.js';
 import { signUp } from '../application/signup.js';
 import {
@@ -14,8 +16,6 @@ import {
   DuplicateUsernameError,
   InvalidCredentialsError,
 } from '../domain/auth.errors.js';
-import { DrizzleRoleRepository } from '../../users/infrastructure/drizzle-role.repository.js';
-import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
   fastify.post(
@@ -35,7 +35,10 @@ export async function authRoutes(fastify: FastifyInstance) {
         fastify.jwt.sign({ sub: payload.sub, roles: payload.roles });
 
       try {
-        const result = await signIn(request.body as LoginRequest, { userRepository, generateToken });
+        const result = await signIn(request.body as LoginRequest, {
+          userRepository,
+          generateToken,
+        });
         return reply.send(result);
       } catch (err) {
         if (err instanceof InvalidCredentialsError) {
@@ -61,7 +64,10 @@ export async function authRoutes(fastify: FastifyInstance) {
       const roleRepository = new DrizzleRoleRepository(fastify.db);
 
       try {
-        const result = await signUp(request.body as SignupRequest, { userRepository, roleRepository });
+        const result = await signUp(request.body as SignupRequest, {
+          userRepository,
+          roleRepository,
+        });
         return reply
           .code(201)
           .header('Location', `/api/users/${result.username}`)

@@ -8,9 +8,9 @@ import {
 import type { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { ResourceNotFoundError } from '../../shared/errors.js';
 import { DrizzleRoleRepository } from '../infrastructure/drizzle-role.repository.js';
 import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js';
-import { ResourceNotFoundError } from '../../shared/errors.js';
 
 export async function userRoutes(fastify: FastifyInstance) {
   fastify.setValidatorCompiler(validatorCompiler);
@@ -72,7 +72,10 @@ export async function userRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/me',
     {
-      preHandler: [fastify.authenticate, fastify.requireRole(['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN'])],
+      preHandler: [
+        fastify.authenticate,
+        fastify.requireRole(['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN']),
+      ],
       schema: {
         response: {
           200: MeResponseSchema,

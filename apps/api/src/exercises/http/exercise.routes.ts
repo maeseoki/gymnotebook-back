@@ -6,8 +6,8 @@ import {
 import type { FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { z } from 'zod';
-import { DrizzleExerciseRepository } from '../infrastructure/drizzle-exercise.repository.js';
 import { ResourceNotFoundError, UnauthorizedError } from '../../shared/errors.js';
+import { DrizzleExerciseRepository } from '../infrastructure/drizzle-exercise.repository.js';
 
 const ExerciseIdParam = z.object({ id: z.coerce.number().int().positive() });
 
@@ -29,7 +29,9 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
 
       // Get user id from token - we need the numeric id
-      const { DrizzleUserRepository } = await import('../../users/infrastructure/drizzle-user.repository.js');
+      const { DrizzleUserRepository } = await import(
+        '../../users/infrastructure/drizzle-user.repository.js'
+      );
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
       if (!user) return (reply as any).status(404).send({ message: 'User not found' });
@@ -57,7 +59,9 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exists = await exerciseRepo.existsById(id);
       if (!exists) return (reply as any).status(404).send({ message: 'Exercise not found' });
 
-      const { DrizzleUserRepository } = await import('../../users/infrastructure/drizzle-user.repository.js');
+      const { DrizzleUserRepository } = await import(
+        '../../users/infrastructure/drizzle-user.repository.js'
+      );
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
       if (!user) return (reply as any).status(404).send({ message: 'User not found' });
@@ -87,7 +91,9 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
       const body = request.body as z.infer<typeof CreateExerciseRequestSchema>;
 
-      const { DrizzleUserRepository } = await import('../../users/infrastructure/drizzle-user.repository.js');
+      const { DrizzleUserRepository } = await import(
+        '../../users/infrastructure/drizzle-user.repository.js'
+      );
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
       if (!user) return (reply as any).status(404).send({ message: 'User not found' });
@@ -122,7 +128,9 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
       const body = request.body as z.infer<typeof UpdateExerciseRequestSchema>;
 
-      const { DrizzleUserRepository } = await import('../../users/infrastructure/drizzle-user.repository.js');
+      const { DrizzleUserRepository } = await import(
+        '../../users/infrastructure/drizzle-user.repository.js'
+      );
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
       if (!user) return (reply as any).status(404).send({ message: 'User not found' });
@@ -161,7 +169,9 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const jwtUser = request.user as { sub: string };
       const exerciseRepo = new DrizzleExerciseRepository(fastify.db);
 
-      const { DrizzleUserRepository } = await import('../../users/infrastructure/drizzle-user.repository.js');
+      const { DrizzleUserRepository } = await import(
+        '../../users/infrastructure/drizzle-user.repository.js'
+      );
       const userRepo = new DrizzleUserRepository(fastify.db);
       const user = await userRepo.findByUsername(jwtUser.sub);
       if (!user) return (reply as any).status(404).send({ message: 'User not found' });

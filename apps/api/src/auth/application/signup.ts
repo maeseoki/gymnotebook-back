@@ -1,8 +1,8 @@
-import * as argon2 from 'argon2';
 import type { SignupRequest } from '@gymnotebook/contracts';
-import type { UserRepository } from '../../users/domain/user.repository.js';
+import * as argon2 from 'argon2';
 import type { RoleRepository } from '../../users/domain/role.repository.js';
-import { DuplicateUsernameError, DuplicateEmailError } from '../domain/auth.errors.js';
+import type { UserRepository } from '../../users/domain/user.repository.js';
+import { DuplicateEmailError, DuplicateUsernameError } from '../domain/auth.errors.js';
 
 export interface SignUpDeps {
   userRepository: UserRepository;
