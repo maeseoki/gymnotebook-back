@@ -143,6 +143,30 @@ New exercise image assignments require the image to have `image_data.user_id` ma
 
 Exercise updates return `200` with the updated exercise. Deletes return `204`, or `409 exercise_in_use` when workout history still references the exercise. Compatibility details are documented in `docs/migrations/exercises-compatibility.md`.
 
+## Images
+
+Images remain database-backed in `image_data` for Spring compatibility. Uploads use multipart field `image`, require authentication, buffer within `MAX_UPLOAD_SIZE`, detect the binary signature with `file-type`, and store the authenticated JWT `userId` as owner.
+
+Supported upload formats are:
+
+- `image/jpeg`
+- `image/png`
+- `image/webp`
+
+GIF and SVG uploads are rejected. GIF is deferred because animated image handling is not required yet, and SVG is excluded because it is text/XML that can contain active content. Client-provided MIME type and filename extension are not trusted; when a declared image MIME type is present and does not match detected content, the upload returns `415 image_type_mismatch`.
+
+`POST /api/image` now returns a typed JSON body:
+
+```json
+{ "id": 123 }
+```
+
+`GET /api/image/:id` remains public for frontend compatibility. It returns binary bytes with the stored `Content-Type`, `Content-Length`, `X-Content-Type-Options: nosniff`, `Content-Disposition: inline`, and `Cache-Control: public, max-age=86400`. The cache is deliberately one day rather than immutable because records are not modeled as content-addressed immutable objects.
+
+`DELETE /api/image/:id` requires ownership. Missing, foreign-owned, and unresolved legacy rows with `user_id = NULL` all return `404 image_not_found`. Referenced owned images return `409 image_in_use`; the API does not silently null exercise image references.
+
+Image compatibility details are documented in `docs/migrations/images-compatibility.md`.
+
 Relevant tests:
 
 ```bash

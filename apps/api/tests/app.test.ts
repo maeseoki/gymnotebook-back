@@ -230,7 +230,7 @@ describe('Fastify foundation', () => {
     });
     const payload = [
       `--${boundary}`,
-      'Content-Disposition: form-data; name="file"; filename="image.png"',
+      'Content-Disposition: form-data; name="image"; filename="image.png"',
       'Content-Type: image/png',
       '',
       'this-payload-is-too-large',
