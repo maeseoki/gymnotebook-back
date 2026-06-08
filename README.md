@@ -167,6 +167,29 @@ GIF and SVG uploads are rejected. GIF is deferred because animated image handlin
 
 Image compatibility details are documented in `docs/migrations/images-compatibility.md`.
 
+## Workouts And History
+
+Workout creation is atomic. The API validates the client-supplied synchronization UUID, verifies every referenced exercise belongs to the authenticated JWT `userId`, inserts the workout, workout groups and individual sets in one transaction, and maps duplicate UUID races to `409 workout_already_exists`.
+
+Workout timestamps must be ISO 8601 instants with an explicit offset or `Z`. The API converts incoming instants to UTC and stores UTC wall-clock values in MySQL `DATETIME`; responses serialize those values as UTC ISO strings with `Z`. Existing legacy `DATETIME` rows may have been written as server-local wall-clock values, so they require an audit before being treated as UTC.
+
+Calendar queries use an explicit IANA timezone:
+
+- `GET /api/workout/days/:month/:year?timezone=Europe/Madrid`
+- `GET /api/workout/workouts/:date?timezone=Europe/Madrid`
+
+If `timezone` is omitted, `DEFAULT_TIMEZONE` is used. The default local configuration is `Europe/Madrid`; production can override it.
+
+Workout history uses bounded pagination:
+
+```text
+page=0&pageSize=20&sortBy=startDate&sortDirection=desc
+```
+
+Allowed sort fields are `startDate`, `endDate` and `id`. Fractional weight and distance values remain unsupported because the legacy schema stores integer measurements.
+
+Workout compatibility details are documented in `docs/migrations/workouts-history-compatibility.md`.
+
 Relevant tests:
 
 ```bash

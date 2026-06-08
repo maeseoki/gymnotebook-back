@@ -22,6 +22,7 @@ const envSchema = z
     AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().optional(),
     AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().optional(),
     SWAGGER_ENABLED: z.enum(['true', 'false']).optional(),
+    DEFAULT_TIMEZONE: z.string().optional(),
   })
   .superRefine((raw, ctx) => {
     if (raw.NODE_ENV !== 'production') {
@@ -88,6 +89,7 @@ const envSchema = z
       AUTH_RATE_LIMIT_MAX: raw.AUTH_RATE_LIMIT_MAX ?? 10,
       AUTH_RATE_LIMIT_WINDOW_MS: raw.AUTH_RATE_LIMIT_WINDOW_MS ?? 60000,
       SWAGGER_ENABLED: raw.SWAGGER_ENABLED ? raw.SWAGGER_ENABLED === 'true' : !isProduction,
+      DEFAULT_TIMEZONE: raw.DEFAULT_TIMEZONE ?? 'Europe/Madrid',
     };
   });
 

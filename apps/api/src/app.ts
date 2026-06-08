@@ -133,6 +133,7 @@ export function createTestConfig(overrides: Partial<Env> = {}): Env {
     AUTH_RATE_LIMIT_MAX: 1000,
     AUTH_RATE_LIMIT_WINDOW_MS: 60000,
     SWAGGER_ENABLED: true,
+    DEFAULT_TIMEZONE: 'Europe/Madrid',
     ...overrides,
   };
 }
