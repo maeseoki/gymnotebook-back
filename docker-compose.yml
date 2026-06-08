@@ -41,6 +41,7 @@ services:
       AUTH_RATE_LIMIT_MAX: 10
       AUTH_RATE_LIMIT_WINDOW_MS: 60000
       SWAGGER_ENABLED: 'true'
+      DEFAULT_TIMEZONE: Europe/Madrid
     depends_on:
       db:
         condition: service_healthy
@@ -66,6 +67,7 @@ services:
       DB_PASSWORD: gymnotebook
       JWT_SECRET: local-docker-jwt-secret-change-before-production
       CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      DEFAULT_TIMEZONE: Europe/Madrid
     depends_on:
       db:
         condition: service_healthy
