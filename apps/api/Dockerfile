@@ -33,4 +33,5 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 COPY --from=builder /app/apps/api/drizzle ./apps/api/drizzle
 EXPOSE 8080
+USER node
 CMD ["node", "apps/api/dist/src/server.js"]

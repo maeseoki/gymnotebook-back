@@ -1,5 +1,32 @@
 # gymnotebook-back
 
+GymNotebook backend rewritten from the legacy Spring Boot service to a Fastify monorepo. The Java backend is retained under `legacy/backend-java` only as a read-only migration reference.
+
+## Stack
+
+- Node.js 24
+- TypeScript 6
+- native ESM
+- pnpm workspaces
+- Turborepo
+- Fastify 5
+- Zod 4
+- Drizzle ORM for MySQL
+- Vitest 4
+- Biome 2
+
+## Repository Structure
+
+```text
+apps/api                 Fastify API, Drizzle schema, scripts and tests
+packages/contracts       Shared Zod API contracts
+packages/typescript-config
+docs/migrations          Compatibility and migration documentation
+legacy/backend-java      Read-only Spring Boot migration reference
+```
+
+The API follows feature-oriented architecture. HTTP modules declare routes/schemas/hooks and call application use cases. Business rules live in application/domain modules; Drizzle access lives in infrastructure modules.
+
 ## Toolchain
 
 - Node.js 24
@@ -52,6 +79,7 @@ The API validates configuration with Zod at startup and fails fast when required
 | `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS` | Global rate limit. |
 | `AUTH_RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_WINDOW_MS` | Stricter signin/signup rate limit. |
 | `SWAGGER_ENABLED` | `true` exposes Swagger UI and JSON at `/docs`; `false` disables them. |
+| `DEFAULT_TIMEZONE` | IANA timezone used by workout calendar queries when clients omit `timezone`. |
 
 Requests without an `Origin` header are allowed for server-to-server calls. Browser origins must match `CORS_ORIGINS`; the API never falls back to wildcard CORS in production.
 
@@ -86,6 +114,12 @@ pnpm db:studio
 
 Do not use `drizzle-kit push` for production.
 
+## OpenAPI
+
+When `SWAGGER_ENABLED=true`, Swagger UI and JSON are available under `/docs`. Production can disable both with `SWAGGER_ENABLED=false`.
+
+The OpenAPI document is generated from the registered Fastify/Zod schemas. Binary image retrieval and multipart upload are documented explicitly, and protected routes declare Bearer JWT security.
+
 ## Tests
 
 ```bash
@@ -95,6 +129,26 @@ pnpm test:coverage
 ```
 
 `pnpm test` runs unit/Fastify inject tests. `pnpm test:integration` starts MySQL through Testcontainers and requires Docker.
+
+Coverage thresholds are non-zero and intentionally realistic for the current architecture. API coverage requires at least 50% statements/lines and 40% branches/functions; contracts require at least 90% statements/branches/lines and 75% functions.
+
+## CI
+
+GitHub Actions runs on pull requests and relevant pushes with Node 24 and pinned Corepack pnpm:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:integration
+pnpm test:coverage
+pnpm build
+pnpm check
+docker build -f apps/api/Dockerfile .
+```
+
+The workflow requires Docker for Testcontainers and does not deploy.
 
 ## Health And Shutdown
 
@@ -196,3 +250,29 @@ Relevant tests:
 pnpm test
 pnpm test:integration
 ```
+
+## Production Start
+
+Build the API and run the compiled server:
+
+```bash
+pnpm --filter @gymnotebook/contracts build
+pnpm --filter @gymnotebook/api build
+pnpm --filter @gymnotebook/api start
+```
+
+For containerized local startup, use Docker Compose. Compose starts MySQL, runs migrations and role seed once through `api-db-init`, then starts the API. Do not run migrations automatically in every API process.
+
+## Compatibility And Release Audit
+
+Capability-specific compatibility notes are in:
+
+- `docs/migrations/auth-users-compatibility.md`
+- `docs/migrations/exercises-compatibility.md`
+- `docs/migrations/images-compatibility.md`
+- `docs/migrations/workouts-history-compatibility.md`
+- `docs/migrations/persistence-foundation.md`
+
+The final traceability, endpoint parity, architecture, security, CI and Docker audit is recorded in `docs/release-readiness-audit.md`.
+
+The legacy `/api/test/**` Spring endpoints are intentionally not implemented. They were authorization demonstration routes rather than product API, and tests assert they are unavailable.

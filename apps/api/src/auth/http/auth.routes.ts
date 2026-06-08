@@ -8,19 +8,19 @@ import {
 import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { inTransaction } from '../../shared/transaction.js';
-import { DrizzleRoleRepository } from '../../users/infrastructure/drizzle-role.repository.js';
 import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
 import { signIn } from '../application/sign-in.js';
 import { signUp } from '../application/sign-up.js';
 import { Argon2PasswordHasher } from '../infrastructure/argon2-password-hasher.js';
 import { BcryptPasswordHasher } from '../infrastructure/bcrypt-password-hasher.js';
+import { DrizzleSignUpUnitOfWork } from '../infrastructure/drizzle-sign-up-unit-of-work.js';
 
 export async function authRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
   const passwordHasher = new Argon2PasswordHasher();
   const legacyPasswordHasher = new BcryptPasswordHasher();
   const userRepository = new DrizzleUserRepository(fastify.db);
+  const signUpUnitOfWork = new DrizzleSignUpUnitOfWork(fastify.db);
 
   app.post(
     '/signin',
@@ -81,13 +81,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       await signUp(request.body, {
         passwordHasher,
-        transaction: (work) =>
-          inTransaction(fastify.db, (tx) =>
-            work({
-              users: new DrizzleUserRepository(tx),
-              roles: new DrizzleRoleRepository(tx),
-            }),
-          ),
+        transaction: (work) => signUpUnitOfWork.transaction(work),
         isDuplicateUsernameError: (error) =>
           isUniqueConstraintError(error, ['users_username_unique', 'username']),
         isDuplicateEmailError: (error) =>

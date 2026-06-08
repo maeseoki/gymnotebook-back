@@ -4,7 +4,7 @@ This document records the compatibility decisions for the Fastify/Drizzle MySQL 
 
 ## Legacy Schema Inventory
 
-The Java entities under `src/main/java` are the primary repository source. Exact generated DDL still depends on Hibernate/MySQL settings and the deployed database. For production adoption, verify with `SHOW CREATE TABLE table_name`.
+The Java entities under `legacy/backend-java/src/main/java` are the primary repository source. Exact generated DDL still depends on Hibernate/MySQL settings and the deployed database. For production adoption, verify with `SHOW CREATE TABLE table_name`.
 
 | Table | Repository findings | Final Drizzle decision |
 | --- | --- | --- |
@@ -56,7 +56,9 @@ Compatibility consequence: ids must remain below `Number.MAX_SAFE_INTEGER` at th
 
 ## Date And Time
 
-Legacy entities use `LocalDateTime`. Drizzle stores these columns as MySQL `datetime` and exposes strings. No timezone conversion is introduced in this phase.
+Legacy entities use `LocalDateTime`. Drizzle stores these columns as MySQL `datetime` and exposes strings. The Fastify workout layer now treats API timestamps as ISO 8601 instants, converts them to UTC, stores UTC wall-clock values in MySQL `DATETIME`, and serializes responses with `Z`.
+
+Existing rows may have been written as server-local wall-clock values by the Spring application. They must be audited before being treated as UTC; see `docs/migrations/workouts-history-compatibility.md`.
 
 ## Testcontainers
 

@@ -206,6 +206,76 @@ describe('Fastify foundation', () => {
     });
   });
 
+  it('generates OpenAPI metadata for production routes', async () => {
+    const instance = await makeApp({ configOverrides: { SWAGGER_ENABLED: true } });
+
+    const response = await instance.inject({ method: 'GET', url: '/docs/json' });
+    const document = response.json<{
+      components: { securitySchemes: Record<string, unknown> };
+      paths: Record<
+        string,
+        Record<
+          string,
+          {
+            tags?: string[];
+            summary?: string;
+            security?: Array<Record<string, unknown>>;
+            responses?: Record<string, unknown>;
+          }
+        >
+      >;
+    }>();
+
+    expect(document.components.securitySchemes.bearerAuth).toMatchObject({
+      type: 'http',
+      scheme: 'bearer',
+    });
+
+    expect(Object.keys(document.paths).sort()).toEqual([
+      '/api/auth/logout',
+      '/api/auth/signin',
+      '/api/auth/signup',
+      '/api/exercise/',
+      '/api/exercise/{id}',
+      '/api/image/',
+      '/api/image/{id}',
+      '/api/user/',
+      '/api/user/me',
+      '/api/user/removepermissions',
+      '/api/user/setpermissions',
+      '/api/user/verifyuser',
+      '/api/user/verifyuser/{username}/{email}',
+      '/api/user/{id}',
+      '/api/workout-sets/exercise/{exerciseId}',
+      '/api/workout/',
+      '/api/workout/days/{month}/{year}',
+      '/api/workout/workouts/{date}',
+      '/health/live',
+      '/health/ready',
+    ]);
+
+    for (const [path, method, tag] of [
+      ['/api/auth/signin', 'post', 'auth'],
+      ['/api/exercise/', 'post', 'exercises'],
+      ['/api/image/', 'post', 'images'],
+      ['/api/image/{id}', 'get', 'images'],
+      ['/api/workout/', 'post', 'workouts'],
+      ['/api/workout/days/{month}/{year}', 'get', 'workouts'],
+      ['/api/workout/workouts/{date}', 'get', 'workouts'],
+      ['/api/workout-sets/exercise/{exerciseId}', 'get', 'workout-history'],
+      ['/api/user/me', 'get', 'users'],
+    ] as const) {
+      const operation = document.paths[path]?.[method];
+      expect(operation?.tags).toContain(tag);
+      expect(operation?.summary).toBeTruthy();
+      expect(operation?.responses).toBeTruthy();
+    }
+
+    expect(document.paths['/api/image/{id}']?.get?.security).toBeUndefined();
+    expect(document.paths['/api/image/']?.post?.security).toEqual([{ bearerAuth: [] }]);
+    expect(document.paths['/api/workout/']?.post?.security).toEqual([{ bearerAuth: [] }]);
+  });
+
   it('hides Swagger when disabled', async () => {
     const instance = await makeApp({ configOverrides: { SWAGGER_ENABLED: false } });
 
@@ -216,6 +286,16 @@ describe('Fastify foundation', () => {
       statusCode: 404,
       code: 'route_not_found',
     });
+  });
+
+  it('does not expose legacy test routes', async () => {
+    const instance = await makeApp({ configOverrides: { NODE_ENV: 'production' } });
+
+    for (const path of ['/api/test/all', '/api/test/user', '/api/test/mod', '/api/test/admin']) {
+      const response = await instance.inject({ method: 'GET', url: path });
+      expect(response.statusCode).toBe(404);
+      expect(response.json()).toMatchObject({ code: 'route_not_found' });
+    }
   });
 
   it('maps multipart payload-too-large errors', async () => {

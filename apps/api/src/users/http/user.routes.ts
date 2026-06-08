@@ -13,20 +13,21 @@ import type { FastifyInstance } from 'fastify';
 import type { ZodTypeProvider } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { inTransaction } from '../../shared/transaction.js';
 import { assignRole } from '../application/assign-role.js';
 import { deleteUser } from '../application/delete-user.js';
 import { getCurrentUser } from '../application/get-current-user.js';
 import { listUsers } from '../application/list-users.js';
 import { removeRole } from '../application/remove-role.js';
 import { verifyUserAvailability } from '../application/verify-user-availability.js';
-import { DrizzleRoleRepository } from '../infrastructure/drizzle-role.repository.js';
+import { EmailAlreadyExistsError, UsernameAlreadyExistsError } from '../domain/user.errors.js';
 import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js';
+import { DrizzleUserUnitOfWork } from '../infrastructure/drizzle-user-unit-of-work.js';
 import { toMeResponse, toUserResponse } from './user.mapper.js';
 
 export async function userRoutes(fastify: FastifyInstance) {
   const app = fastify.withTypeProvider<ZodTypeProvider>();
   const userRepository = new DrizzleUserRepository(fastify.db);
+  const userUnitOfWork = new DrizzleUserUnitOfWork(fastify.db);
 
   app.get(
     '/',
@@ -63,7 +64,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         params: UserParamSchema,
         response: {
           200: MessageResponseSchema,
-          400: MessageResponseSchema,
+          400: ErrorResponseSchema,
+          409: ErrorResponseSchema,
           401: ErrorResponseSchema,
         },
       },
@@ -71,10 +73,10 @@ export async function userRoutes(fastify: FastifyInstance) {
     async (request, reply) => {
       const availability = await verifyUserAvailability(request.params, userRepository);
       if (!availability.usernameAvailable) {
-        return reply.status(400).send({ message: 'Error: El nombre de usuario ya está en uso!' });
+        throw new UsernameAlreadyExistsError();
       }
       if (!availability.emailAvailable) {
-        return reply.status(400).send({ message: 'Error: El email ya está en uso!' });
+        throw new EmailAlreadyExistsError();
       }
       return reply.send({ message: '¡Usuario y email disponibles!' });
     },
@@ -153,13 +155,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       await assignRole(
         { userId: request.body.userId, role: request.body.newRole },
         {
-          transaction: (work) =>
-            inTransaction(fastify.db, (tx) =>
-              work({
-                users: new DrizzleUserRepository(tx),
-                roles: new DrizzleRoleRepository(tx),
-              }),
-            ),
+          transaction: (work) => userUnitOfWork.withUsersAndRoles(work),
           isDuplicateUserRoleError: (error) =>
             isUniqueConstraintError(error, ['user_roles_user_id_role_id_pk', 'PRIMARY']),
         },
@@ -194,13 +190,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       await removeRole(
         { userId: request.body.userId, role: request.body.newRole },
         {
-          transaction: (work) =>
-            inTransaction(fastify.db, (tx) =>
-              work({
-                users: new DrizzleUserRepository(tx),
-                roles: new DrizzleRoleRepository(tx),
-              }),
-            ),
+          transaction: (work) => userUnitOfWork.withUsersAndRoles(work),
         },
       );
 
@@ -233,12 +223,7 @@ export async function userRoutes(fastify: FastifyInstance) {
       await deleteUser(
         { actorUserId: request.user.userId, targetUserId: request.params.id },
         {
-          transaction: (work) =>
-            inTransaction(fastify.db, (tx) =>
-              work({
-                users: new DrizzleUserRepository(tx),
-              }),
-            ),
+          transaction: (work) => userUnitOfWork.withUsers(work),
         },
       );
 

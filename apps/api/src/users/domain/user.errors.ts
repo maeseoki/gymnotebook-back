@@ -16,6 +16,20 @@ export class UserNotFoundError extends UserApplicationError {
   }
 }
 
+export class UsernameAlreadyExistsError extends UserApplicationError {
+  constructor() {
+    super(409, 'username_already_exists', 'Username is already in use');
+    this.name = 'UsernameAlreadyExistsError';
+  }
+}
+
+export class EmailAlreadyExistsError extends UserApplicationError {
+  constructor() {
+    super(409, 'email_already_exists', 'Email is already in use');
+    this.name = 'EmailAlreadyExistsError';
+  }
+}
+
 export class RoleNotFoundError extends UserApplicationError {
   constructor() {
     super(404, 'role_not_found', 'Role not found');
