@@ -15,7 +15,7 @@
 |---|---|---|---|
 | App shell | `App.tsx` | Auth gate + providers + header + bottom nav + local storage workout sync | Recreate architecture, but move to dedicated stores |
 | Header | `components/Shared/Header.tsx` | Static route-title map + regex matching | Recreate with route-segment based titles |
-| MainNavigation | `components/Shared/MainNavigation.tsx` | Fixed bottom icon nav, role-based admin tab visibility | Preserve UX with native tab bar |
+| MainNavigation | `components/Shared/MainNavigation.tsx` | Fixed bottom icon nav, role-based admin tab visibility | Preserve core UX with native tab bar; target tabs are Home/Workout/Exercises/History/Profile and admin entry moves under Profile/settings |
 | Logo/Copyright | `components/Shared/*` | Branding/footer | Optional preserve; footer less useful in mobile app |
 
 ## Exercises
@@ -61,7 +61,7 @@
 
 ## Problematic patterns to preserve/fix
 
-Preserve behavior: workout resumability, quick add-set UX, image-backed exercise cards, role-aware admin nav visibility.
+Preserve behavior: workout resumability, quick add-set UX, image-backed exercise cards, and role-aware access control (without a permanent admin main tab).
 
 Fix in rewrite:
 - Nested state mutation and reference-identity lookup.

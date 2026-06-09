@@ -1,33 +1,42 @@
 # Open Questions
 
-## Decisions required before scaffolding
+## Still unresolved (required for implementation detail)
 
-1. Is first release Android-only, or Android + iOS simultaneously?
-2. Is web support required for Expo app?
-3. Is registration public, invite-only, or disabled in production?
-4. Should biometric unlock be supported for stored sessions?
-5. Should active workout autosave happen after every set, debounced, or manual checkpoints?
-6. Is offline workout creation/submission required for v1?
-7. Should active workout canonical persistence use SQLite (recommended) or AsyncStorage?
-8. Should exercise image input support camera, gallery, or both?
-9. Is admin user-management expected in mobile app scope?
-10. Is password recovery required in this migration scope?
+1. Is signup public, invite-only, or disabled for production?
+2. What are final access-token and refresh-token lifetimes?
+3. What session-management UX is required initially (current-device only vs visible session list vs revoke-all)?
+4. What exact UX should represent offline retry decisions for finished workouts (automatic background retry, manual retry trigger, or hybrid)?
+5. What final conflict-resolution UX should appear on duplicate UUID responses?
+6. Should future measurements support decimals (and how does that version with existing integer contracts)?
+7. Keep/replace confetti celebration after workout finish?
+8. What haptic feedback should be enabled by default for key actions?
+9. For future Google/Apple auth: automatic linking by verified email vs explicit linking?
+10. For Apple private relay email cases: what linking/recovery behavior is required?
+11. What account unlinking and lost-provider-access recovery policy is required?
+12. What mandatory Sign in with Apple implications apply if Google sign-in is offered on iOS?
 
-## Decisions that can wait until later phases
+## Decisions now closed
 
-1. Keep/replace confetti celebration animation?
-2. Haptics usage for key actions (set saved, workout finished)?
-3. Should weight/time/distance support decimals in future schema version?
-4. Should bottom nav structure change (e.g., separate history tab)?
-5. Monetization model (subscription/one-time/deferred)?
-6. Push notification roadmap (reminders/progression nudges)?
+The following are no longer open in this documentation set:
+
+- Android+iOS support from one codebase.
+- Web support not prioritized for first release.
+- Biometric unlock not required initially (but architecture must keep extension path).
+- Active-workout persistence initial stack uses AsyncStorage + Zustand persist + Zod (not SQLite-by-default).
+- Camera and gallery support are both required.
+- Mobile admin scope excluded from initial main tabs.
+- Password recovery deferred until backend flow exists.
+- Autosave/persistence durability for active workout is required.
+- Active-workout offline-first behavior is mandatory.
+- Main tabs are Home/Workout/Exercises/History/Profile.
+- Monetization/subscriptions out of initial rewrite.
+- Push notifications out of initial rewrite.
 
 ## Decisions already implied by backend/contracts
 
-1. JWT payload includes `userId` and role enum values.
-2. Signup rejects unknown fields and does not accept role assignment.
-3. Workout timestamps must include offset or `Z`.
-4. Workouts-by-date endpoint expects strict `YYYY-MM-DD` (+ optional timezone query).
-5. History pagination uses `page`, `pageSize`, `sortBy`, `sortDirection`.
-6. Image upload supports JPEG/PNG/WebP and returns `{ id }`.
-7. Ownership-protected resources often return `404` when inaccessible.
+1. Signup rejects unknown fields and role assignment.
+2. Workout timestamps must be ISO with offset or `Z`.
+3. Workouts-by-date endpoint expects strict `YYYY-MM-DD` (+ optional timezone query).
+4. History pagination uses `page`, `pageSize`, `sortBy`, `sortDirection`.
+5. Image upload supports JPEG/PNG/WebP and returns `{ id }`.
+6. Ownership-protected resources often return `404` when inaccessible.

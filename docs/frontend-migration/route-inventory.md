@@ -12,9 +12,9 @@
 | `/exercises/new` | none | Authenticated | `App.tsx` + `ExercisesWrapper` | `ExerciseEdit.tsx` | dropzone, form fields | exercises page button | success path uses `navigate(-1)` | `POST image` (optional), `POST exercise` | form state via RHF; toast for upload/save errors; skeleton not needed unless edit | pick image, fill form, save | `/(authenticated)/exercises/new` |
 | `/exercises/:id` | `id:number` | Authenticated | `App.tsx` + `ExercisesWrapper` | `ExerciseDetail.tsx` | history cards, set table | exercise list card | none | `GET workout-sets/exercise/:id` | `loading` flag; no robust error state | view history, navigate to edit | `/(authenticated)/exercises/[id]` |
 | `/exercises/edit/:id` | `id:number` | Authenticated | `App.tsx` + `ExercisesWrapper` | `ExerciseEdit.tsx` | same as new | detail “Editar ejercicio” link | save uses `navigate(-1)` | `GET exercise/:id`, optional `POST image`, `PUT exercise/:id` | skeleton while loading current exercise | update exercise | `/(authenticated)/exercises/[id]/edit` |
-| `/me` | none | Authenticated | `App.tsx` | `User/Me.tsx` | profile card, `LogOut`, `WorkoutsCalendar` | bottom tab, no-workout CTA | none | calendar child: `GET workout/days/:month/:year`, `GET workout/workouts/:date` | no hard loading states; calendar markers | logout, browse calendar, click day | `/(authenticated)/me/index` |
-| `/admin` (parent) | none | Authenticated only at app level; no route guard for role | `App.tsx` + `Admin.tsx` | `AdminUsers` via index child | user list + delete dialog | admin tab visible only if token roles include admin/mod | none | `GET user`, `DELETE user/:id` | local `users`, dialog state, toast success/fail | delete non-admin users | `/(authenticated)/admin/index` |
-| `/admin` index child | none | same as parent | `Admin.tsx` outlet | `AdminUsers.tsx` | same | direct `/admin` | none | same | same | same | `/(authenticated)/admin/index` |
+| `/me` | none | Authenticated | `App.tsx` | `User/Me.tsx` | profile card, `LogOut`, `WorkoutsCalendar` | bottom tab, no-workout CTA | none | calendar child: `GET workout/days/:month/:year`, `GET workout/workouts/:date` | no hard loading states; calendar markers | logout, browse calendar, click day | `/(authenticated)/(tabs)/profile` |
+| `/admin` (parent) | none | Authenticated only at app level; no route guard for role | `App.tsx` + `Admin.tsx` | `AdminUsers` via index child | user list + delete dialog | currently reachable via legacy admin tab when roles allow | none | `GET user`, `DELETE user/:id` | local `users`, dialog state, toast success/fail | delete non-admin users | `/(authenticated)/settings/admin` |
+| `/admin` index child | none | same as parent | `Admin.tsx` outlet | `AdminUsers.tsx` | same | direct `/admin` | none | same | same | same | `/(authenticated)/settings/admin` |
 
 ## Detailed route notes
 
@@ -28,7 +28,7 @@
 - **Redirect loops:** none observed.
 - **Defined-but-unused records:** no direct route record is dead; wildcard suffix on `/workout/*` appears redundant.
 - **Links to nonexistent routes:** `Login.tsx` uses `navigate('/signUp')` (capital U), but router path is `/signup`.
-- **Role-gated navigation vs route protection mismatch:** `/admin` page is hidden in bottom nav for non-admin users, but route itself has no frontend guard; direct URL still attempts render.
+- **Role-gated navigation vs route protection mismatch:** `/admin` page is hidden for non-admin users, but route itself has no frontend guard; direct URL still attempts render.
 
 ## Browser-history dependent flows
 

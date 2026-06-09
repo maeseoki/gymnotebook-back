@@ -18,12 +18,12 @@
 - No `useQuery` or `useMutation` calls found in legacy frontend.
 - Server state is entirely fetched imperatively (`useEffect` + services), bypassing cache invalidation patterns.
 
-## Persisted values
+## Persisted values (legacy)
 
 | Key | Shape | Writer(s) | Reader(s) | Lifecycle | Cleanup | Risk | Migration recommendation |
 |---|---|---|---|---|---|---|---|
-| `token` | raw JWT string | `useUser.addUser` | `useUser`, `apiClient` interceptor | login -> all authenticated screens | logout/interceptor on 401/403 | stored in plain localStorage; XSS exposure; stale invalid token may persist | move to `Expo SecureStore`; keep decoded claims in memory store |
-| `workout` | JSON serialized workout draft (`uuid,startDate,endDate?,workoutSets`) | `App.tsx` effect on every workout change | `App.tsx` initializer | start/resume workout | removed when draft null or success/discard | parse corruption not handled; shape drift; data loss on conflict branch | migrate to persisted workout-draft store with schema versioning |
+| `token` | raw JWT string | `useUser.addUser` | `useUser`, `apiClient` interceptor | login -> all authenticated screens | logout/interceptor on 401/403 | stored in plain localStorage; stale token behavior | move to SecureStore-backed mobile auth/session flow |
+| `workout` | JSON serialized workout draft (`uuid,startDate,endDate?,workoutSets`) | `App.tsx` effect on every workout change | `App.tsx` initializer | start/resume workout | removed when draft null or success/discard | parse corruption not handled; shape drift; duplicate conflict clears draft | migrate to versioned persisted draft in Zustand + AsyncStorage + Zod |
 
 ## Current corruption/data-loss vectors
 
@@ -33,41 +33,95 @@
 - Reference-equality lookup for workout groups (`findIndex(workoutSet === currentWorkoutSet)`).
 - Inconsistent set field names (`dropSet` vs `isDropSet`) across local/remote contexts.
 
-## Future ownership model (recommended)
+## Mobile target ownership model (decided)
 
-- **TanStack Query**
-  - exercises list/detail
-  - workout history pages
-  - workouts-by-date and workout-day markers
-  - current user profile/admin users
-- **Zustand**
-  - active workout draft (in-memory editing model)
-  - auth session metadata (non-sensitive)
-  - transient multi-screen wizard state
-- **SecureStore**
-  - JWT access token only
-- **AsyncStorage or SQLite**
-  - workout draft persistence
-  - non-sensitive preferences
-- **React Hook Form**
-  - login/signup/exercise forms with shared contract validation
-- **Expo Router**
-  - route segments + deep-link-safe navigation state
+- **TanStack Query**: exercise/history/profile server state and offline-aware fetch status.
+- **Zustand**: auth state machine metadata, editable active-workout draft, transient workflow UI state.
+- **SecureStore**: refresh token and other sensitive credentials.
+- **AsyncStorage**: canonical persisted active-workout draft envelope in initial release.
+- **Zod**: versioned persisted-draft validation + migration guard rails.
+- **React Hook Form**: forms with contract-aware validation.
+- **Expo Router**: public/authenticated route groups + explicit destinations.
 
-## AsyncStorage vs SQLite for active workout draft
+## Offline-first active workout behavior (decided)
 
-### Considerations
-- Workout drafts can grow (many exercises + sets).
-- Updates are frequent (often every set).
-- Crash recovery should be robust.
-- Future offline sync implies migration/versioning needs.
+The active-workout flow must work without network coverage and preserve data across app interruptions and auth expiry.
 
-### Recommendation
-Use **SQLite** for active workout drafts.
+Required draft statuses:
 
-Rationale:
-- Better durability and partial-update patterns than repeated full-JSON rewrites.
-- Easier schema migrations/versioning as workout model evolves.
-- Better path for future offline sync queues and conflict metadata.
+- `active`
+- `finished`
+- `waiting_for_auth`
+- `waiting_for_network`
+- `submitting`
+- `failed`
+- (UI may additionally surface a synchronized/success state after acknowledgement)
 
-Use AsyncStorage only for lightweight preferences/flags, not the canonical workout draft graph.
+Draft removal normally happens only after successful server acknowledgement.
+
+## Persisted draft envelope (documentation pseudocode)
+
+```ts
+type PersistedWorkoutDraft = {
+  schemaVersion: number;
+  localId: string;
+  workoutUuid: string;
+  status:
+    | 'active'
+    | 'finished'
+    | 'waiting_for_auth'
+    | 'waiting_for_network'
+    | 'submitting'
+    | 'failed';
+  createdAt: string;
+  updatedAt: string;
+  finishedAt: string | null;
+  retryCount: number;
+  lastSubmissionAttemptAt: string | null;
+  lastSubmissionErrorCode: string | null;
+  workout: DraftWorkout;
+};
+```
+
+This is pseudocode for direction only.
+
+## Restoration and write rules (decided)
+
+### On startup
+
+1. Read persisted draft.
+2. Parse JSON safely.
+3. Validate with versioned Zod schema.
+4. Migrate when stored schema is older.
+5. If recovery fails, keep raw payload for diagnostics where practical and present recovery/reset choice.
+6. Never let malformed persisted data crash the whole app.
+
+### Write strategy
+
+- Persist after each meaningful workout mutation.
+- Debounce short-interval writes.
+- Force immediate flush on critical transitions (start/add-confirm set/finish/status change/server success).
+- Use immutable updates.
+- Use stable local IDs for groups and sets.
+- Never identify groups/sets by array index or object-reference equality.
+
+## Local draft model vs API contract (decided)
+
+Editable state must use local draft models (`DraftWorkout`, `DraftWorkoutGroup`, `DraftSet`) rather than `CreateWorkoutRequest`.
+
+Local draft models may include:
+
+- stable local IDs;
+- incomplete values while editing;
+- text input values before numeric parsing;
+- local timestamps;
+- synchronization metadata;
+- validation state.
+
+Submission path:
+
+`DraftWorkout -> mapper -> CreateWorkoutRequest -> shared schema validation -> API request`
+
+## Future SQLite trigger (not now)
+
+Revisit SQLite when requirements evolve to multiple pending workouts, durable multi-entity sync queues, queryable local history, very large datasets, transactional cross-entity updates, or multi-device conflict resolution.

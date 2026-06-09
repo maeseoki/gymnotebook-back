@@ -13,17 +13,21 @@ This folder documents the legacy React + Vite SPA in `legacy/frontend-vite` and 
 - **Route records discovered:** 11 (including index and nested records)
 - **User-visible routed screens:** 9
 - **Modal/dialog surfaces:** 6
-- **Core workflows covered:** authentication, exercise CRUD, active workout, workout history calendar/admin
+- **Core workflows covered:** authentication, exercise CRUD, active workout, workout history/calendar/admin
 - **Largest compatibility breaks:** login payload shape, workout submit payload shape, image upload response shape, history pagination query shape, set response field rename (`dropSet` -> `isDropSet`), strict date/time requirements.
 
-## Recommended migration direction
-- Expo Router for navigation structure
-- TanStack Query for server state (currently mostly bypassed)
-- Zustand for active workout draft + cross-screen transient state
-- SecureStore for JWT, SQLite (recommended) for workout draft durability
-- Shared API contracts imported from `@gymnotebook/contracts`
+## Locked mobile decisions (source of truth)
+- Native Expo + React Native app for Android and iOS.
+- Main tabs: Home, Workout, Exercises, History, Profile.
+- Offline-first active workout is a core requirement.
+- Initial active-workout persistence is Zustand + persist adapter + AsyncStorage + Zod (not SQLite by default).
+- Mobile auth requires a future access+refresh+session architecture, not legacy localStorage behavior.
+
+See [mobile-decisions.md](./mobile-decisions.md) and [mobile-authentication.md](./mobile-authentication.md).
 
 ## Documents
+- [Mobile architecture decisions (authoritative)](./mobile-decisions.md)
+- [Mobile authentication architecture](./mobile-authentication.md)
 - [Route inventory](./route-inventory.md)
 - [Screen specifications](./screen-specifications.md)
 - [User workflows](./user-workflows.md)
@@ -44,4 +48,4 @@ This folder documents the legacy React + Vite SPA in `legacy/frontend-vite` and 
 - `docs/frontend-migration/screenshots/` is currently empty.
 
 ## Recommended next step
-Create a dedicated implementation issue for **Phase 1-3** from [expo-migration-plan.md](./expo-migration-plan.md), and lock product decisions listed in [open-questions.md](./open-questions.md) that block scaffolding.
+Create a dedicated implementation issue for **Phase 1-3** from [expo-migration-plan.md](./expo-migration-plan.md), while backend mobile-session design can proceed in parallel for later auth phases.
