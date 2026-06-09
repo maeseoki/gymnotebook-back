@@ -1,0 +1,40 @@
+.react-calendar {
+
+	&__theme--dark {
+		background: var(--chakra-colors-gray-700);
+		border-radius: var(--chakra-radii-md);
+		border-color: var(--chakra-colors-gray-600);
+	}
+
+	&__tile {
+
+		&:enabled:hover,
+		&:enabled:focus {
+			background: var(--chakra-colors-primary-200);
+		}
+
+		&--active {
+			background: var(--chakra-colors-primary-400);
+
+			&:enabled:hover,
+			&:enabled:focus {
+				background: var(--chakra-colors-primary-500);
+			}
+		}
+	}
+
+	&__navigation {
+
+		button {
+
+			&:enabled:hover,
+			&:enabled:focus {
+				background: var(--chakra-colors-primary-200);
+			}
+		}
+	}
+
+	.workout-day {
+		color: var(--chakra-colors-secondary-500);
+	}
+}
