@@ -1,0 +1,17 @@
+{
+  "extends": "@gymnotebook/typescript-config/node.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["src", "drizzle", "scripts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "drizzle/migrations",
+    "vitest.config.ts",
+    "vitest.integration.config.ts",
+    "drizzle.config.ts"
+  ]
+}

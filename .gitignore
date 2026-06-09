@@ -1,39 +1,38 @@
-HELP.md
+# Java (legacy)
 target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.class
+*.jar
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# Node
+node_modules/
+dist/
+.turbo/
+.cache/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# Build artifacts next to source
+**/*.js.map
+*.tsbuildinfo
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# Env
+.env
+.env.local
+.env.*.local
 
-### VS Code ###
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
 .vscode/
+*.iml
 
-### Application Properties ###
-application.properties
-application-dev.properties
-application-prod.properties
-application.yml
+# pnpm
+pnpm-debug.log*
+
+# Coverage
+coverage/
+*.lcov
+
+# Drizzle generated
+apps/api/drizzle/migrations/meta/

@@ -1,0 +1,76 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: gymnotebook
+      MYSQL_USER: gymnotebook
+      MYSQL_PASSWORD: gymnotebook
+    ports:
+      - '3307:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - '8080:8080'
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 8080
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: gymnotebook
+      DB_USER: gymnotebook
+      DB_PASSWORD: gymnotebook
+      JWT_SECRET: local-docker-jwt-secret-change-before-production
+      JWT_EXPIRATION_MS: 86400000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      LOG_LEVEL: info
+      MAX_UPLOAD_SIZE: 10485760
+      RATE_LIMIT_MAX: 100
+      RATE_LIMIT_WINDOW_MS: 60000
+      AUTH_RATE_LIMIT_MAX: 10
+      AUTH_RATE_LIMIT_WINDOW_MS: 60000
+      SWAGGER_ENABLED: 'true'
+      DEFAULT_TIMEZONE: Europe/Madrid
+    depends_on:
+      db:
+        condition: service_healthy
+      api-db-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O - http://127.0.0.1:8080/health/ready >/dev/null 2>&1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api-db-init:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ['sh', '-c', 'node apps/api/dist/scripts/migrate.js && node apps/api/dist/scripts/seed-roles.js']
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: gymnotebook
+      DB_USER: gymnotebook
+      DB_PASSWORD: gymnotebook
+      JWT_SECRET: local-docker-jwt-secret-change-before-production
+      CORS_ORIGINS: http://localhost:3000,http://localhost:5173
+      DEFAULT_TIMEZONE: Europe/Madrid
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:

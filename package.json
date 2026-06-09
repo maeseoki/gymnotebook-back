@@ -1,0 +1,34 @@
+{
+  "name": "gymnotebook",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint:fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:coverage": "turbo run test:coverage",
+    "db:generate": "pnpm --filter @gymnotebook/api db:generate",
+    "db:migrate": "pnpm --filter @gymnotebook/api db:migrate",
+    "db:seed": "pnpm --filter @gymnotebook/api db:seed",
+    "db:check": "pnpm --filter @gymnotebook/api db:check",
+    "db:studio": "pnpm --filter @gymnotebook/api db:studio",
+    "db:adopt-existing": "pnpm --filter @gymnotebook/api db:adopt-existing",
+    "format": "biome format --write .",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm db:check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.16",
+    "turbo": "2.9.16",
+    "typescript": "6.0.3"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.5.0"
+  },
+  "packageManager": "pnpm@11.5.2"
+}
