@@ -54,6 +54,10 @@ Required behavior:
    - failed and retryable
    - successfully synchronized
 
+`successfully synchronized` may be implemented as a short-lived UI feedback state. It does not need to be part of the persisted `PersistedWorkoutDraft.status` union.
+
+After server acknowledgement, the app should show success feedback and then remove the persisted draft as the normal completion path. If the app crashes after acknowledgement but before local cleanup, recovery must remain safe by relying on workout UUID duplicate protection and explicit retry/recovery handling (no silent discard).
+
 Initial release scope note: this requirement is specific to active-workout creation/edit/finish/submission. A general offline sync engine for every feature is not required in v1.
 
 ## Local persistence decision (initial)

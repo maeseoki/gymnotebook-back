@@ -13,7 +13,7 @@ The legacy access-token + localStorage model is insufficient for long-term mobil
 ### Access token
 
 - Short-lived JWT.
-- Sent as a ****** in the HTTP Authorization header.
+- Sent as a Bearer token in the HTTP `Authorization` header.
 - Held primarily in app memory.
 - May be recovered after restart via refresh-token flow.
 - Not treated as durable source of session truth.

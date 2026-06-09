@@ -72,7 +72,8 @@ Auth state machine must distinguish: `restoring`, `authenticated`, `unauthentica
    - while sending -> `submitting`.
 7. **Submission failure** -> `failed` (retryable), draft retained.
 8. **Duplicate UUID response** -> retain draft; present explicit conflict/retry UX.
-9. **Successful acknowledgement** -> transition to synchronized/success state then clear persisted draft as normal completion path.
+9. **Successful acknowledgement** -> transition to short-lived synchronized/success UI feedback, then clear persisted draft as normal completion path.
+10. **Crash between acknowledgement and cleanup** -> on restore, keep behavior safe via workout UUID duplicate protection + explicit retry/recovery UX (no silent discard).
 
 ### Required user-visible status coverage
 - in progress

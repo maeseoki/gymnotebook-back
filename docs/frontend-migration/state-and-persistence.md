@@ -57,7 +57,11 @@ Required draft statuses:
 - `failed`
 - (UI may additionally surface a synchronized/success state after acknowledgement)
 
-Draft removal normally happens only after successful server acknowledgement.
+The synchronized/success state can be short-lived UI feedback and does not need to be persisted in the draft status union.
+
+After successful server acknowledgement, show success feedback, then remove the persisted draft as the normal path.
+
+If the app crashes after acknowledgement but before local cleanup, restore flow must avoid unsafe behavior by relying on workout UUID duplicate protection and explicit recovery/retry UX (never silent discard).
 
 ## Persisted draft envelope (documentation pseudocode)
 
