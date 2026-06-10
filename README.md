@@ -21,8 +21,10 @@ GymNotebook backend rewritten from the legacy Spring Boot service to a Fastify m
 apps/api                 Fastify API, Drizzle schema, scripts and tests
 packages/contracts       Shared Zod API contracts
 packages/typescript-config
+apps/mobile              Expo mobile app foundation
 docs/migrations          Compatibility and migration documentation
 legacy/backend-java      Read-only Spring Boot migration reference
+legacy/frontend-vite     Read-only legacy Vite frontend reference
 ```
 
 The API follows feature-oriented architecture. HTTP modules declare routes/schemas/hooks and call application use cases. Business rules live in application/domain modules; Drizzle access lives in infrastructure modules.
@@ -47,6 +49,15 @@ pnpm db:migrate
 pnpm db:seed
 pnpm --filter @gymnotebook/api dev
 ```
+
+Mobile app development starts a development-client Metro server:
+
+```bash
+pnpm --filter @gymnotebook/mobile start
+```
+
+Use `apps/mobile/.env.example` as the public Expo environment template. For Android emulator API access, use `http://10.0.2.2:8080/api`; for physical devices, use the host LAN address.
+The mobile app does not default `EXPO_PUBLIC_API_URL`; local development and EAS builds must provide it explicitly. Preview and production mobile environments require HTTPS API URLs.
 
 For local Docker:
 
@@ -163,6 +174,16 @@ docker build -f apps/api/Dockerfile .
 ```
 
 The workflow requires Docker for Testcontainers and does not deploy.
+
+The Expo mobile package is validated in CI through Biome, TypeScript, Jest Expo tests, Expo config resolution, and an Expo export smoke check. `pnpm build` owns the mobile export smoke check, and `pnpm check` owns Expo config validation and DB schema checking, so CI avoids running those expensive Expo operations twice. CI does not run EAS builds, boot emulators, or require Apple/Google credentials.
+
+## Mobile App Foundation
+
+The mobile app lives in `apps/mobile` as `@gymnotebook/mobile`. It uses Expo SDK 56, Expo Router route groups, TypeScript 6, Biome, NativeWind 4 with Tailwind CSS 3.4, TanStack Query 5, Zustand 5, Zod 4, Axios, SecureStore, AsyncStorage and Expo Network. It consumes `@gymnotebook/contracts` directly from the workspace.
+
+Current scope is foundation only: route placeholders, providers, environment validation, HTTP error normalization, auth/session storage ports, active-workout persistence helpers, network/query foundations, UI primitives and tests. Product screens, endpoint calls, refresh interceptors, workout behavior, exercise CRUD, image handling and Google/Apple authentication are deferred.
+
+See `apps/mobile/README.md` for commands, environment setup, development-build strategy, selected package versions and SDK compatibility notes.
 
 ## Health And Shutdown
 

@@ -57,10 +57,10 @@ jobs:
       - name: Coverage
         run: pnpm test:coverage
 
-      - name: Build
+      - name: Build API and export mobile
         run: pnpm build
 
-      - name: Repository check
+      - name: Repository check and Expo config
         run: pnpm check
 
       - name: Docker image

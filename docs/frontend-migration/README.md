@@ -1,7 +1,7 @@
 # Frontend Migration Audit: Legacy Vite -> Expo
 
 ## Purpose
-This folder documents the legacy React + Vite SPA in `legacy/frontend-vite` and defines a migration specification for a future Expo app in `apps/mobile` (not implemented in this issue).
+This folder documents the legacy React + Vite SPA in `legacy/frontend-vite` and defines the migration specification for the Expo app in `apps/mobile`. The current mobile package is a foundation only, not a complete product implementation.
 
 ## Scope audited
 - `legacy/frontend-vite/src` (routes, pages, components, services, context, hooks, utils, theme)
@@ -22,6 +22,7 @@ This folder documents the legacy React + Vite SPA in `legacy/frontend-vite` and 
 - Offline-first active workout is a core requirement.
 - Initial active-workout persistence is Zustand + persist adapter + AsyncStorage + Zod (not SQLite by default).
 - Mobile auth requires a future access+refresh+session architecture, not legacy localStorage behavior.
+- Initial stable styling foundation uses NativeWind 4 + Tailwind CSS 3.4. NativeWind 5/Tailwind 4 migration is deferred until NativeWind 5 has a stable release.
 
 See [mobile-decisions.md](./mobile-decisions.md) and [mobile-authentication.md](./mobile-authentication.md).
 
@@ -48,4 +49,4 @@ See [mobile-decisions.md](./mobile-decisions.md) and [mobile-authentication.md](
 - `docs/frontend-migration/screenshots/` is currently empty.
 
 ## Recommended next step
-Create a dedicated implementation issue for **Phase 1-3** from [expo-migration-plan.md](./expo-migration-plan.md), while backend mobile-session design can proceed in parallel for later auth phases.
+Continue with mobile auth/session restoration screens and services on top of the implemented foundation, without broadening active-workout or exercise CRUD scope prematurely.

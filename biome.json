@@ -29,6 +29,7 @@
       "!!**/node_modules",
       "!!**/dist",
       "!!**/.turbo",
+      "!!**/.expo",
       "!!**/coverage",
       "!apps/api/drizzle/migrations"
     ]

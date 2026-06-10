@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1780853287230,
+      "tag": "0000_legacy_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780853338318,
+      "tag": "0001_persistence_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1781093287000,
+      "tag": "0002_mobile_sessions",
+      "breakpoints": true
+    }
+  ]
+}

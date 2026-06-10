@@ -12,6 +12,8 @@
     "test": "turbo run test",
     "test:integration": "turbo run test:integration",
     "test:coverage": "turbo run test:coverage",
+    "mobile:expo-config": "pnpm --filter @gymnotebook/mobile expo:config",
+    "mobile:export": "pnpm --filter @gymnotebook/mobile export",
     "db:generate": "pnpm --filter @gymnotebook/api db:generate",
     "db:migrate": "pnpm --filter @gymnotebook/api db:migrate",
     "db:seed": "pnpm --filter @gymnotebook/api db:seed",
@@ -20,7 +22,7 @@
     "db:studio": "pnpm --filter @gymnotebook/api db:studio",
     "db:adopt-existing": "pnpm --filter @gymnotebook/api db:adopt-existing",
     "format": "biome format --write .",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm db:check"
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm db:check && pnpm mobile:expo-config"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",

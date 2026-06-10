@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "typecheck"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".expo/**"]
     },
     "dev": {
       "persistent": true,
@@ -32,6 +32,14 @@
     "test:coverage": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
+    },
+    "expo:config": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "export": {
+      "dependsOn": ["^build", "typecheck"],
+      "outputs": ["dist/**"]
     }
   }
 }
