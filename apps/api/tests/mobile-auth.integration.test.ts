@@ -1,11 +1,13 @@
 import { fileURLToPath } from 'node:url';
+import type { MobileTokenPairResponse } from '@gymnotebook/contracts';
 import { MySqlContainer, type StartedMySqlContainer } from '@testcontainers/mysql';
 import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
+import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import * as schema from '../drizzle/schema.js';
 import { seedRoles } from '../scripts/seed-roles.js';
-import { createTestConfig } from '../src/app.js';
+import { buildApp, createTestConfig } from '../src/app.js';
 import { createMobileSession } from '../src/mobile-auth/application/create-mobile-session.js';
 import { listMobileSessionsForUser } from '../src/mobile-auth/application/list-mobile-sessions.js';
 import { revokeMobileSessionByRefreshToken } from '../src/mobile-auth/application/revoke-mobile-session.js';
@@ -60,6 +62,7 @@ class TestAccessTokenIssuer implements MobileAccessTokenIssuer {
 let container: StartedMySqlContainer | undefined;
 let client: DatabaseClient | undefined;
 let config: Env | undefined;
+let app: FastifyInstance | undefined;
 
 beforeAll(async () => {
   container = await new MySqlContainer('mysql:8.4')
@@ -81,10 +84,14 @@ beforeAll(async () => {
     migrationsFolder: fileURLToPath(new URL('../drizzle/migrations', import.meta.url)),
   });
   await seedRoles(client.db);
+  app = await buildApp({ config, databaseClient: client });
 });
 
 afterAll(async () => {
-  await client?.close();
+  await app?.close();
+  if (!app) {
+    await client?.close();
+  }
   await container?.stop();
 });
 
@@ -323,6 +330,449 @@ describe('mobile session MySQL integration', () => {
       (await allSessions()).filter((row) => row.sessionId === 'rollback-session-id'),
     ).toHaveLength(0);
   });
+
+  it('runs the complete mobile HTTP signup, refresh, replay, listing, and revocation flow', async () => {
+    const signup = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httpmobileone',
+        email: 'httpmobileone@example.test',
+        password: 'secret1',
+        device: { name: 'Pixel', platform: 'android' },
+      },
+    });
+    expect(signup.statusCode).toBe(201);
+    expect(signup.body.refreshToken).toEqual(expect.any(String));
+
+    const protectedRead = await injectJson({
+      method: 'GET',
+      url: '/api/user/me',
+      headers: bearer(signup.body.accessToken),
+    });
+    expect(protectedRead.statusCode).toBe(200);
+
+    const firstRefresh = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/refresh',
+      payload: { refreshToken: signup.body.refreshToken },
+    });
+    expect(firstRefresh.statusCode).toBe(200);
+    expect(firstRefresh.body.refreshToken).not.toBe(signup.body.refreshToken);
+
+    const immediateReplay = await injectJson({
+      method: 'POST',
+      url: '/api/auth/mobile/refresh',
+      payload: { refreshToken: signup.body.refreshToken },
+    });
+    expect(immediateReplay.statusCode).toBe(401);
+    expect(immediateReplay.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+    const stillUsable = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/refresh',
+      payload: { refreshToken: firstRefresh.body.refreshToken },
+    });
+    expect(stillUsable.statusCode).toBe(200);
+
+    const secondSignin = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signin',
+      payload: {
+        username: 'httpmobileone',
+        password: 'secret1',
+        device: { name: 'iPhone', platform: 'ios' },
+      },
+    });
+    expect(secondSignin.statusCode).toBe(200);
+
+    const sessions = await injectJson<{
+      sessions: Array<{ id: string; current: boolean; devicePlatform: 'android' | 'ios' | null }>;
+    }>({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(sessions.statusCode).toBe(200);
+    expect(sessions.body.sessions).toHaveLength(2);
+    expect(sessions.body.sessions.filter((session) => session.current)).toHaveLength(1);
+    const otherSession = sessions.body.sessions.find((session) => !session.current);
+    if (!otherSession) {
+      throw new Error('Expected another mobile session');
+    }
+
+    const revokeOther = await injectJson({
+      method: 'DELETE',
+      url: `/api/auth/mobile/sessions/${otherSession.id}`,
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(revokeOther.statusCode).toBe(204);
+
+    const foreignSignup = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httpmobiletwo',
+        email: 'httpmobiletwo@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(foreignSignup.statusCode).toBe(201);
+    const foreignSessions = await injectJson<{ sessions: Array<{ id: string }> }>({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(foreignSignup.body.accessToken),
+    });
+    const foreignSessionId = foreignSessions.body.sessions[0]?.id;
+    if (!foreignSessionId) {
+      throw new Error('Expected foreign session');
+    }
+
+    const revokeForeign = await injectJson({
+      method: 'DELETE',
+      url: `/api/auth/mobile/sessions/${foreignSessionId}`,
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(revokeForeign.statusCode).toBe(404);
+    expect(revokeForeign.body).toMatchObject({ code: 'mobile_session_not_found' });
+
+    const revokeAllKeepCurrent = await injectJson<{ revoked: number }>({
+      method: 'DELETE',
+      url: '/api/auth/mobile/sessions?keepCurrent=true',
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(revokeAllKeepCurrent.statusCode).toBe(200);
+    expect(revokeAllKeepCurrent.body.revoked).toBeGreaterThanOrEqual(0);
+
+    const currentStillActive = await injectJson<{ sessions: Array<{ current: boolean }> }>({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(currentStillActive.statusCode).toBe(200);
+    expect(currentStillActive.body.sessions).toHaveLength(1);
+    expect(currentStillActive.body.sessions[0]?.current).toBe(true);
+
+    const revokeAll = await injectJson<{ revoked: number }>({
+      method: 'DELETE',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(revokeAll.statusCode).toBe(200);
+    expect(revokeAll.body.revoked).toBeGreaterThan(0);
+
+    const revokedAccessToken = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(stillUsable.body.accessToken),
+    });
+    expect(revokedAccessToken.statusCode).toBe(401);
+    expect(revokedAccessToken.body).toMatchObject({ code: 'invalid_mobile_session' });
+  });
+
+  it('validates mobile session-management access with a bounded active-session lookup', async () => {
+    const active = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httpactivecheck',
+        email: 'httpactivecheck@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(active.statusCode).toBe(201);
+    const activeSessionId = await firstListedSessionId(active.body.accessToken);
+
+    const activeList = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(active.body.accessToken),
+    });
+    expect(activeList.statusCode).toBe(200);
+
+    const foreign = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httpforeigncheck',
+        email: 'httpforeigncheck@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(foreign.statusCode).toBe(201);
+    const foreignSessionId = await firstListedSessionId(foreign.body.accessToken);
+    const foreignSessionToken = signMobileAccessToken({
+      userId: active.body.user.id,
+      username: active.body.user.username,
+      sessionId: foreignSessionId,
+    });
+    const foreignResponse = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(foreignSessionToken),
+    });
+    expect(foreignResponse.statusCode).toBe(401);
+    expect(foreignResponse.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+    await requireClient()
+      .db.update(schema.mobileSessions)
+      .set({ expiresAt: '2025-12-31 23:59:59' })
+      .where(eq(schema.mobileSessions.sessionId, activeSessionId));
+    const expiredResponse = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(active.body.accessToken),
+    });
+    expect(expiredResponse.statusCode).toBe(401);
+    expect(expiredResponse.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+    const revoked = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httprevokedcheck',
+        email: 'httprevokedcheck@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(revoked.statusCode).toBe(201);
+    const revokedSessionId = await firstListedSessionId(revoked.body.accessToken);
+    await requireClient()
+      .db.update(schema.mobileSessions)
+      .set({ revokedAt: '2026-01-01 00:00:00' })
+      .where(eq(schema.mobileSessions.sessionId, revokedSessionId));
+    const revokedResponse = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(revoked.body.accessToken),
+    });
+    expect(revokedResponse.statusCode).toBe(401);
+    expect(revokedResponse.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+    const replacedUser = await createUser('httpreplacedcheck', 'httpreplacedcheck@example.test');
+    const replacedSessionId = 'replaced-session-id-that-is-long-enough';
+    const previous = await requireClient()
+      .db.insert(schema.mobileSessions)
+      .values({
+        sessionId: replacedSessionId,
+        userId: replacedUser.id,
+        tokenFamilyId: 'replaced-family-id-that-is-long-enough',
+        refreshTokenHash: 'replaced-hash-old',
+        previousSessionRowId: null,
+        deviceName: null,
+        devicePlatform: null,
+        createdAt: '2026-01-01 00:00:00',
+        lastUsedAt: '2026-01-01 00:00:00',
+        rotatedAt: '2026-01-01 00:01:00',
+        expiresAt: '2026-02-01 00:00:00',
+        revokedAt: '2026-01-01 00:01:00',
+      })
+      .$returningId();
+    const previousId = previous[0]?.id;
+    if (typeof previousId !== 'number') {
+      throw new Error('Expected replaced previous row id');
+    }
+    const replacement = await requireClient()
+      .db.insert(schema.mobileSessions)
+      .values({
+        sessionId: 'replacement-session-id-that-is-long-enough',
+        userId: replacedUser.id,
+        tokenFamilyId: 'replaced-family-id-that-is-long-enough',
+        refreshTokenHash: 'replaced-hash-new',
+        previousSessionRowId: previousId,
+        deviceName: null,
+        devicePlatform: null,
+        createdAt: '2026-01-01 00:00:00',
+        lastUsedAt: '2026-01-01 00:01:00',
+        rotatedAt: null,
+        expiresAt: '2026-02-01 00:00:00',
+        revokedAt: null,
+      })
+      .$returningId();
+    const replacementId = replacement[0]?.id;
+    if (typeof replacementId !== 'number') {
+      throw new Error('Expected replacement row id');
+    }
+    await requireClient()
+      .db.update(schema.mobileSessions)
+      .set({ replacedBySessionRowId: replacementId })
+      .where(eq(schema.mobileSessions.id, previousId));
+
+    const replacedToken = signMobileAccessToken({
+      userId: replacedUser.id,
+      username: replacedUser.username,
+      sessionId: replacedSessionId,
+    });
+    const replacedResponse = await injectJson({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: bearer(replacedToken),
+    });
+    expect(replacedResponse.statusCode).toBe(401);
+    expect(replacedResponse.body).toMatchObject({ code: 'invalid_mobile_session' });
+  });
+
+  it('keeps the successful HTTP refresh replacement active after concurrent replay', async () => {
+    const signup = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/signup',
+      payload: {
+        username: 'httpconcurrent',
+        email: 'httpconcurrent@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(signup.statusCode).toBe(201);
+
+    const results = await Promise.all([
+      injectJson<MobileTokenPairResponse>({
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: signup.body.refreshToken },
+      }),
+      injectJson<MobileTokenPairResponse>({
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: signup.body.refreshToken },
+      }),
+    ]);
+
+    const successful = results.filter((response) => response.statusCode === 200);
+    const failed = results.filter((response) => response.statusCode === 401);
+    expect(successful).toHaveLength(1);
+    expect(failed).toHaveLength(1);
+    expect(failed[0]?.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+    const replacement = successful[0]?.body;
+    if (!replacement) {
+      throw new Error('Expected successful replacement');
+    }
+    const replacementRefresh = await injectJson<MobileTokenPairResponse>({
+      method: 'POST',
+      url: '/api/auth/mobile/refresh',
+      payload: { refreshToken: replacement.refreshToken },
+    });
+    expect(replacementRefresh.statusCode).toBe(200);
+
+    const rows = await sessionsForUser(signup.body.user.id);
+    expect(activeLeafRows(rows)).toHaveLength(1);
+    expect(hasReplacementBranch(rows)).toBe(false);
+  });
+
+  it('normalizes delayed HTTP refresh-token reuse and commits family revocation', async () => {
+    const localConfig = createTestConfig({
+      DB_HOST: requireConfig().DB_HOST,
+      DB_PORT: requireConfig().DB_PORT,
+      DB_NAME: requireConfig().DB_NAME,
+      DB_USER: requireConfig().DB_USER,
+      DB_PASSWORD: requireConfig().DB_PASSWORD,
+      MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: 0,
+    });
+    const localClient = createDatabaseClient(localConfig);
+    const localApp = await buildApp({ config: localConfig, databaseClient: localClient });
+    try {
+      const signup = await injectJsonWithApp<MobileTokenPairResponse>(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/signup',
+        payload: {
+          username: 'httpreuse',
+          email: 'httpreuse@example.test',
+          password: 'secret1',
+        },
+      });
+      expect(signup.statusCode).toBe(201);
+
+      const replacement = await injectJsonWithApp<MobileTokenPairResponse>(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: signup.body.refreshToken },
+      });
+      expect(replacement.statusCode).toBe(200);
+
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+
+      const reuse = await injectJsonWithApp(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: signup.body.refreshToken },
+      });
+      expect(reuse.statusCode).toBe(401);
+      expect(reuse.body).toMatchObject({ code: 'invalid_mobile_session' });
+
+      const replacementAfterReuse = await injectJsonWithApp(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: replacement.body.refreshToken },
+      });
+      expect(replacementAfterReuse.statusCode).toBe(401);
+      expect(replacementAfterReuse.body).toMatchObject({ code: 'invalid_mobile_session' });
+      expect(
+        (await sessionsForUser(signup.body.user.id)).every((row) => row.revokedAt !== null),
+      ).toBe(true);
+    } finally {
+      await localApp.close();
+    }
+  });
+
+  it('applies the dedicated auth rate limit to mobile refresh', async () => {
+    const localConfig = createTestConfig({
+      DB_HOST: requireConfig().DB_HOST,
+      DB_PORT: requireConfig().DB_PORT,
+      DB_NAME: requireConfig().DB_NAME,
+      DB_USER: requireConfig().DB_USER,
+      DB_PASSWORD: requireConfig().DB_PASSWORD,
+      AUTH_RATE_LIMIT_MAX: 1,
+      AUTH_RATE_LIMIT_WINDOW_MS: 60000,
+    });
+    const localClient = createDatabaseClient(localConfig);
+    const localApp = await buildApp({ config: localConfig, databaseClient: localClient });
+    try {
+      const first = await injectJsonWithApp(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: 'a'.repeat(64) },
+      });
+      const second = await injectJsonWithApp(localApp, {
+        method: 'POST',
+        url: '/api/auth/mobile/refresh',
+        payload: { refreshToken: 'b'.repeat(64) },
+      });
+
+      expect(first.statusCode).toBe(401);
+      expect(first.body).toMatchObject({ code: 'invalid_mobile_session' });
+      expect(second.statusCode).toBe(429);
+    } finally {
+      await localApp.close();
+    }
+  });
+
+  it('keeps existing web auth responses unchanged', async () => {
+    const webSignup = await injectJson({
+      method: 'POST',
+      url: '/api/auth/signup',
+      payload: {
+        username: 'webcompat',
+        email: 'webcompat@example.test',
+        password: 'secret1',
+      },
+    });
+    expect(webSignup.statusCode).toBe(201);
+    expect(webSignup.body).toEqual({ message: '¡Usuario registrado correctamente!' });
+
+    const webSignin = await injectJson({
+      method: 'POST',
+      url: '/api/auth/signin',
+      payload: { username: 'webcompat', password: 'secret1' },
+    });
+    expect(webSignin.statusCode).toBe(200);
+    expect(webSignin.body).toMatchObject({
+      type: 'Bearer',
+      username: 'webcompat',
+      email: 'webcompat@example.test',
+      roles: ['ROLE_USER'],
+    });
+    expect(webSignin.body).not.toHaveProperty('refreshToken');
+  });
 });
 
 function makeDeps(overrides: { securityEvents?: { record(event: unknown): Promise<void> } } = {}) {
@@ -408,4 +858,65 @@ function requireClient(): DatabaseClient {
     throw new Error('Database client was not initialized');
   }
   return client;
+}
+
+function requireConfig(): Env {
+  if (!config) {
+    throw new Error('Config was not initialized');
+  }
+  return config;
+}
+
+function requireApp(): FastifyInstance {
+  if (!app) {
+    throw new Error('App was not initialized');
+  }
+  return app;
+}
+
+function bearer(token: string): { authorization: string } {
+  return { authorization: `Bearer ${token}` };
+}
+
+function signMobileAccessToken(input: {
+  userId: number;
+  username: string;
+  sessionId: string;
+}): string {
+  return requireApp().jwt.sign({
+    sub: input.username,
+    userId: input.userId,
+    roles: ['ROLE_USER'],
+    sessionId: input.sessionId,
+  });
+}
+
+async function firstListedSessionId(accessToken: string): Promise<string> {
+  const response = await injectJson<{ sessions: Array<{ id: string }> }>({
+    method: 'GET',
+    url: '/api/auth/mobile/sessions',
+    headers: bearer(accessToken),
+  });
+  const sessionId = response.body.sessions[0]?.id;
+  if (!sessionId) {
+    throw new Error('Expected listed mobile session');
+  }
+  return sessionId;
+}
+
+async function injectJson<TBody = Record<string, unknown>>(
+  request: Parameters<FastifyInstance['inject']>[0],
+): Promise<{ statusCode: number; body: TBody }> {
+  return injectJsonWithApp(requireApp(), request);
+}
+
+async function injectJsonWithApp<TBody = Record<string, unknown>>(
+  instance: FastifyInstance,
+  request: Parameters<FastifyInstance['inject']>[0],
+): Promise<{ statusCode: number; body: TBody }> {
+  const response = await instance.inject(request);
+  return {
+    statusCode: response.statusCode,
+    body: response.body.length > 0 ? response.json<TBody>() : ({} as TBody),
+  };
 }

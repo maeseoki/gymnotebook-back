@@ -233,6 +233,12 @@ describe('Fastify foundation', () => {
 
     expect(Object.keys(document.paths).sort()).toEqual([
       '/api/auth/logout',
+      '/api/auth/mobile/logout',
+      '/api/auth/mobile/refresh',
+      '/api/auth/mobile/sessions',
+      '/api/auth/mobile/sessions/{sessionId}',
+      '/api/auth/mobile/signin',
+      '/api/auth/mobile/signup',
       '/api/auth/signin',
       '/api/auth/signup',
       '/api/exercise/',
@@ -274,6 +280,83 @@ describe('Fastify foundation', () => {
     expect(document.paths['/api/image/{id}']?.get?.security).toBeUndefined();
     expect(document.paths['/api/image/']?.post?.security).toEqual([{ bearerAuth: [] }]);
     expect(document.paths['/api/workout/']?.post?.security).toEqual([{ bearerAuth: [] }]);
+
+    for (const [path, method] of [
+      ['/api/auth/mobile/signin', 'post'],
+      ['/api/auth/mobile/signup', 'post'],
+      ['/api/auth/mobile/refresh', 'post'],
+      ['/api/auth/mobile/logout', 'post'],
+      ['/api/auth/mobile/sessions', 'get'],
+      ['/api/auth/mobile/sessions/{sessionId}', 'delete'],
+      ['/api/auth/mobile/sessions', 'delete'],
+    ] as const) {
+      const operation = document.paths[path]?.[method];
+      expect(operation?.tags).toContain('mobile-auth');
+      expect(operation?.summary).toBeTruthy();
+      expect(operation?.responses).toBeTruthy();
+    }
+
+    expect(document.paths['/api/auth/mobile/signin']?.post?.security).toBeUndefined();
+    expect(document.paths['/api/auth/mobile/signup']?.post?.security).toBeUndefined();
+    expect(document.paths['/api/auth/mobile/refresh']?.post?.security).toBeUndefined();
+    expect(document.paths['/api/auth/mobile/logout']?.post?.security).toBeUndefined();
+    expect(document.paths['/api/auth/mobile/sessions']?.get?.security).toEqual([
+      { bearerAuth: [] },
+    ]);
+    expect(document.paths['/api/auth/mobile/sessions/{sessionId}']?.delete?.security).toEqual([
+      { bearerAuth: [] },
+    ]);
+    expect(document.paths['/api/auth/mobile/sessions']?.delete?.security).toEqual([
+      { bearerAuth: [] },
+    ]);
+  });
+
+  it('validates mobile auth contracts before handlers run', async () => {
+    const instance = await makeApp();
+
+    const signin = await instance.inject({
+      method: 'POST',
+      url: '/api/auth/mobile/signin',
+      payload: { username: 'mobileuser', password: 'secret1', extra: true },
+    });
+    const refresh = await instance.inject({
+      method: 'POST',
+      url: '/api/auth/mobile/refresh',
+      payload: { refreshToken: 'short' },
+    });
+    const logout = await instance.inject({
+      method: 'POST',
+      url: '/api/auth/mobile/logout',
+      payload: { refreshToken: 'a'.repeat(64), extra: true },
+    });
+
+    expect(signin.statusCode).toBe(400);
+    expect(refresh.statusCode).toBe(400);
+    expect(logout.statusCode).toBe(400);
+    expect(signin.json()).toMatchObject({ code: 'validation_failed' });
+    expect(refresh.json()).toMatchObject({ code: 'validation_failed' });
+    expect(logout.json()).toMatchObject({ code: 'validation_failed' });
+  });
+
+  it('requires mobile access tokens for mobile session management routes', async () => {
+    const instance = await makeApp();
+    const legacyAuthorization = authHeader(instance, {
+      sub: 'legacy',
+      userId: 1,
+      roles: ['ROLE_USER'],
+    });
+
+    const missing = await instance.inject({ method: 'GET', url: '/api/auth/mobile/sessions' });
+    const legacy = await instance.inject({
+      method: 'GET',
+      url: '/api/auth/mobile/sessions',
+      headers: { authorization: legacyAuthorization },
+    });
+
+    expect(missing.statusCode).toBe(401);
+    expect(missing.json()).toMatchObject({ code: 'unauthorized' });
+    expect(legacy.statusCode).toBe(401);
+    expect(legacy.json()).toMatchObject({ code: 'mobile_session_required' });
   });
 
   it('hides Swagger when disabled', async () => {

@@ -15,6 +15,7 @@ import { authRoutes } from './auth/http/auth.routes.js';
 import { exerciseRoutes } from './exercises/http/exercise.routes.js';
 import { healthRoutes } from './health/health.routes.js';
 import { imageRoutes } from './images/http/image.routes.js';
+import { mobileAuthRoutes } from './mobile-auth/http/mobile-auth.routes.js';
 import { configPlugin } from './shared/config.js';
 import { createTestDatabaseClient, type DatabasePluginOptions, dbPlugin } from './shared/db.js';
 import type { Env } from './shared/env.js';
@@ -102,6 +103,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   await fastify.register(jwtAuthPlugin);
 
   await fastify.register(authRoutes, { prefix: '/api/auth' });
+  await fastify.register(mobileAuthRoutes, { prefix: '/api/auth/mobile' });
   await fastify.register(userRoutes, { prefix: '/api/user' });
   await fastify.register(exerciseRoutes, { prefix: '/api/exercise' });
   await fastify.register(imageRoutes, { prefix: '/api/image' });
@@ -158,6 +160,11 @@ function createLoggerOptions(config: Env): FastifyServerOptions['logger'] {
       'token',
       'accessToken',
       'refreshToken',
+      'req.body.password',
+      'req.body.refreshToken',
+      'req.body.device',
+      'res.body.accessToken',
+      'res.body.refreshToken',
       'JWT_SECRET',
       'MOBILE_REFRESH_TOKEN_PEPPER',
       'DB_PASSWORD',

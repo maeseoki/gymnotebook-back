@@ -83,7 +83,7 @@ The API validates configuration with Zod at startup and fails fast when required
 | `LOG_LEVEL` | Pino log level. |
 | `MAX_UPLOAD_SIZE` | Multipart file size limit in bytes. |
 | `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS` | Global rate limit. |
-| `AUTH_RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_WINDOW_MS` | Stricter signin/signup rate limit. |
+| `AUTH_RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_WINDOW_MS` | Stricter auth rate limit for signin, signup, and mobile refresh. |
 | `SWAGGER_ENABLED` | `true` exposes Swagger UI and JSON at `/docs`; `false` disables them. |
 | `DEFAULT_TIMEZONE` | IANA timezone used by workout calendar queries when clients omit `timezone`. |
 
@@ -203,9 +203,21 @@ Role rules:
 
 Auth/user compatibility details are documented in `docs/migrations/auth-users-compatibility.md`.
 
-Mobile session foundations are implemented separately from these web-compatible endpoints. The mobile model uses database-backed sessions, opaque rotating refresh tokens stored only as HMAC hashes, and short-lived mobile JWTs with `sessionId` claims. The security design is documented in `docs/architecture/mobile-auth-sessions.md`; mobile HTTP endpoints are deferred.
+Mobile authentication is implemented separately from these web-compatible endpoints. The mobile model uses database-backed sessions, opaque rotating refresh tokens stored only as HMAC hashes, and short-lived mobile JWTs with `sessionId` claims. The security design is documented in `docs/architecture/mobile-auth-sessions.md`.
+
+Implemented mobile endpoints:
+
+- `POST /api/auth/mobile/signin`: username/password signin plus mobile token pair.
+- `POST /api/auth/mobile/signup`: account creation with `ROLE_USER` plus mobile token pair.
+- `POST /api/auth/mobile/refresh`: refresh-token rotation; does not require an access token.
+- `POST /api/auth/mobile/logout`: idempotent current-device logout by refresh token; returns `204`.
+- `GET /api/auth/mobile/sessions`: list active owned mobile sessions; requires a mobile access token with `sessionId`.
+- `DELETE /api/auth/mobile/sessions/:sessionId`: revoke one owned mobile session; missing or foreign sessions return `404 mobile_session_not_found`.
+- `DELETE /api/auth/mobile/sessions?keepCurrent=false`: revoke all owned mobile sessions. `keepCurrent=true` preserves the current session.
 
 Refresh rotation rejects an already-rotated token every time. During the short `MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS` window, immediate concurrent replay does not revoke the newly issued replacement; after the grace window, replay revokes the token family. Access-token issuance is part of the session creation/rotation transaction so signing failures do not commit unusable session rows.
+
+Mobile clients should keep access tokens in memory and store refresh tokens only in platform secure storage such as Expo SecureStore. Refresh tokens must not be stored in AsyncStorage. Revoking a mobile session immediately prevents refresh and access to mobile session-management endpoints. Existing signed access tokens can still be accepted by ordinary protected API routes until their short TTL expires because those routes do not perform per-request session-row validation in this task.
 
 ## Exercises
 

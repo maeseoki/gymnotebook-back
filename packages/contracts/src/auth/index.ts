@@ -78,7 +78,7 @@ export const MobileLogoutRequestSchema = z.strictObject({
 export type MobileLogoutRequest = z.infer<typeof MobileLogoutRequestSchema>;
 
 export const MobileSessionResponseSchema = z.strictObject({
-  id: z.string().min(16).max(128),
+  id: z.uuid(),
   deviceName: z.string().max(80).nullable(),
   devicePlatform: MobileDevicePlatformSchema.nullable(),
   createdAt: IsoInstantStringSchema,
@@ -94,6 +94,20 @@ export const MobileSessionsResponseSchema = z.strictObject({
 export type MobileSessionsResponse = z.infer<typeof MobileSessionsResponseSchema>;
 
 export const MobileSessionIdParamSchema = z.strictObject({
-  sessionId: z.string().min(16).max(128),
+  sessionId: z.uuid(),
 });
 export type MobileSessionIdParam = z.infer<typeof MobileSessionIdParamSchema>;
+
+const QueryBooleanSchema = z
+  .union([z.boolean(), z.enum(['true', 'false'])])
+  .transform((value) => value === true || value === 'true');
+
+export const MobileRevokeAllSessionsQuerySchema = z.strictObject({
+  keepCurrent: QueryBooleanSchema.default(false),
+});
+export type MobileRevokeAllSessionsQuery = z.infer<typeof MobileRevokeAllSessionsQuerySchema>;
+
+export const MobileRevokeAllSessionsResponseSchema = z.strictObject({
+  revoked: z.number().int().min(0),
+});
+export type MobileRevokeAllSessionsResponse = z.infer<typeof MobileRevokeAllSessionsResponseSchema>;

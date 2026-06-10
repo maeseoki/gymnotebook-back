@@ -3,6 +3,8 @@ import {
   JwtResponseSchema,
   MobileLogoutRequestSchema,
   MobileRefreshRequestSchema,
+  MobileRevokeAllSessionsQuerySchema,
+  MobileRevokeAllSessionsResponseSchema,
   MobileSessionResponseSchema,
   MobileSignInRequestSchema,
   MobileSignUpRequestSchema,
@@ -206,7 +208,7 @@ describe('mobile auth contracts', () => {
   it('validates safe session responses only', () => {
     expect(
       MobileSessionResponseSchema.safeParse({
-        id: 'session-id-that-is-long-enough',
+        id: '11111111-1111-4111-8111-111111111111',
         deviceName: null,
         devicePlatform: 'android',
         createdAt: '2026-01-01T00:00:00Z',
@@ -217,7 +219,7 @@ describe('mobile auth contracts', () => {
     ).toBe(true);
     expect(
       MobileSessionResponseSchema.safeParse({
-        id: 'session-id-that-is-long-enough',
+        id: '11111111-1111-4111-8111-111111111111',
         deviceName: null,
         devicePlatform: 'android',
         createdAt: '2026-01-01T00:00:00Z',
@@ -227,5 +229,17 @@ describe('mobile auth contracts', () => {
         refreshTokenHash: 'secret',
       }).success,
     ).toBe(false);
+  });
+
+  it('validates revoke-all query and response contracts', () => {
+    expect(MobileRevokeAllSessionsQuerySchema.parse({})).toEqual({ keepCurrent: false });
+    expect(MobileRevokeAllSessionsQuerySchema.parse({ keepCurrent: 'true' })).toEqual({
+      keepCurrent: true,
+    });
+    expect(
+      MobileRevokeAllSessionsQuerySchema.safeParse({ keepCurrent: false, extra: true }).success,
+    ).toBe(false);
+    expect(MobileRevokeAllSessionsResponseSchema.safeParse({ revoked: 2 }).success).toBe(true);
+    expect(MobileRevokeAllSessionsResponseSchema.safeParse({ revoked: -1 }).success).toBe(false);
   });
 });

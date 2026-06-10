@@ -61,5 +61,10 @@ export interface MobileSessionRepository {
     now: string;
     currentSessionId?: string;
   }): Promise<MobileSessionView[]>;
+  isActiveSessionForUser(input: {
+    userId: number;
+    sessionId: string;
+    now: string;
+  }): Promise<boolean>;
   cleanup(input: CleanupMobileSessionsInput): Promise<number>;
 }

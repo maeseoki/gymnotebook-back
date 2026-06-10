@@ -251,6 +251,28 @@ export class DrizzleMobileSessionRepository implements MobileSessionRepository {
     }));
   }
 
+  async isActiveSessionForUser(input: {
+    userId: number;
+    sessionId: string;
+    now: string;
+  }): Promise<boolean> {
+    const rows = await this.db
+      .select({ id: schema.mobileSessions.id })
+      .from(schema.mobileSessions)
+      .where(
+        and(
+          eq(schema.mobileSessions.userId, input.userId),
+          eq(schema.mobileSessions.sessionId, input.sessionId),
+          isNull(schema.mobileSessions.revokedAt),
+          isNull(schema.mobileSessions.replacedBySessionRowId),
+          gt(schema.mobileSessions.expiresAt, input.now),
+        ),
+      )
+      .limit(1);
+
+    return rows.length > 0;
+  }
+
   async cleanup(input: CleanupMobileSessionsInput): Promise<number> {
     const rows = await this.db
       .select({ id: schema.mobileSessions.id })

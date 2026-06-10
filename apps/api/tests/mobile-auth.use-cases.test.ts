@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import {
+  EmailAlreadyExistsError,
+  UsernameAlreadyExistsError,
+} from '../src/auth/domain/auth.errors.js';
 import { cleanupMobileSessions } from '../src/mobile-auth/application/cleanup-mobile-sessions.js';
 import { createMobileSession } from '../src/mobile-auth/application/create-mobile-session.js';
 import { listMobileSessionsForUser } from '../src/mobile-auth/application/list-mobile-sessions.js';
@@ -8,6 +12,8 @@ import {
   revokeMobileSessionByRefreshToken,
 } from '../src/mobile-auth/application/revoke-mobile-session.js';
 import { rotateMobileSession } from '../src/mobile-auth/application/rotate-mobile-session.js';
+import { signUpMobile } from '../src/mobile-auth/application/sign-up-mobile.js';
+import { validateActiveMobileSessionForUser } from '../src/mobile-auth/application/validate-active-mobile-session.js';
 import type { MobileAccessTokenIssuer } from '../src/mobile-auth/domain/mobile-access-token-issuer.js';
 import {
   ImmediateMobileRefreshTokenReplayError,
@@ -33,6 +39,10 @@ import type {
 import type { Clock } from '../src/mobile-auth/domain/mobile-session-time.js';
 import { CryptoRefreshTokenService } from '../src/mobile-auth/infrastructure/crypto-refresh-token.service.js';
 import { JwtMobileAccessTokenIssuer } from '../src/mobile-auth/infrastructure/jwt-mobile-access-token.issuer.js';
+import type { ERole, Role } from '../src/users/domain/role.js';
+import type { RoleRepository } from '../src/users/domain/role.repository.js';
+import type { AuthenticatedUserCredentials, UserWithRoles } from '../src/users/domain/user.js';
+import type { CreateUserInput, UserRepository } from '../src/users/domain/user.repository.js';
 
 class MutableClock implements Clock {
   constructor(private value: Date) {}
@@ -67,6 +77,8 @@ class FakeMobileSessionStore implements MobileSessionRepository, MobileSessionUn
   users = new Map<number, MobileSessionUser>();
   nextId = 1;
   failNextCreate = false;
+  listActiveCalls = 0;
+  isActiveCalls = 0;
 
   async transaction<T>(
     work: (repositories: MobileSessionTransactionRepositories) => Promise<T>,
@@ -194,6 +206,7 @@ class FakeMobileSessionStore implements MobileSessionRepository, MobileSessionUn
   }
 
   async listActiveByUser(input: { userId: number; now: string; currentSessionId?: string }) {
+    this.listActiveCalls += 1;
     return this.rows
       .filter(
         (row) =>
@@ -213,6 +226,22 @@ class FakeMobileSessionStore implements MobileSessionRepository, MobileSessionUn
       }));
   }
 
+  async isActiveSessionForUser(input: {
+    userId: number;
+    sessionId: string;
+    now: string;
+  }): Promise<boolean> {
+    this.isActiveCalls += 1;
+    return this.rows.some(
+      (row) =>
+        row.userId === input.userId &&
+        row.sessionId === input.sessionId &&
+        row.revokedAt === null &&
+        row.replacedBySessionRowId === null &&
+        row.expiresAt > input.now,
+    );
+  }
+
   async cleanup(input: CleanupMobileSessionsInput): Promise<number> {
     const deletable = this.rows.filter((row) => {
       const retained =
@@ -224,6 +253,131 @@ class FakeMobileSessionStore implements MobileSessionRepository, MobileSessionUn
     const ids = deletable.slice(0, input.limit).map((row) => row.id);
     this.rows = this.rows.filter((row) => !ids.includes(row.id));
     return ids.length;
+  }
+}
+
+class FakeSignupUsers implements UserRepository {
+  users: Array<{ id: number; username: string; email: string; passwordHash: string }> = [];
+  assignedRoles: Array<{ userId: number; roleId: number }> = [];
+  nextId = 1;
+
+  async findCredentialsByUsername(username: string): Promise<AuthenticatedUserCredentials | null> {
+    const user = this.users.find((candidate) => candidate.username === username);
+    return user
+      ? {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          passwordHash: user.passwordHash,
+          roles: ['ROLE_USER'],
+        }
+      : null;
+  }
+
+  async findById(id: number): Promise<UserWithRoles | null> {
+    const user = this.users.find((candidate) => candidate.id === id);
+    return user
+      ? {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          roles: [{ id: 1, name: 'ROLE_USER' }],
+        }
+      : null;
+  }
+
+  async findAll(): Promise<UserWithRoles[]> {
+    return this.users.map((candidate) => ({
+      id: candidate.id,
+      username: candidate.username,
+      email: candidate.email,
+      roles: [{ id: 1, name: 'ROLE_USER' }],
+    }));
+  }
+
+  async existsByUsername(username: string): Promise<boolean> {
+    return this.users.some((candidate) => candidate.username === username);
+  }
+
+  async existsByEmail(email: string): Promise<boolean> {
+    return this.users.some((candidate) => candidate.email === email);
+  }
+
+  async existsById(id: number): Promise<boolean> {
+    return this.users.some((candidate) => candidate.id === id);
+  }
+
+  async createUser(input: CreateUserInput): Promise<number> {
+    const id = this.nextId;
+    this.nextId += 1;
+    this.users.push({ id, ...input });
+    return id;
+  }
+
+  async updatePasswordHash(userId: number, passwordHash: string): Promise<void> {
+    const user = this.users.find((candidate) => candidate.id === userId);
+    if (user) {
+      user.passwordHash = passwordHash;
+    }
+  }
+
+  async assignRole(userId: number, roleId: number): Promise<void> {
+    this.assignedRoles.push({ userId, roleId });
+  }
+
+  async removeRole(userId: number, roleId: number): Promise<void> {
+    this.assignedRoles = this.assignedRoles.filter(
+      (assigned) => assigned.userId !== userId || assigned.roleId !== roleId,
+    );
+  }
+
+  async hasRole(userId: number, role: ERole): Promise<boolean> {
+    return (
+      role === 'ROLE_USER' && this.assignedRoles.some((assigned) => assigned.userId === userId)
+    );
+  }
+
+  async countUsersByRole(role: ERole): Promise<number> {
+    return role === 'ROLE_USER' ? this.assignedRoles.length : 0;
+  }
+
+  async countUsersByRoleForUpdate(role: ERole): Promise<number> {
+    return this.countUsersByRole(role);
+  }
+
+  async deleteById(id: number): Promise<void> {
+    this.users = this.users.filter((candidate) => candidate.id !== id);
+    this.assignedRoles = this.assignedRoles.filter((assigned) => assigned.userId !== id);
+  }
+
+  snapshot(): {
+    users: FakeSignupUsers['users'];
+    assignedRoles: FakeSignupUsers['assignedRoles'];
+    nextId: number;
+  } {
+    return {
+      users: this.users.map((candidate) => ({ ...candidate })),
+      assignedRoles: this.assignedRoles.map((assigned) => ({ ...assigned })),
+      nextId: this.nextId,
+    };
+  }
+
+  restore(snapshot: ReturnType<FakeSignupUsers['snapshot']>): void {
+    this.users = snapshot.users.map((candidate) => ({ ...candidate }));
+    this.assignedRoles = snapshot.assignedRoles.map((assigned) => ({ ...assigned }));
+    this.nextId = snapshot.nextId;
+  }
+}
+
+class FakeSignupRoles implements RoleRepository {
+  role: Role | null = { id: 1, name: 'ROLE_USER' };
+
+  async findByName(name: ERole): Promise<Role | null> {
+    return this.role?.name === name ? this.role : null;
+  }
+
+  async findById(id: number): Promise<Role | null> {
+    return this.role?.id === id ? this.role : null;
   }
 }
 
@@ -322,6 +476,149 @@ describe('mobile session use cases', () => {
       ),
     ).rejects.toThrow('access token failed');
 
+    expect(deps.store.rows).toEqual([]);
+  });
+
+  it('signs up a mobile user, assigns ROLE_USER and creates the first session atomically', async () => {
+    const deps = makeDeps();
+    const users = new FakeSignupUsers();
+    const roles = new FakeSignupRoles();
+
+    const result = await signUpMobile(
+      {
+        username: 'newmobile',
+        email: 'newmobile@example.test',
+        password: 'secret1',
+        device: { platform: 'ios' },
+      },
+      {
+        passwordHasher: { hash: async (password) => `hashed:${password}` },
+        transaction: (work) =>
+          deps.store.transaction(async ({ mobileSessions }) =>
+            work({ users, roles, mobileSessions }),
+          ),
+        refreshTokens: deps.refreshTokens,
+        accessTokens: deps.accessTokens,
+        clock: deps.clock,
+        refreshTokenTtlMs: 100000,
+        isDuplicateUsernameError: () => false,
+        isDuplicateEmailError: () => false,
+        isRefreshTokenHashConflict: () => false,
+      },
+    );
+
+    expect(result.user).toMatchObject({
+      username: 'newmobile',
+      email: 'newmobile@example.test',
+      roles: ['ROLE_USER'],
+    });
+    expect(users.users).toHaveLength(1);
+    expect(users.users[0]?.passwordHash).toBe('hashed:secret1');
+    expect(users.assignedRoles).toEqual([{ userId: 1, roleId: 1 }]);
+    expect(deps.store.rows).toHaveLength(1);
+    expect(deps.store.rows[0]?.devicePlatform).toBe('ios');
+  });
+
+  it('rejects duplicate mobile signup values without creating sessions', async () => {
+    const deps = makeDeps();
+    const users = new FakeSignupUsers();
+    await users.createUser({
+      username: 'duplicate',
+      email: 'duplicate@example.test',
+      passwordHash: 'hash',
+    });
+    const roles = new FakeSignupRoles();
+
+    await expect(
+      signUpMobile(
+        {
+          username: 'duplicate',
+          email: 'new@example.test',
+          password: 'secret1',
+        },
+        {
+          passwordHasher: { hash: async (password) => `hashed:${password}` },
+          transaction: (work) =>
+            deps.store.transaction(async ({ mobileSessions }) =>
+              work({ users, roles, mobileSessions }),
+            ),
+          refreshTokens: deps.refreshTokens,
+          accessTokens: deps.accessTokens,
+          clock: deps.clock,
+          refreshTokenTtlMs: 100000,
+          isDuplicateUsernameError: () => false,
+          isDuplicateEmailError: () => false,
+          isRefreshTokenHashConflict: () => false,
+        },
+      ),
+    ).rejects.toBeInstanceOf(UsernameAlreadyExistsError);
+
+    await expect(
+      signUpMobile(
+        {
+          username: 'newmobile',
+          email: 'duplicate@example.test',
+          password: 'secret1',
+        },
+        {
+          passwordHasher: { hash: async (password) => `hashed:${password}` },
+          transaction: (work) =>
+            deps.store.transaction(async ({ mobileSessions }) =>
+              work({ users, roles, mobileSessions }),
+            ),
+          refreshTokens: deps.refreshTokens,
+          accessTokens: deps.accessTokens,
+          clock: deps.clock,
+          refreshTokenTtlMs: 100000,
+          isDuplicateUsernameError: () => false,
+          isDuplicateEmailError: () => false,
+          isRefreshTokenHashConflict: () => false,
+        },
+      ),
+    ).rejects.toBeInstanceOf(EmailAlreadyExistsError);
+
+    expect(deps.store.rows).toEqual([]);
+  });
+
+  it('rolls back mobile signup user and session work when token issuance fails', async () => {
+    const deps = makeDeps();
+    const users = new FakeSignupUsers();
+    const roles = new FakeSignupRoles();
+    deps.accessTokens.fail = true;
+
+    await expect(
+      signUpMobile(
+        {
+          username: 'rollbackmobile',
+          email: 'rollbackmobile@example.test',
+          password: 'secret1',
+        },
+        {
+          passwordHasher: { hash: async (password) => `hashed:${password}` },
+          transaction: async (work) => {
+            const userSnapshot = users.snapshot();
+            return deps.store.transaction(async ({ mobileSessions }) => {
+              try {
+                return await work({ users, roles, mobileSessions });
+              } catch (error) {
+                users.restore(userSnapshot);
+                throw error;
+              }
+            });
+          },
+          refreshTokens: deps.refreshTokens,
+          accessTokens: deps.accessTokens,
+          clock: deps.clock,
+          refreshTokenTtlMs: 100000,
+          isDuplicateUsernameError: () => false,
+          isDuplicateEmailError: () => false,
+          isRefreshTokenHashConflict: () => false,
+        },
+      ),
+    ).rejects.toThrow('access token failed');
+
+    expect(users.users).toEqual([]);
+    expect(users.assignedRoles).toEqual([]);
     expect(deps.store.rows).toEqual([]);
   });
 
@@ -632,6 +929,114 @@ describe('mobile session use cases', () => {
       ),
     ).resolves.toBe(2);
     expect(deps.store.rows).toEqual([]);
+  });
+
+  it('validates one active mobile session without listing all sessions', async () => {
+    const deps = makeDeps();
+    await createMobileSession(
+      { user },
+      {
+        unitOfWork: deps.store,
+        refreshTokens: deps.refreshTokens,
+        accessTokens: deps.accessTokens,
+        clock: deps.clock,
+        refreshTokenTtlMs: 100000,
+        isRefreshTokenHashConflict: () => false,
+      },
+    );
+    const sessionId = deps.store.rows[0]?.sessionId;
+    if (!sessionId) {
+      throw new Error('Expected created session id');
+    }
+
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: user.id, sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).resolves.toBeUndefined();
+    expect(deps.store.isActiveCalls).toBe(1);
+    expect(deps.store.listActiveCalls).toBe(0);
+  });
+
+  it('rejects foreign, expired, revoked and replaced active-session validation', async () => {
+    const deps = makeDeps();
+    const created = await createMobileSession(
+      { user },
+      {
+        unitOfWork: deps.store,
+        refreshTokens: deps.refreshTokens,
+        accessTokens: deps.accessTokens,
+        clock: deps.clock,
+        refreshTokenTtlMs: 100000,
+        isRefreshTokenHashConflict: () => false,
+      },
+    );
+    const sessionId = deps.store.rows[0]?.sessionId;
+    if (!sessionId) {
+      throw new Error('Expected created session id');
+    }
+
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: 999, sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).rejects.toBeInstanceOf(InvalidMobileSessionError);
+
+    const row = deps.store.rows[0];
+    if (!row) {
+      throw new Error('Expected created session row');
+    }
+    row.revokedAt = '2026-01-01 00:00:01';
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: user.id, sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).rejects.toBeInstanceOf(InvalidMobileSessionError);
+
+    row.revokedAt = null;
+    row.expiresAt = '2025-12-31 23:59:59';
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: user.id, sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).rejects.toBeInstanceOf(InvalidMobileSessionError);
+
+    row.expiresAt = '2026-01-01 00:01:40';
+    await rotateMobileSession(
+      { refreshToken: created.refreshToken },
+      {
+        unitOfWork: deps.store,
+        refreshTokens: deps.refreshTokens,
+        accessTokens: deps.accessTokens,
+        securityEvents: { record: async () => {} },
+        clock: deps.clock,
+        refreshTokenTtlMs: 100000,
+        refreshTokenReuseGraceMs: 10000,
+        isRefreshTokenHashConflict: () => false,
+      },
+    );
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: user.id, sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).resolves.toBeUndefined();
+
+    const previousRow = deps.store.rows[0];
+    if (!previousRow) {
+      throw new Error('Expected previous session row');
+    }
+    previousRow.sessionId = 'previous-version-session-id';
+    await expect(
+      validateActiveMobileSessionForUser(
+        { userId: user.id, sessionId: previousRow.sessionId },
+        { unitOfWork: deps.store, clock: deps.clock },
+      ),
+    ).rejects.toBeInstanceOf(InvalidMobileSessionError);
   });
 
   it('maps sensitive internal session errors to one generic external error', () => {

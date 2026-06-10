@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented foundations. HTTP mobile authentication endpoints are deferred.
+Implemented mobile authentication session foundations and HTTP endpoints.
 
 ## Context
 
@@ -29,7 +29,7 @@ Mobile access tokens are short-lived JWTs sent as `Authorization: Bearer <token>
 
 Existing non-mobile JWTs may continue without `sessionId`.
 
-Refresh tokens are opaque base64url strings generated from Node cryptographic random bytes. They are returned only on initial issue and rotation, stored by the client in SecureStore, and never placed in JWT claims.
+Refresh tokens are opaque base64url strings generated from Node cryptographic random bytes. They are returned only on initial issue and rotation, stored by the client in SecureStore, and never placed in JWT claims. They must not be stored in AsyncStorage.
 
 ## Refresh-Token Hashing
 
@@ -75,7 +75,21 @@ If the already-replaced token is presented after the short grace window, it is t
 
 Safe security events are emitted after the database transaction commits. Event recording is best effort; telemetry or logging failure must not roll back a committed family revocation or make that revocation appear unsuccessful. A durable outbox may be added later if guaranteed event delivery becomes a requirement.
 
-Internal error codes distinguish `invalid_mobile_session`, `immediate_replay`, `mobile_session_expired`, `mobile_session_revoked`, `mobile_refresh_token_reuse`, and `mobile_session_not_found` for tests and safe logs. Future HTTP endpoints should map sensitive refresh failures to one external `invalid_mobile_session` response.
+Internal error codes distinguish `invalid_mobile_session`, `immediate_replay`, `mobile_session_expired`, `mobile_session_revoked`, `mobile_refresh_token_reuse`, and `mobile_session_not_found` for tests and safe logs. HTTP refresh maps sensitive failures to one external `401 invalid_mobile_session` response.
+
+## HTTP Endpoints
+
+Implemented mobile endpoints are:
+
+- `POST /api/auth/mobile/signin`: validates username/password through the existing auth code path, including legacy BCrypt migration, then creates a mobile session.
+- `POST /api/auth/mobile/signup`: hashes the password outside the database transaction, then creates the user, assigns `ROLE_USER`, creates the initial mobile session row, and issues the access token inside one transaction.
+- `POST /api/auth/mobile/refresh`: rotates a refresh token and returns a new token pair. It never requires an access token.
+- `POST /api/auth/mobile/logout`: idempotently revokes the token family associated with a valid-shaped refresh token and returns `204`. Unknown valid-shaped tokens also return `204`.
+- `GET /api/auth/mobile/sessions`: lists active owned mobile sessions and marks the current session.
+- `DELETE /api/auth/mobile/sessions/:sessionId`: revokes an owned stable session ID. Missing and foreign sessions return `404 mobile_session_not_found`.
+- `DELETE /api/auth/mobile/sessions?keepCurrent=false`: revokes all mobile sessions for the authenticated user. `keepCurrent=true` preserves the current stable session ID.
+
+Signin, signup and refresh use the stricter auth rate limit. Refresh and logout do not require Bearer authentication. Session listing and revocation require a mobile access token with a `sessionId` claim.
 
 ## Revocation And Logout
 
@@ -87,6 +101,8 @@ Implemented application operations support:
 - list active, unexpired, unreplaced sessions for a user.
 
 Users cannot inspect or revoke another user's sessions because repository operations scope by `user_id`. Deleting a user cascades mobile-session rows, leaving no usable sessions.
+
+Revoking a mobile session immediately prevents refresh and blocks the mobile session-management endpoints because those routes validate that the JWT `sessionId` is still the active leaf token for the user. Ordinary protected API routes still validate only JWT signature and expiry in this task; already-issued access tokens can remain usable there until their short TTL expires. Immediate global access-token revocation would require session validation on every authenticated request or a revocation cache.
 
 ## Cleanup
 
@@ -100,7 +116,7 @@ The existing web-compatible endpoints remain stateless and unchanged:
 - `POST /api/auth/signup`
 - `GET /api/auth/logout`
 
-Mobile flows will use separate endpoints in a later task.
+Mobile flows use separate `/api/auth/mobile/*` endpoints and do not add refresh tokens to the web-compatible signin response.
 
 ## Future Provider Integration
 
@@ -108,7 +124,7 @@ Future Google and Apple login should validate provider authorization through bac
 
 ## Unresolved Decisions
 
-- Exact mobile HTTP endpoint handlers and error response mapping.
 - Whether to expose coarse security-event history to users.
 - Active-session count limits or device-name editing.
 - Production scheduling for the cleanup command.
+- Full immediate access-token revocation on every protected route.
