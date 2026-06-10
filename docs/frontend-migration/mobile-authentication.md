@@ -2,6 +2,8 @@
 
 This is a target architecture for the Expo mobile rewrite. It does **not** imply current backend support already exists.
 
+Implemented backend foundations are documented in [Mobile Auth Sessions ADR](../architecture/mobile-auth-sessions.md). That ADR covers persistence, refresh-token hashing, rotation foundations, reuse detection foundations, revocation application services, and shared contracts. Mobile HTTP endpoints remain deferred.
+
 Related: [Mobile architecture decisions](./mobile-decisions.md)
 
 ## Why this differs from legacy

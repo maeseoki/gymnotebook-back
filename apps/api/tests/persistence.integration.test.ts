@@ -69,7 +69,7 @@ describe('persistence foundation', () => {
       'SELECT COUNT(*) AS count FROM `__drizzle_migrations` WHERE `hash` IS NOT NULL',
     );
 
-    expect(rows[0]?.count).toBe(2);
+    expect(rows[0]?.count).toBe(3);
   });
 
   it('creates all expected tables', async () => {
@@ -83,6 +83,7 @@ describe('persistence foundation', () => {
       '__drizzle_migrations',
       'exercises',
       'image_data',
+      'mobile_sessions',
       'roles',
       'sets',
       'user_roles',
@@ -104,6 +105,18 @@ describe('persistence foundation', () => {
     await expectForeignKey('exercises_user_id_users_id_fk', 'CASCADE');
     await expectForeignKey('workout_sets_exercise_id_exercises_id_fk', 'RESTRICT');
     await expectForeignKey('sets_workout_set_id_workout_sets_id_fk', 'CASCADE');
+    await expectForeignKey('mobile_sessions_user_id_users_id_fk', 'CASCADE');
+    await expectForeignKey(
+      'mobile_sessions_previous_session_row_id_mobile_sessions_id_fk',
+      'RESTRICT',
+    );
+    await expectForeignKey(
+      'mobile_sessions_replaced_by_session_row_id_mobile_sessions_id_fk',
+      'SET NULL',
+    );
+    await expectIndex('mobile_sessions', 'mobile_sessions_refresh_token_hash_unique');
+    await expectIndex('mobile_sessions', 'mobile_sessions_token_family_id_idx');
+    await expectIndex('mobile_sessions', 'mobile_sessions_expiry_revocation_idx');
     await expectIndex('workouts', 'workouts_user_start_date_idx');
     await expectIndex('workout_sets', 'workout_sets_exercise_id_idx');
     await expectIndex('sets', 'sets_workout_set_id_idx');

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IsoInstantStringSchema } from '../common/index.js';
 import { ERoleSchema } from '../users/index.js';
 
 export const LoginRequestSchema = z.strictObject({
@@ -27,3 +28,72 @@ export const JwtResponseSchema = z.object({
   roles: z.array(ERoleSchema),
 });
 export type JwtResponse = z.infer<typeof JwtResponseSchema>;
+
+export const MobileDevicePlatformSchema = z.enum(['android', 'ios']);
+export type MobileDevicePlatform = z.infer<typeof MobileDevicePlatformSchema>;
+
+export const MobileDeviceMetadataSchema = z.strictObject({
+  name: z.string().trim().min(1).max(80).optional(),
+  platform: MobileDevicePlatformSchema.optional(),
+});
+export type MobileDeviceMetadata = z.infer<typeof MobileDeviceMetadataSchema>;
+
+export const MobileSignInRequestSchema = z.strictObject({
+  username: z.string().min(1),
+  password: z.string().min(1),
+  device: MobileDeviceMetadataSchema.optional(),
+});
+export type MobileSignInRequest = z.infer<typeof MobileSignInRequestSchema>;
+
+export const MobileSignUpRequestSchema = SignupRequestSchema.extend({
+  device: MobileDeviceMetadataSchema.optional(),
+}).strict();
+export type MobileSignUpRequest = z.infer<typeof MobileSignUpRequestSchema>;
+
+export const MobileUserSchema = z.strictObject({
+  id: z.number().int(),
+  username: z.string(),
+  email: z.string(),
+  roles: z.array(ERoleSchema),
+});
+export type MobileUser = z.infer<typeof MobileUserSchema>;
+
+export const MobileTokenPairResponseSchema = z.strictObject({
+  accessToken: z.string().min(1),
+  refreshToken: z.string().min(1),
+  accessTokenExpiresAt: IsoInstantStringSchema,
+  refreshTokenExpiresAt: IsoInstantStringSchema,
+  user: MobileUserSchema,
+});
+export type MobileTokenPairResponse = z.infer<typeof MobileTokenPairResponseSchema>;
+
+export const MobileRefreshRequestSchema = z.strictObject({
+  refreshToken: z.string().min(32).max(512),
+});
+export type MobileRefreshRequest = z.infer<typeof MobileRefreshRequestSchema>;
+
+export const MobileLogoutRequestSchema = z.strictObject({
+  refreshToken: z.string().min(32).max(512),
+});
+export type MobileLogoutRequest = z.infer<typeof MobileLogoutRequestSchema>;
+
+export const MobileSessionResponseSchema = z.strictObject({
+  id: z.string().min(16).max(128),
+  deviceName: z.string().max(80).nullable(),
+  devicePlatform: MobileDevicePlatformSchema.nullable(),
+  createdAt: IsoInstantStringSchema,
+  lastUsedAt: IsoInstantStringSchema,
+  expiresAt: IsoInstantStringSchema,
+  current: z.boolean(),
+});
+export type MobileSessionResponse = z.infer<typeof MobileSessionResponseSchema>;
+
+export const MobileSessionsResponseSchema = z.strictObject({
+  sessions: z.array(MobileSessionResponseSchema),
+});
+export type MobileSessionsResponse = z.infer<typeof MobileSessionsResponseSchema>;
+
+export const MobileSessionIdParamSchema = z.strictObject({
+  sessionId: z.string().min(16).max(128),
+});
+export type MobileSessionIdParam = z.infer<typeof MobileSessionIdParamSchema>;
