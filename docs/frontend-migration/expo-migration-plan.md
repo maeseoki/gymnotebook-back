@@ -20,6 +20,7 @@ packages/
 | Dependency/technology | Purpose | Needed immediately? | Replaces legacy | Native config / Expo Go notes |
 |---|---|---|---|---|
 | Expo + React Native + TypeScript | app runtime | Yes | Vite + React DOM | Core foundation |
+| NativeWind 4 + Tailwind CSS 3.4 | native styling utility foundation | Yes | Chakra styling layer | Stable initial choice; migrate to NativeWind 5 + Tailwind 4 only after NativeWind 5 is stable |
 | Expo Router | file-based navigation | Yes | React Router DOM | Expo-first; deep-link friendly |
 | TanStack Query | server-state caching | Yes | imperative `useEffect` fetching | Expo Go compatible |
 | Axios or typed fetch client | HTTP layer | Yes | existing axios usage | central interceptors + mapper layer |
@@ -73,9 +74,9 @@ Notes:
 
 | Phase | Scope | Can start before mobile-session backend endpoints? | Dependencies | Acceptance criteria | Risks |
 |---|---|---|---|---|---|
-| 1. Mobile workspace + UI foundation | Create `apps/mobile`, Expo config, TS/biome wiring, base UI shell | Yes | product decisions locked | app boots and lint/typecheck pass | wrong initial architecture |
-| 2. Contracts + HTTP foundation | consume `@gymnotebook/contracts`, mapper-oriented client, error mapping base | Yes | phase 1 | typed client compiles end-to-end | contract drift and over-coupled view models |
-| 3. Navigation/theme/primitives | Expo Router groups/tabs, tokenized theme, reusable primitives | Yes | phases 1-2 | target route skeleton and visual baseline | over-fitting legacy web CSS |
+| 1. Mobile workspace + UI foundation | Create `apps/mobile`, Expo config, TS/biome wiring, base UI shell | Yes | product decisions locked | Implemented as foundation | wrong initial architecture |
+| 2. Contracts + HTTP foundation | consume `@gymnotebook/contracts`, mapper-oriented client, error mapping base | Yes | phase 1 | Implemented as foundation | contract drift and over-coupled view models |
+| 3. Navigation/theme/primitives | Expo Router groups/tabs, tokenized theme, reusable primitives | Yes | phases 1-2 | Implemented as foundation | over-fitting legacy web CSS |
 | 4. Backend mobile-session design/implementation | access+refresh+session endpoints and revocation/rotation rules | No (backend track) | backend issue | endpoint contract approved + implemented | auth/security complexity |
 | 5. Mobile auth/session restoration | mobile signin/signup/restore/logout flows with state machine | No (needs phase 4) | phases 2-4 | restoring/authenticated/unauthenticated/reauth-required handled cleanly | refresh loop/session edge cases |
 | 6. Exercises + native image pipeline | list/detail/create/edit + camera/gallery + image lifecycle handling | Mostly yes (except auth-protected runtime flows) | phases 2-3 (and 5 for authenticated runtime) | CRUD parity and safe image replacement sequencing | permissions and orphan cleanup |

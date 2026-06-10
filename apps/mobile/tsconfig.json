@@ -1,0 +1,23 @@
+{
+  "extends": "@gymnotebook/typescript-config/expo.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "types": ["jest"],
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": [
+    "app.config.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "__tests__/**/*.ts",
+    "__tests__/**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}

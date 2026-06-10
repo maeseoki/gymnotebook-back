@@ -1,0 +1,4 @@
+/* biome-ignore-all lint/suspicious/noUnknownAtRules: Tailwind directives are consumed by NativeWind. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

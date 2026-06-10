@@ -8,6 +8,7 @@ node_modules/
 dist/
 .turbo/
 .cache/
+.expo/
 
 # Build artifacts next to source
 **/*.js.map
@@ -33,6 +34,3 @@ pnpm-debug.log*
 # Coverage
 coverage/
 *.lcov
-
-# Drizzle generated
-apps/api/drizzle/migrations/meta/*

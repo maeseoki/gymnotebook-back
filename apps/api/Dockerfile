@@ -9,7 +9,7 @@ COPY pnpm-lock.yaml ./
 COPY packages/typescript-config/package.json ./packages/typescript-config/
 COPY packages/contracts/package.json ./packages/contracts/
 COPY apps/api/package.json ./apps/api/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --filter @gymnotebook/api...
 
 FROM base AS builder
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
-RUN pnpm install --frozen-lockfile --offline
+RUN pnpm install --frozen-lockfile --offline --filter @gymnotebook/api...
 RUN pnpm --filter @gymnotebook/contracts build
 RUN pnpm --filter @gymnotebook/api build
 
