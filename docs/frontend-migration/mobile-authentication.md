@@ -1,6 +1,8 @@
 # Mobile Authentication Architecture (Target)
 
-This is a target architecture for the Expo mobile rewrite. It does **not** imply current backend support already exists.
+This document describes the target Expo mobile authentication architecture and the backend behavior now available for username/password mobile sessions. It does **not** imply the Expo application, Google authentication, or Apple authentication already exists.
+
+Implemented backend behavior is documented in [Mobile Auth Sessions ADR](../architecture/mobile-auth-sessions.md). That ADR covers persistence, refresh-token hashing, refresh rotation, reuse detection, revocation, session-management enforcement, shared contracts, and HTTP endpoints.
 
 Related: [Mobile architecture decisions](./mobile-decisions.md)
 
@@ -28,22 +30,25 @@ The legacy access-token + localStorage model is insufficient for long-term mobil
 - Never logged.
 - Rotated on successful use.
 
-### Server-side session model (future backend)
+### Server-side session model
 
-Conceptual session fields for a future backend issue:
+The backend stores one row per refresh-token version in `mobile_sessions`:
 
-- `id`
+- internal `id`
+- stable public `session_id`
 - `user_id`
 - `refresh_token_hash`
 - `token_family_id`
+- `previous_session_row_id`
+- `replaced_by_session_row_id`
 - `created_at`
 - `last_used_at`
+- `rotated_at`
 - `expires_at`
 - `revoked_at`
-- `replaced_by_session_or_token_id`
 - device metadata (`device_name`, etc.) where needed
 
-Exact schema design is deferred to backend implementation.
+Only the stable public session ID and safe device/timestamp metadata are exposed to clients.
 
 ## Security behavior requirements
 
@@ -57,9 +62,9 @@ Exact schema design is deferred to backend implementation.
 - Optionally limit active sessions only if later product decision requires it.
 - Never expose raw refresh tokens in logs or post-issuance API payloads.
 
-## Mobile auth endpoints to design later
+## Implemented mobile auth endpoints
 
-A later backend issue should define endpoints conceptually similar to:
+The backend exposes:
 
 - `POST /api/auth/mobile/signin`
 - `POST /api/auth/mobile/signup`
@@ -67,8 +72,13 @@ A later backend issue should define endpoints conceptually similar to:
 - `POST /api/auth/mobile/logout`
 - `GET /api/auth/mobile/sessions`
 - `DELETE /api/auth/mobile/sessions/:sessionId`
+- `DELETE /api/auth/mobile/sessions?keepCurrent=false`
 
-Names are not finalized by this documentation task.
+Signin/signup return an access/refresh token pair. Refresh rotates the refresh token and returns a new pair. Logout uses a refresh token and remains idempotent, so it can work after access-token expiry. Session listing and revocation require a mobile access token containing `sessionId`.
+
+Refresh failures for unknown, expired, revoked, immediately replayed, or reused tokens all return `401 invalid_mobile_session`. Malformed request bodies return `400 validation_failed`.
+
+Revoking a mobile session immediately prevents refresh and access to mobile session-management endpoints. Existing access tokens may remain valid on ordinary protected API routes until their short TTL expires because global per-request session validation is not enabled yet.
 
 ## Session restoration flow
 

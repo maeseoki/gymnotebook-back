@@ -73,11 +73,17 @@ The API validates configuration with Zod at startup and fails fast when required
 | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | MySQL pool configuration. Production must provide explicit values. |
 | `JWT_SECRET` | Required in production, at least 32 characters. |
 | `JWT_EXPIRATION_MS` | Token lifetime in milliseconds. |
+| `MOBILE_ACCESS_TOKEN_TTL` | Mobile access-token lifetime in milliseconds. |
+| `MOBILE_REFRESH_TOKEN_TTL` | Mobile refresh-token/session lifetime in milliseconds. |
+| `MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS` | Short replay grace window for already-rotated refresh tokens. The old token is still rejected; the family is not revoked during this window. |
+| `MOBILE_REFRESH_TOKEN_PEPPER` | Dedicated refresh-token HMAC pepper. Required in production, at least 32 characters, and must not equal `JWT_SECRET`. |
+| `MOBILE_REFRESH_TOKEN_BYTES` | Random byte length for generated opaque refresh tokens. Minimum 32. |
+| `MOBILE_SESSION_CLEANUP_RETENTION_MS` | Retention window before expired or revoked mobile-session metadata is eligible for cleanup. |
 | `CORS_ORIGINS` | Comma-separated origin allowlist, for example `http://localhost:3000,http://localhost:5173`. |
 | `LOG_LEVEL` | Pino log level. |
 | `MAX_UPLOAD_SIZE` | Multipart file size limit in bytes. |
 | `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS` | Global rate limit. |
-| `AUTH_RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_WINDOW_MS` | Stricter signin/signup rate limit. |
+| `AUTH_RATE_LIMIT_MAX`, `AUTH_RATE_LIMIT_WINDOW_MS` | Stricter auth rate limit for signin, signup, and mobile refresh. |
 | `SWAGGER_ENABLED` | `true` exposes Swagger UI and JSON at `/docs`; `false` disables them. |
 | `DEFAULT_TIMEZONE` | IANA timezone used by workout calendar queries when clients omit `timezone`. |
 
@@ -113,6 +119,14 @@ pnpm db:studio
 ```
 
 Do not use `drizzle-kit push` for production.
+
+Mobile session cleanup is explicit and safe for future scheduling:
+
+```bash
+pnpm db:cleanup-mobile-sessions
+```
+
+It deletes only bounded batches of expired or long-revoked mobile-session rows and does not run automatically on requests.
 
 ## OpenAPI
 
@@ -185,9 +199,25 @@ Role rules:
 - Admins cannot delete themselves.
 - The final admin cannot be removed or deleted.
 
-`GET /api/auth/logout` is retained only as a stateless compatibility endpoint. Clients must discard the token locally; server-side revocation and refresh tokens are intentionally not implemented.
+`GET /api/auth/logout` is retained only as a stateless compatibility endpoint. Clients using the existing web-compatible flow must discard the token locally; that endpoint does not revoke mobile sessions.
 
 Auth/user compatibility details are documented in `docs/migrations/auth-users-compatibility.md`.
+
+Mobile authentication is implemented separately from these web-compatible endpoints. The mobile model uses database-backed sessions, opaque rotating refresh tokens stored only as HMAC hashes, and short-lived mobile JWTs with `sessionId` claims. The security design is documented in `docs/architecture/mobile-auth-sessions.md`.
+
+Implemented mobile endpoints:
+
+- `POST /api/auth/mobile/signin`: username/password signin plus mobile token pair.
+- `POST /api/auth/mobile/signup`: account creation with `ROLE_USER` plus mobile token pair.
+- `POST /api/auth/mobile/refresh`: refresh-token rotation; does not require an access token.
+- `POST /api/auth/mobile/logout`: idempotent current-device logout by refresh token; returns `204`.
+- `GET /api/auth/mobile/sessions`: list active owned mobile sessions; requires a mobile access token with `sessionId`.
+- `DELETE /api/auth/mobile/sessions/:sessionId`: revoke one owned mobile session; missing or foreign sessions return `404 mobile_session_not_found`.
+- `DELETE /api/auth/mobile/sessions?keepCurrent=false`: revoke all owned mobile sessions. `keepCurrent=true` preserves the current session.
+
+Refresh rotation rejects an already-rotated token every time. During the short `MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS` window, immediate concurrent replay does not revoke the newly issued replacement; after the grace window, replay revokes the token family. Access-token issuance is part of the session creation/rotation transaction so signing failures do not commit unusable session rows.
+
+Mobile clients should keep access tokens in memory and store refresh tokens only in platform secure storage such as Expo SecureStore. Refresh tokens must not be stored in AsyncStorage. Revoking a mobile session immediately prevents refresh and access to mobile session-management endpoints. Existing signed access tokens can still be accepted by ordinary protected API routes until their short TTL expires because those routes do not perform per-request session-row validation in this task.
 
 ## Exercises
 

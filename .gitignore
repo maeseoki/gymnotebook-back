@@ -35,4 +35,4 @@ coverage/
 *.lcov
 
 # Drizzle generated
-apps/api/drizzle/migrations/meta/
+apps/api/drizzle/migrations/meta/*

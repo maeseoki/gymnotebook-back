@@ -15,6 +15,7 @@ import { authRoutes } from './auth/http/auth.routes.js';
 import { exerciseRoutes } from './exercises/http/exercise.routes.js';
 import { healthRoutes } from './health/health.routes.js';
 import { imageRoutes } from './images/http/image.routes.js';
+import { mobileAuthRoutes } from './mobile-auth/http/mobile-auth.routes.js';
 import { configPlugin } from './shared/config.js';
 import { createTestDatabaseClient, type DatabasePluginOptions, dbPlugin } from './shared/db.js';
 import type { Env } from './shared/env.js';
@@ -102,6 +103,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   await fastify.register(jwtAuthPlugin);
 
   await fastify.register(authRoutes, { prefix: '/api/auth' });
+  await fastify.register(mobileAuthRoutes, { prefix: '/api/auth/mobile' });
   await fastify.register(userRoutes, { prefix: '/api/user' });
   await fastify.register(exerciseRoutes, { prefix: '/api/exercise' });
   await fastify.register(imageRoutes, { prefix: '/api/image' });
@@ -125,6 +127,12 @@ export function createTestConfig(overrides: Partial<Env> = {}): Env {
     DB_PASSWORD: 'gymnotebook',
     JWT_SECRET: 'test-only-jwt-secret-that-is-long-enough',
     JWT_EXPIRATION_MS: 86400000,
+    MOBILE_ACCESS_TOKEN_TTL: 900000,
+    MOBILE_REFRESH_TOKEN_TTL: 2592000000,
+    MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: 10000,
+    MOBILE_REFRESH_TOKEN_PEPPER: 'test-only-mobile-refresh-token-pepper-long-enough',
+    MOBILE_REFRESH_TOKEN_BYTES: 64,
+    MOBILE_SESSION_CLEANUP_RETENTION_MS: 7776000000,
     CORS_ORIGINS: ['http://localhost:3000'],
     LOG_LEVEL: 'silent',
     MAX_UPLOAD_SIZE: 10 * 1024 * 1024,
@@ -152,7 +160,13 @@ function createLoggerOptions(config: Env): FastifyServerOptions['logger'] {
       'token',
       'accessToken',
       'refreshToken',
+      'req.body.password',
+      'req.body.refreshToken',
+      'req.body.device',
+      'res.body.accessToken',
+      'res.body.refreshToken',
       'JWT_SECRET',
+      'MOBILE_REFRESH_TOKEN_PEPPER',
       'DB_PASSWORD',
     ],
     censor: '[Redacted]',

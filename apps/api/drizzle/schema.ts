@@ -1,3 +1,4 @@
+import type { AnyMySqlColumn } from 'drizzle-orm/mysql-core';
 import {
   bigint,
   boolean,
@@ -74,6 +75,52 @@ export const users = mysqlTable(
   (table) => [
     uniqueIndex('users_username_unique').on(table.username),
     uniqueIndex('users_email_unique').on(table.email),
+  ],
+);
+
+export const mobileDevicePlatforms = ['android', 'ios'] as const;
+export type MobileDevicePlatform = (typeof mobileDevicePlatforms)[number];
+
+export const mobileSessions = mysqlTable(
+  'mobile_sessions',
+  {
+    id: id().primaryKey().autoincrement(),
+    sessionId: varchar('session_id', { length: 64 }).notNull(),
+    userId: id('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenFamilyId: varchar('token_family_id', { length: 64 }).notNull(),
+    refreshTokenHash: varchar('refresh_token_hash', { length: 128 }).notNull(),
+    previousSessionRowId: id('previous_session_row_id').references(
+      (): AnyMySqlColumn => mobileSessions.id,
+      { onDelete: 'restrict' },
+    ),
+    replacedBySessionRowId: id('replaced_by_session_row_id').references(
+      (): AnyMySqlColumn => mobileSessions.id,
+      { onDelete: 'set null' },
+    ),
+    deviceName: varchar('device_name', { length: 80 }),
+    devicePlatform: varchar('device_platform', { length: 16 }).$type<MobileDevicePlatform>(),
+    createdAt: datetime('created_at', { mode: 'string' }).notNull(),
+    lastUsedAt: datetime('last_used_at', { mode: 'string' }).notNull(),
+    rotatedAt: datetime('rotated_at', { mode: 'string' }),
+    expiresAt: datetime('expires_at', { mode: 'string' }).notNull(),
+    revokedAt: datetime('revoked_at', { mode: 'string' }),
+  },
+  (table) => [
+    uniqueIndex('mobile_sessions_refresh_token_hash_unique').on(table.refreshTokenHash),
+    index('mobile_sessions_session_id_idx').on(table.sessionId),
+    index('mobile_sessions_user_id_idx').on(table.userId),
+    index('mobile_sessions_token_family_id_idx').on(table.tokenFamilyId),
+    index('mobile_sessions_expiry_revocation_idx').on(table.expiresAt, table.revokedAt),
+    index('mobile_sessions_user_active_idx').on(
+      table.userId,
+      table.revokedAt,
+      table.expiresAt,
+      table.replacedBySessionRowId,
+    ),
+    index('mobile_sessions_previous_row_idx').on(table.previousSessionRowId),
+    index('mobile_sessions_replaced_by_row_idx').on(table.replacedBySessionRowId),
   ],
 );
 

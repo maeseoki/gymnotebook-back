@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed-roles.ts",
+    "db:cleanup-mobile-sessions": "tsx scripts/cleanup-mobile-sessions.ts",
     "db:check": "drizzle-kit check",
     "db:studio": "drizzle-kit studio",
     "db:adopt-existing": "tsx scripts/adopt-existing-database.ts"

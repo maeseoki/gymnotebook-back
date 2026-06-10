@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 const DEFAULT_DEV_JWT_SECRET = 'development-only-jwt-secret-change-before-production';
+const DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER =
+  'development-only-mobile-refresh-token-pepper-change-before-production';
 
 const envSchema = z
   .object({
@@ -14,6 +16,12 @@ const envSchema = z
     DB_PASSWORD: z.string().optional(),
     JWT_SECRET: z.string().optional(),
     JWT_EXPIRATION_MS: z.coerce.number().int().positive().optional(),
+    MOBILE_ACCESS_TOKEN_TTL: z.coerce.number().int().positive().optional(),
+    MOBILE_REFRESH_TOKEN_TTL: z.coerce.number().int().positive().optional(),
+    MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: z.coerce.number().int().nonnegative().optional(),
+    MOBILE_REFRESH_TOKEN_PEPPER: z.string().optional(),
+    MOBILE_REFRESH_TOKEN_BYTES: z.coerce.number().int().min(32).max(128).optional(),
+    MOBILE_SESSION_CLEANUP_RETENTION_MS: z.coerce.number().int().nonnegative().optional(),
     CORS_ORIGINS: z.string().optional(),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).optional(),
     MAX_UPLOAD_SIZE: z.coerce.number().int().positive().optional(),
@@ -35,6 +43,7 @@ const envSchema = z
       'DB_USER',
       'DB_PASSWORD',
       'JWT_SECRET',
+      'MOBILE_REFRESH_TOKEN_PEPPER',
       'CORS_ORIGINS',
     ] as const) {
       if (!raw[key]) {
@@ -61,6 +70,30 @@ const envSchema = z
         message: 'JWT_SECRET must not use the development default in production',
       });
     }
+
+    if (raw.MOBILE_REFRESH_TOKEN_PEPPER && raw.MOBILE_REFRESH_TOKEN_PEPPER.length < 32) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
+        message: 'MOBILE_REFRESH_TOKEN_PEPPER must be at least 32 characters in production',
+      });
+    }
+
+    if (raw.MOBILE_REFRESH_TOKEN_PEPPER === DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
+        message: 'MOBILE_REFRESH_TOKEN_PEPPER must not use the development default in production',
+      });
+    }
+
+    if (raw.MOBILE_REFRESH_TOKEN_PEPPER && raw.MOBILE_REFRESH_TOKEN_PEPPER === raw.JWT_SECRET) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
+        message: 'MOBILE_REFRESH_TOKEN_PEPPER must not reuse JWT_SECRET',
+      });
+    }
   })
   .transform((raw) => {
     const isProduction = raw.NODE_ENV === 'production';
@@ -81,6 +114,14 @@ const envSchema = z
       DB_PASSWORD: raw.DB_PASSWORD ?? 'gymnotebook',
       JWT_SECRET: raw.JWT_SECRET ?? DEFAULT_DEV_JWT_SECRET,
       JWT_EXPIRATION_MS: raw.JWT_EXPIRATION_MS ?? 86400000,
+      MOBILE_ACCESS_TOKEN_TTL: raw.MOBILE_ACCESS_TOKEN_TTL ?? 15 * 60 * 1000,
+      MOBILE_REFRESH_TOKEN_TTL: raw.MOBILE_REFRESH_TOKEN_TTL ?? 30 * 24 * 60 * 60 * 1000,
+      MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: raw.MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS ?? 10 * 1000,
+      MOBILE_REFRESH_TOKEN_PEPPER:
+        raw.MOBILE_REFRESH_TOKEN_PEPPER ?? DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER,
+      MOBILE_REFRESH_TOKEN_BYTES: raw.MOBILE_REFRESH_TOKEN_BYTES ?? 64,
+      MOBILE_SESSION_CLEANUP_RETENTION_MS:
+        raw.MOBILE_SESSION_CLEANUP_RETENTION_MS ?? 90 * 24 * 60 * 60 * 1000,
       CORS_ORIGINS: corsOrigins,
       LOG_LEVEL: raw.LOG_LEVEL ?? (raw.NODE_ENV === 'test' ? 'silent' : 'info'),
       MAX_UPLOAD_SIZE: raw.MAX_UPLOAD_SIZE ?? 10 * 1024 * 1024,

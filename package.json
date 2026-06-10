@@ -15,6 +15,7 @@
     "db:generate": "pnpm --filter @gymnotebook/api db:generate",
     "db:migrate": "pnpm --filter @gymnotebook/api db:migrate",
     "db:seed": "pnpm --filter @gymnotebook/api db:seed",
+    "db:cleanup-mobile-sessions": "pnpm --filter @gymnotebook/api db:cleanup-mobile-sessions",
     "db:check": "pnpm --filter @gymnotebook/api db:check",
     "db:studio": "pnpm --filter @gymnotebook/api db:studio",
     "db:adopt-existing": "pnpm --filter @gymnotebook/api db:adopt-existing",

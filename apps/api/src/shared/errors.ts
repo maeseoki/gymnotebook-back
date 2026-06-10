@@ -120,6 +120,14 @@ function mapError(error: unknown): Omit<ErrorResponse, 'requestId'> {
     };
   }
 
+  if (statusCode === 429) {
+    return {
+      statusCode: 429,
+      code: 'rate_limit_exceeded',
+      message: 'Rate limit exceeded',
+    };
+  }
+
   if (code?.startsWith('FST_JWT')) {
     return {
       statusCode: 401,

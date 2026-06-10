@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   userId: number;
   roles: ERole[];
+  sessionId?: string;
 }
 
 declare module 'fastify' {
