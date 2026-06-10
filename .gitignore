@@ -34,3 +34,6 @@ pnpm-debug.log*
 # Coverage
 coverage/
 *.lcov
+
+# Expo
+expo-env.d.ts
