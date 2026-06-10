@@ -18,6 +18,7 @@ const envSchema = z
     JWT_EXPIRATION_MS: z.coerce.number().int().positive().optional(),
     MOBILE_ACCESS_TOKEN_TTL: z.coerce.number().int().positive().optional(),
     MOBILE_REFRESH_TOKEN_TTL: z.coerce.number().int().positive().optional(),
+    MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: z.coerce.number().int().nonnegative().optional(),
     MOBILE_REFRESH_TOKEN_PEPPER: z.string().optional(),
     MOBILE_REFRESH_TOKEN_BYTES: z.coerce.number().int().min(32).max(128).optional(),
     MOBILE_SESSION_CLEANUP_RETENTION_MS: z.coerce.number().int().nonnegative().optional(),
@@ -115,6 +116,7 @@ const envSchema = z
       JWT_EXPIRATION_MS: raw.JWT_EXPIRATION_MS ?? 86400000,
       MOBILE_ACCESS_TOKEN_TTL: raw.MOBILE_ACCESS_TOKEN_TTL ?? 15 * 60 * 1000,
       MOBILE_REFRESH_TOKEN_TTL: raw.MOBILE_REFRESH_TOKEN_TTL ?? 30 * 24 * 60 * 60 * 1000,
+      MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS: raw.MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS ?? 10 * 1000,
       MOBILE_REFRESH_TOKEN_PEPPER:
         raw.MOBILE_REFRESH_TOKEN_PEPPER ?? DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER,
       MOBILE_REFRESH_TOKEN_BYTES: raw.MOBILE_REFRESH_TOKEN_BYTES ?? 64,

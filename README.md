@@ -75,6 +75,7 @@ The API validates configuration with Zod at startup and fails fast when required
 | `JWT_EXPIRATION_MS` | Token lifetime in milliseconds. |
 | `MOBILE_ACCESS_TOKEN_TTL` | Mobile access-token lifetime in milliseconds. |
 | `MOBILE_REFRESH_TOKEN_TTL` | Mobile refresh-token/session lifetime in milliseconds. |
+| `MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS` | Short replay grace window for already-rotated refresh tokens. The old token is still rejected; the family is not revoked during this window. |
 | `MOBILE_REFRESH_TOKEN_PEPPER` | Dedicated refresh-token HMAC pepper. Required in production, at least 32 characters, and must not equal `JWT_SECRET`. |
 | `MOBILE_REFRESH_TOKEN_BYTES` | Random byte length for generated opaque refresh tokens. Minimum 32. |
 | `MOBILE_SESSION_CLEANUP_RETENTION_MS` | Retention window before expired or revoked mobile-session metadata is eligible for cleanup. |
@@ -203,6 +204,8 @@ Role rules:
 Auth/user compatibility details are documented in `docs/migrations/auth-users-compatibility.md`.
 
 Mobile session foundations are implemented separately from these web-compatible endpoints. The mobile model uses database-backed sessions, opaque rotating refresh tokens stored only as HMAC hashes, and short-lived mobile JWTs with `sessionId` claims. The security design is documented in `docs/architecture/mobile-auth-sessions.md`; mobile HTTP endpoints are deferred.
+
+Refresh rotation rejects an already-rotated token every time. During the short `MOBILE_REFRESH_TOKEN_REUSE_GRACE_MS` window, immediate concurrent replay does not revoke the newly issued replacement; after the grace window, replay revokes the token family. Access-token issuance is part of the session creation/rotation transaction so signing failures do not commit unusable session rows.
 
 ## Exercises
 

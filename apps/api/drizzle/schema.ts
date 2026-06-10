@@ -103,6 +103,7 @@ export const mobileSessions = mysqlTable(
     devicePlatform: varchar('device_platform', { length: 16 }).$type<MobileDevicePlatform>(),
     createdAt: datetime('created_at', { mode: 'string' }).notNull(),
     lastUsedAt: datetime('last_used_at', { mode: 'string' }).notNull(),
+    rotatedAt: datetime('rotated_at', { mode: 'string' }),
     expiresAt: datetime('expires_at', { mode: 'string' }).notNull(),
     revokedAt: datetime('revoked_at', { mode: 'string' }),
   },
