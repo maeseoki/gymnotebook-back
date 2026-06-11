@@ -1,5 +1,10 @@
 import { Stack } from 'expo-router';
+import { PublicRouteGuard } from '@/features/auth/components/AuthGate';
 
 export default function PublicLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <PublicRouteGuard>
+      <Stack screenOptions={{ headerShown: false }} />
+    </PublicRouteGuard>
+  );
 }

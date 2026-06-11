@@ -1,6 +1,6 @@
 # The Gym Notebook Mobile
 
-Expo mobile application foundation for Android and iOS. This package is intentionally limited to app bootstrap, routing, shared contracts, storage/query/network/auth foundations, tests, and development-build configuration. Product screens and endpoint calls are deferred.
+Expo mobile application foundation for Android and iOS. This package includes app bootstrap, routing, shared contracts, storage/query/network foundations, and the username/password mobile authentication flow. Exercise, workout, history, image, provider-auth, push-notification, and SQLite product work remains deferred.
 
 ## Selected Versions
 
@@ -101,14 +101,14 @@ app/
     └── settings
 ```
 
-Routes are placeholders only. They do not call signin, signup, exercise, workout, or history endpoints yet.
+The public login and signup routes call the backend mobile auth endpoints. Authenticated product routes are still placeholders except for Profile, which shows authenticated user metadata and supports logout.
 
 ## Foundations
 
 - Providers: Safe Area, font/splash coordination, TanStack Query, and Expo Router slot composition.
 - Contracts: mobile imports `@gymnotebook/contracts` through workspace resolution and Metro watch folders.
-- HTTP: Axios client with environment-derived base URL, `Accept: application/json`, timeout, access-token getter injection, and shared error normalization. It does not force a global JSON `Content-Type`, so future multipart requests can set their own boundary.
-- Auth: Zustand session metadata state machine, in-memory access token port, SecureStore refresh-token adapter.
+- HTTP: Axios client with environment-derived base URL, `Accept: application/json`, timeout, access-token getter injection, and shared error normalization. It does not force a global JSON `Content-Type`, so future multipart requests can set their own boundary. No global refresh interceptor is enabled yet; restoration and explicit refresh use the refresh endpoint directly to avoid hidden retry loops during this phase.
+- Auth: username/password signin and signup through `/auth/mobile/*`, Zustand session metadata state machine, in-memory access token port, SecureStore refresh-token adapter, startup restoration, route protection, and logout.
 - Persistence: AsyncStorage key-value adapter plus versioned JSON/Zod restore and migration helper for future active-workout draft storage.
 - Network: Expo Network adapter exposing `online`, `offline`, or `unknown`; connected network is not treated as guaranteed internet reachability. The TanStack Query online manager treats `unknown` as online so requests are not paused solely because reachability is inconclusive.
 - Query: mobile QueryClient defaults, query-key conventions, conservative transient retry policy for queries, no global mutation retries, and Expo Network online-manager integration.
@@ -116,6 +116,40 @@ Routes are placeholders only. They do not call signin, signup, exercise, workout
 - UI: dark-first React Native primitives: Screen, KeyboardSafeScreen, Text, Button, Card, TextInput, FormField, LoadingIndicator, EmptyState, and ErrorState.
 - Styling: NativeWind 4 is configured through `nativewind/babel`, `withNativeWind` in Metro, `global.css`, and `tailwind.config.ts`. The current primitives use React Native style objects so they remain stable before product screens introduce `className` usage.
 
+## Mobile Authentication
+
+Implemented flow:
+
+1. The root layout mounts `AuthBootstrap`, which runs session restoration once.
+2. Restoration reads the refresh token from SecureStore. Missing tokens become `unauthenticated`.
+3. Existing refresh tokens are sent to `POST /api/auth/mobile/refresh`.
+4. Successful refresh rotates the SecureStore refresh token, stores the access token in memory, and stores only safe user/session metadata in Zustand.
+5. Invalid mobile sessions clear SecureStore, memory access token, and Zustand auth metadata.
+6. Network, timeout, unknown, or SecureStore read failures do not automatically destroy the refresh token. The store moves to `reauthentication_required` and public auth routes are shown.
+7. Login and signup store the returned refresh token first, then set the in-memory access token and Zustand authenticated metadata. If SecureStore write fails, the user is not marked authenticated.
+8. Logout is best effort on the backend, then always clears SecureStore, memory access token, and Zustand auth metadata.
+
+Storage model:
+
+- Refresh token: SecureStore only, key owned by `src/shared/auth/refresh-token-storage.ts`.
+- Access token: process memory only, via `src/shared/auth/access-token-memory.ts`.
+- User metadata and access-token expiry: Zustand only.
+- AsyncStorage: reserved for active-workout persistence and not used for auth.
+
+Route protection:
+
+- `restoring` shows a minimal loading screen.
+- unauthenticated and `reauthentication_required` users are redirected to public login/signup.
+- authenticated users are redirected away from public auth routes to tabs.
+
+Local backend development requires `EXPO_PUBLIC_API_URL` to point at the API base including `/api`, for example:
+
+```bash
+EXPO_PUBLIC_APP_ENV=development EXPO_PUBLIC_API_URL=http://10.0.2.2:8080/api pnpm --filter @gymnotebook/mobile start
+```
+
+The backend mobile auth endpoints must be available. Automated tests use fakes and do not require a live backend.
+
 ## Deferred
 
-Signin/signup screens, session restoration calls, refresh interceptors, workout editing/submission, exercise CRUD, image selection/camera, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.
+Global refresh interceptors, session-management UI, password recovery, workout editing/submission, exercise CRUD, image selection/camera, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.

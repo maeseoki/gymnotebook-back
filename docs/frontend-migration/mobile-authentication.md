@@ -1,6 +1,6 @@
-# Mobile Authentication Architecture (Target)
+# Mobile Authentication Architecture
 
-This document describes the target Expo mobile authentication architecture and the backend behavior now available for username/password mobile sessions. It does **not** imply the Expo application, Google authentication, or Apple authentication already exists.
+This document describes the implemented Expo mobile username/password authentication architecture and the backend behavior available for revocable mobile sessions. Google authentication, Apple authentication, password recovery, and session-management UI are still deferred.
 
 Implemented backend behavior is documented in [Mobile Auth Sessions ADR](../architecture/mobile-auth-sessions.md). That ADR covers persistence, refresh-token hashing, refresh rotation, reuse detection, revocation, session-management enforcement, shared contracts, and HTTP endpoints.
 
@@ -80,6 +80,23 @@ Refresh failures for unknown, expired, revoked, immediately replayed, or reused 
 
 Revoking a mobile session immediately prevents refresh and access to mobile session-management endpoints. Existing access tokens may remain valid on ordinary protected API routes until their short TTL expires because global per-request session validation is not enabled yet.
 
+## Expo app implementation
+
+The Expo app now implements:
+
+- login at `apps/mobile/app/(public)/login.tsx`;
+- signup at `apps/mobile/app/(public)/signup.tsx`;
+- startup restoration through `AuthBootstrap`;
+- route protection through public/authenticated Expo Router group guards;
+- logout from Profile;
+- auth API functions under `apps/mobile/src/features/auth/api`;
+- auth application service under `apps/mobile/src/features/auth/application`;
+- React Hook Form + Zod form schemas under `apps/mobile/src/features/auth/schemas`;
+- in-memory access-token injection into Axios;
+- SecureStore refresh-token persistence.
+
+Device metadata is intentionally minimal: the app sends `{ platform: 'ios' | 'android' }` when running on those platforms and omits metadata otherwise.
+
 ## Session restoration flow
 
 On app launch:
@@ -89,7 +106,7 @@ On app launch:
 3. If present, call refresh endpoint.
 4. Keep returned access token in memory.
 5. Persist rotated refresh token in SecureStore.
-6. Load current user profile.
+6. Store returned user metadata and access-token expiry in Zustand.
 7. Mark restoration complete.
 8. Render protected navigation only after restoration reaches terminal state.
 
@@ -102,16 +119,37 @@ Authentication state machine must distinguish:
 
 Avoid login-screen flicker while restoration is still in progress.
 
+Invalid mobile sessions clear SecureStore, the memory access token, and Zustand auth metadata. Network, timeout, unknown, or SecureStore read failures do not automatically destroy the stored refresh token; the app clears any memory access token, moves to `reauthentication_required`, and shows public auth routes so the user can retry or sign in. This preserves the chance to recover from transient connectivity without deleting a still-valid refresh token.
+
 ## HTTP client behavior
 
 - Attach current access token automatically.
-- On first eligible `401`, perform one shared refresh attempt.
-- Queue concurrent failed requests behind that single refresh.
-- Retry each request at most once.
-- Clear mobile session if refresh fails definitively.
-- Avoid refresh loops.
-- Exclude signin/signup/refresh/logout from refresh retries.
+- Parse mobile auth success responses with shared Zod contracts from `@gymnotebook/contracts`.
+- Normalize backend, validation, network, timeout, and unknown errors before mapping them to safe UI messages.
+- Do not enable a global refresh interceptor yet.
 - Preserve offline workout draft data when authentication is cleared.
+
+The global refresh interceptor is deferred deliberately. The current app has restoration, login, signup, and logout but no protected product mutations yet. Keeping refresh explicit avoids hidden retry behavior and infinite-loop risk until authenticated endpoint usage and active-workout retry states are implemented.
+
+## Logout behavior
+
+Logout reads the refresh token from SecureStore and makes a best-effort `POST /api/auth/mobile/logout`. Local state is authoritative: SecureStore, the in-memory access token, and Zustand auth metadata are cleared even if the backend logout request fails. Active-workout AsyncStorage persistence is not touched.
+
+## Storage model
+
+- Refresh token: SecureStore only.
+- Access token: in-memory port only.
+- User metadata and access-token expiry: Zustand only.
+- AsyncStorage: reserved for active-workout persistence and never used for auth.
+
+When a token pair is received, the app stores the refresh token in SecureStore before setting the access token or authenticated Zustand metadata. If SecureStore write fails, the app does not mark the user authenticated.
+
+## Route protection
+
+- `restoring`: render a minimal loading screen.
+- `unauthenticated`: public login/signup are accessible; authenticated routes redirect to login.
+- `reauthentication_required`: public login/signup are accessible; authenticated routes redirect to login.
+- `authenticated`: authenticated tabs are accessible; public login/signup redirect to tabs.
 
 ## Token expiry during workout
 

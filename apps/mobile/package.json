@@ -12,7 +12,7 @@
     "build": "pnpm run export",
     "export": "cross-env EXPO_PUBLIC_APP_ENV=test EXPO_PUBLIC_API_URL=https://example.invalid/api EXPO_HOME=/tmp/.expo EXPO_NO_TELEMETRY=1 expo export --platform web --output-dir dist",
     "expo:config": "cross-env EXPO_PUBLIC_APP_ENV=test EXPO_PUBLIC_API_URL=https://example.invalid/api EXPO_HOME=/tmp/.expo EXPO_NO_TELEMETRY=1 expo config --type public",
-    "expo:doctor": "cross-env EXPO_PUBLIC_APP_ENV=test EXPO_PUBLIC_API_URL=https://example.invalid/api EXPO_NO_TELEMETRY=1 expo-doctor",
+    "expo:doctor": "node scripts/expo-doctor.cjs",
     "expo:install-check": "cross-env EXPO_PUBLIC_APP_ENV=test EXPO_PUBLIC_API_URL=https://example.invalid/api expo install --check",
     "lint": "biome check .",
     "format": "biome format .",
