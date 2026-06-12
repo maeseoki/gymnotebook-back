@@ -1,4 +1,4 @@
-import { onlineManager, QueryClient } from '@tanstack/react-query';
+import { notifyManager, onlineManager, QueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { type ApiFailure, normalizeApiError } from '@/shared/api/errors';
 import type { NetworkProvider } from '@/shared/network/network-state';
@@ -6,6 +6,11 @@ import type { NetworkProvider } from '@/shared/network/network-state';
 export const queryKeys = {
   mobile: ['mobile'] as const,
   auth: ['mobile', 'auth'] as const,
+  exercises: {
+    all: ['mobile', 'exercises'] as const,
+    list: ['mobile', 'exercises', 'list'] as const,
+    detail: (id: number) => ['mobile', 'exercises', 'detail', id] as const,
+  },
 };
 
 export function createMobileQueryClient(): QueryClient {
@@ -63,10 +68,11 @@ export function isTransientApiFailure(failure: ApiFailure): boolean {
 }
 
 export function createTestQueryClient(): QueryClient {
+  notifyManager.setScheduler((cb) => cb());
   return new QueryClient({
     defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
+      queries: { retry: false, networkMode: 'always', gcTime: Infinity },
+      mutations: { retry: false, networkMode: 'always', gcTime: Infinity },
     },
   });
 }

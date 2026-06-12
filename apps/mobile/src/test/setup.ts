@@ -1,3 +1,22 @@
+export {};
+
+// @ts-expect-error - IS_REACT_ACT_ENVIRONMENT is a global flag for React testing
+global.IS_REACT_ACT_ENVIRONMENT = true;
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+// Filter out internal React act/environment warnings caused by the VM sandbox isolation
+const originalConsoleError = console.error;
+console.error = (...args: unknown[]) => {
+  const msg = typeof args[0] === 'string' ? args[0] : '';
+  if (
+    msg.includes('The current testing environment is not configured to support act') ||
+    msg.includes('You seem to have overlapping act() calls')
+  ) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
 process.env.EXPO_PUBLIC_APP_ENV = 'test';
 process.env.EXPO_PUBLIC_API_URL = 'https://example.invalid/api';
 
@@ -25,3 +44,6 @@ jest.mock('react-native-safe-area-context', () => {
     useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
   };
 });
+
+const { notifyManager } = require('@tanstack/react-query');
+notifyManager.setScheduler(queueMicrotask);
