@@ -1,4 +1,8 @@
-import { CreateWorkoutRequestSchema } from '@gymnotebook/contracts'
+import {
+  CreateWorkoutRequestSchema,
+  type WorkoutHistoryPage,
+  WorkoutHistoryPageSchema,
+} from '@gymnotebook/contracts'
 import { mobileApiClient } from '@/features/auth/api/mobile-auth-api'
 import { type ApiFailure, normalizeApiError } from '@/shared/api/errors'
 import type { ActiveWorkoutDraft } from '../schemas/active-workout-draft'
@@ -17,6 +21,15 @@ export const workoutsApi = {
       const payload = mapDraftToCreateRequest(draft)
       CreateWorkoutRequestSchema.parse(payload)
       await mobileApiClient.post('/workout', payload)
+    } catch (error) {
+      throw new WorkoutsApiError(normalizeApiError(error))
+    }
+  },
+
+  async getExerciseHistory(exerciseId: number): Promise<WorkoutHistoryPage> {
+    try {
+      const response = await mobileApiClient.get(`/workout-sets/exercise/${exerciseId}`)
+      return WorkoutHistoryPageSchema.parse(response.data)
     } catch (error) {
       throw new WorkoutsApiError(normalizeApiError(error))
     }

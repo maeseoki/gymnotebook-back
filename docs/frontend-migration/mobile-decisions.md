@@ -205,3 +205,13 @@ See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [
   - Successful mutations invalidate the `['mobile', 'workouts']` query key namespace to trigger day and list details refetches.
   - All operations are strictly authenticated and user-scoped. Deleting a workout cascades to all its sets. Deleting a set deletes empty parent `workout_sets` and `workouts` if they are left empty.
   - Adding a new set or a new exercise to an existing completed workout remains unsupported/deferred on the backend and is not exposed in the UI.
+
+## Recent Exercise Set History in Active Workout
+
+**Decision:** Show recent previous sets for the selected exercise while logging an active workout to help the user decide their next set values.
+- **Data Source:** Fetches historical sets from `GET /api/workout-sets/exercise/:exerciseId`.
+- **Query Caching:** Uses stable query key `['mobile', 'workouts', 'exerciseHistory', exerciseId]`.
+- **UI Presentation:** Displays a compact "Últimas series" list in the set-entry modal (`SetForm.tsx`) showing up to the last 2 workouts where the exercise was performed.
+- **States:** Gracefully displays loading, empty, and friendly error states without blocking set entry.
+- **Unit Conversions:** Utilizes standard formatting utilities to convert weight (grams -> kg), time (seconds -> min/sec), and distance (meters).
+- **Scope Limit:** Displays only. Automatic suggestions/auto-fill or progression recommendations are deferred.

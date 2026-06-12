@@ -254,7 +254,7 @@ This section covers every user-visible routed page and modal/dialog.
 
 ## Modals and dialogs
 
-1. `SetForm` (`Workout/SetForm.tsx`): dynamic fields by exercise type. Displays and accepts weight input in kilograms (kg) and converts to grams on submit without silent rounding. Distance is labeled as `Distancia (m)` and accepts only integer values. Labels and error validation messages are localized in Spanish.
+1. `SetForm` (`Workout/SetForm.tsx`): dynamic fields by exercise type. Displays and accepts weight input in kilograms (kg) and converts to grams on submit without silent rounding. Distance is labeled as `Distancia (m)` and accepts only integer values. Labels and error validation messages are localized in Spanish. Includes a compact "Últimas series" section showing the last 2 previous workout sets for the selected exercise, fetched from `/workout-sets/exercise/:exerciseId`. Displays date, set values, notes, and drop set marker. Show loading state ("Cargando historial..."), empty state ("Sin historial previo para este ejercicio."), and error state ("No se pudo cargar el historial reciente.") safely without blocking the active workout form. Suggestions and auto-fill are deferred.
 2. `ExerciseDetailModal` (`Workout/ExerciseDetailModal.tsx`): wraps exercise history view.
 3. `DiscardWorkoutDialog`: confirms workout discard.
 4. `EndWorkoutDialog`: confirms workout finish.

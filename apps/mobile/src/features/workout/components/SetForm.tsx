@@ -4,8 +4,10 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { type GestureResponderEvent, Modal, Pressable, StyleSheet, View } from 'react-native'
 import { z } from 'zod'
+import { formatDate, formatSetValues } from '@/features/history/utils/history-formatters'
 import { colors, spacing } from '@/shared/theme/tokens'
 import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives'
+import { useExerciseSetHistory } from '../hooks/use-exercise-set-history'
 import type { ActiveWorkoutSet } from '../schemas/active-workout-draft'
 
 const createSetFormSchema = (exerciseType: EExerciseType) => {
@@ -97,6 +99,7 @@ interface SetFormProps {
   visible: boolean
   exerciseType: EExerciseType
   exerciseName: string
+  exerciseId?: number
   editingSet?: ActiveWorkoutSet | null
   onClose: () => void
   onSubmit: (data: {
@@ -111,11 +114,18 @@ export function SetForm({
   visible,
   exerciseType,
   exerciseName,
+  exerciseId,
   editingSet,
   onClose,
   onSubmit,
 }: SetFormProps) {
   const schema = createSetFormSchema(exerciseType)
+
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    isError: historyError,
+  } = useExerciseSetHistory(exerciseId, visible)
 
   const {
     control,
@@ -304,7 +314,7 @@ export function SetForm({
                       error={errors.distanceMeters?.message as string}
                     >
                       <TextInput
-                        keyboardType="decimal-pad"
+                        keyboardType="number-pad"
                         placeholder="0"
                         onBlur={onBlur}
                         onChangeText={onChange}
@@ -314,6 +324,35 @@ export function SetForm({
                     </FormField>
                   )}
                 />
+              )}
+            </View>
+
+            {/* Recent exercise history section */}
+            <View style={styles.historySection}>
+              <Text style={styles.historyTitle}>Últimas series</Text>
+              {isLoadingHistory ? (
+                <Text style={styles.historyStatus}>Cargando historial...</Text>
+              ) : historyError ? (
+                <Text style={styles.historyStatus}>No se pudo cargar el historial reciente.</Text>
+              ) : historyData?.content && historyData.content.length > 0 ? (
+                <View style={styles.historyList}>
+                  {historyData.content.slice(0, 2).map((workout) => (
+                    <View key={workout.id} style={styles.historyWorkout}>
+                      <Text style={styles.historyDate}>{formatDate(workout.startDate)}</Text>
+                      <View style={styles.historySets}>
+                        {workout.sets.map((set, idx) => (
+                          <Text key={set.id} style={styles.historySetItem}>
+                            Serie {idx + 1}: {formatSetValues(set, exerciseType)}
+                            {set.isDropSet ? ' (Drop)' : ''}
+                            {set.notes ? ` - ${set.notes}` : ''}
+                          </Text>
+                        ))}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.historyStatus}>Sin historial previo para este ejercicio.</Text>
               )}
             </View>
 
@@ -376,5 +415,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing[4],
     marginTop: spacing[2],
+  },
+  historySection: {
+    marginTop: spacing[2],
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing[3],
+    gap: spacing[2],
+  },
+  historyTitle: {
+    fontSize: 14,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: colors.primary,
+  },
+  historyStatus: {
+    fontSize: 13,
+    color: colors.textMuted,
+    fontStyle: 'italic',
+  },
+  historyList: {
+    gap: spacing[3],
+  },
+  historyWorkout: {
+    gap: spacing[1],
+  },
+  historyDate: {
+    fontSize: 12,
+    fontFamily: 'SpaceGrotesk_500Medium',
+    color: colors.text,
+  },
+  historySets: {
+    paddingLeft: spacing[2],
+    gap: 2,
+  },
+  historySetItem: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
 })

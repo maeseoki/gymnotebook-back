@@ -16,6 +16,8 @@ export const queryKeys = {
     history: (year: number, month: number) =>
       ['mobile', 'workouts', 'history', year, month] as const,
     detail: (date: string) => ['mobile', 'workouts', 'detail', date] as const,
+    exerciseHistory: (exerciseId: number) =>
+      ['mobile', 'workouts', 'exerciseHistory', exerciseId] as const,
   },
 }
 

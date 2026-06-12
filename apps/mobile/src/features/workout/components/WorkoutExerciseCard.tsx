@@ -108,6 +108,7 @@ export function WorkoutExerciseCard({
         visible={modalVisible}
         exerciseType={exercise.exerciseType}
         exerciseName={exercise.exerciseName}
+        exerciseId={exercise.exerciseId}
         editingSet={editingSet}
         onClose={() => setModalVisible(false)}
         onSubmit={handleFormSubmit}

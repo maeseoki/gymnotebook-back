@@ -135,7 +135,13 @@ The application supports an offline-first active workout draft tracking flow:
    - Saving/finishing a workout requires at least one exercise and at least one set across the whole workout. Saving empty workouts is blocked.
    - A successful save clears the local draft from AsyncStorage and redirects the user to the history tab.
    - A save failure (e.g. network error) preserves the local draft.
-6. **Known Limitations:**
+6. **Recent Exercise Set History:**
+   - Displays a compact "Últimas series" section for the selected exercise in the set-entry/edit modal.
+   - Fetches recent sets using the `GET /api/workout-sets/exercise/:exerciseId` endpoint.
+   - Uses formatting utilities for weight (grams to kg), time (seconds to min/sec), and distance (meters).
+   - Handles loading ("Cargando historial..."), empty ("Sin historial previo para este ejercicio."), and error ("No se pudo cargar el historial reciente.") states without blocking the active workout form.
+   - Auto-progression/auto-fill or suggestions are intentionally deferred (display-only MVP).
+7. **Known Limitations:**
    - Confetti success feedback, active templates, and timers are deferred.
    - History / calendar / charts synchronization is deferred.
 
