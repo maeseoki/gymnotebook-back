@@ -252,6 +252,230 @@ describe('workout and history HTTP integration', () => {
     expect(foreign.statusCode).toBe(404)
     expect(foreign.json()).toMatchObject({ code: 'exercise_not_found' })
   })
+
+  describe('saved workout mutations', () => {
+    it('deletes a workout owned by the user, cascades deletions, and handles non-owner/missing cases', async () => {
+      const ownerId = await createUser('del-workout-owner', 'del-workout-owner@example.test')
+      const otherId = await createUser('del-workout-other', 'del-workout-other@example.test')
+      const exerciseId = await createExercise(ownerId, 'Squat')
+
+      // Create workout
+      const payload = workoutPayload(exerciseId)
+      const resCreate = await createWorkoutRequest(ownerId, 'del-workout-owner', payload)
+      expect(resCreate.statusCode).toBe(201)
+
+      // Query workout to find its database ID
+      const resRead = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'del-workout-owner') },
+      })
+      const workoutId = resRead.json()[0].id
+      expect(workoutId).toBeDefined()
+
+      // Attempt to delete by another user -> expect 404
+      const resDeleteOther = await requireApp().inject({
+        method: 'DELETE',
+        url: `/api/workout/${workoutId}`,
+        headers: { authorization: authHeader(otherId, 'del-workout-other') },
+      })
+      expect(resDeleteOther.statusCode).toBe(404)
+      expect(resDeleteOther.json()).toMatchObject({ code: 'workout_not_found' })
+
+      // Attempt to delete non-existent workout -> expect 404
+      const resDeleteMissing = await requireApp().inject({
+        method: 'DELETE',
+        url: '/api/workout/999999',
+        headers: { authorization: authHeader(ownerId, 'del-workout-owner') },
+      })
+      expect(resDeleteMissing.statusCode).toBe(404)
+      expect(resDeleteMissing.json()).toMatchObject({ code: 'workout_not_found' })
+
+      // Delete by owner -> expect 204
+      const resDeleteOwner = await requireApp().inject({
+        method: 'DELETE',
+        url: `/api/workout/${workoutId}`,
+        headers: { authorization: authHeader(ownerId, 'del-workout-owner') },
+      })
+      expect(resDeleteOwner.statusCode).toBe(204)
+
+      // Verify workout no longer appears in GET workouts
+      const resReadAgain = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'del-workout-owner') },
+      })
+      expect(resReadAgain.json()).toHaveLength(0)
+    })
+
+    it('updates a set owned by the user, validates bounds and fields, and handles non-owner/missing cases', async () => {
+      const ownerId = await createUser('up-set-owner', 'up-set-owner@example.test')
+      const otherId = await createUser('up-set-other', 'up-set-other@example.test')
+      const exerciseId = await createExercise(ownerId, 'Leg Press')
+
+      const payload = workoutPayload(exerciseId)
+      await createWorkoutRequest(ownerId, 'up-set-owner', payload)
+
+      // Get workouts
+      const resRead = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+      })
+      const setId = resRead.json()[0].workoutSets[0].sets[0].id
+      expect(setId).toBeDefined()
+
+      // Attempt to update by another user -> expect 404
+      const resUpdateOther = await requireApp().inject({
+        method: 'PATCH',
+        url: `/api/workout/sets/${setId}`,
+        headers: { authorization: authHeader(otherId, 'up-set-other') },
+        payload: { reps: 8, weight: 82500 },
+      })
+      expect(resUpdateOther.statusCode).toBe(404)
+      expect(resUpdateOther.json()).toMatchObject({ code: 'set_not_found' })
+
+      // Attempt to update non-existent set -> expect 404
+      const resUpdateMissing = await requireApp().inject({
+        method: 'PATCH',
+        url: '/api/workout/sets/999999',
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+        payload: { reps: 8, weight: 82500 },
+      })
+      expect(resUpdateMissing.statusCode).toBe(404)
+      expect(resUpdateMissing.json()).toMatchObject({ code: 'set_not_found' })
+
+      // Attempt to update with invalid payload (e.g. negative weight) -> expect 400
+      const resUpdateInvalid = await requireApp().inject({
+        method: 'PATCH',
+        url: `/api/workout/sets/${setId}`,
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+        payload: { weight: -100 },
+      })
+      expect(resUpdateInvalid.statusCode).toBe(400)
+      expect(resUpdateInvalid.json()).toMatchObject({ code: 'validation_failed' })
+
+      // Attempt to update with empty payload -> expect 400
+      const resUpdateEmpty = await requireApp().inject({
+        method: 'PATCH',
+        url: `/api/workout/sets/${setId}`,
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+        payload: {},
+      })
+      expect(resUpdateEmpty.statusCode).toBe(400)
+      expect(resUpdateEmpty.json()).toMatchObject({ code: 'validation_failed' })
+
+      // Attempt to update with invalid date outside workout range -> expect 400
+      const resUpdateInvalidDate = await requireApp().inject({
+        method: 'PATCH',
+        url: `/api/workout/sets/${setId}`,
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+        payload: { startDate: '2026-03-30T10:00:00Z' }, // workout end date is 2026-03-29T03:30:00+02:00
+      })
+      expect(resUpdateInvalidDate.statusCode).toBe(400)
+      expect(resUpdateInvalidDate.json()).toMatchObject({ code: 'invalid_workout_set_time' })
+
+      // Update by owner successfully
+      const resUpdateOwner = await requireApp().inject({
+        method: 'PATCH',
+        url: `/api/workout/sets/${setId}`,
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+        payload: { reps: 12, weight: 82500, notes: 'Updated notes' },
+      })
+      expect(resUpdateOwner.statusCode).toBe(200)
+      expect(resUpdateOwner.json()).toMatchObject({
+        reps: 12,
+        weight: 82500,
+        notes: 'Updated notes',
+      })
+
+      // Verify update in GET workouts
+      const resReadAgain = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'up-set-owner') },
+      })
+      expect(resReadAgain.json()[0].workoutSets[0].sets[0]).toMatchObject({
+        reps: 12,
+        weight: 82500,
+        notes: 'Updated notes',
+      })
+    })
+
+    it('deletes a set, cleans up empty parents, and handles non-owner/missing cases', async () => {
+      const ownerId = await createUser('del-set-owner', 'del-set-owner@example.test')
+      const otherId = await createUser('del-set-other', 'del-set-other@example.test')
+      const exerciseId = await createExercise(ownerId, 'Deadlift')
+
+      const payload = workoutPayload(exerciseId)
+      await createWorkoutRequest(ownerId, 'del-set-owner', payload)
+
+      // Get workouts
+      const resRead = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      const workout = resRead.json()[0]
+      const firstSetId = workout.workoutSets[0].sets[0].id
+      const secondSetId = workout.workoutSets[0].sets[1].id
+      expect(firstSetId).toBeDefined()
+      expect(secondSetId).toBeDefined()
+
+      // Attempt to delete by another user -> expect 404
+      const resDeleteOther = await requireApp().inject({
+        method: 'DELETE',
+        url: `/api/workout/sets/${firstSetId}`,
+        headers: { authorization: authHeader(otherId, 'del-set-other') },
+      })
+      expect(resDeleteOther.statusCode).toBe(404)
+      expect(resDeleteOther.json()).toMatchObject({ code: 'set_not_found' })
+
+      // Attempt to delete missing set -> expect 404
+      const resDeleteMissing = await requireApp().inject({
+        method: 'DELETE',
+        url: '/api/workout/sets/999999',
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      expect(resDeleteMissing.statusCode).toBe(404)
+      expect(resDeleteMissing.json()).toMatchObject({ code: 'set_not_found' })
+
+      // Delete the first set -> expect 204
+      const resDeleteFirst = await requireApp().inject({
+        method: 'DELETE',
+        url: `/api/workout/sets/${firstSetId}`,
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      expect(resDeleteFirst.statusCode).toBe(204)
+
+      // Verify only second set is left in GET workouts
+      const resReadFirstDelete = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      expect(resReadFirstDelete.json()[0].workoutSets[0].sets).toHaveLength(1)
+      expect(resReadFirstDelete.json()[0].workoutSets[0].sets[0].id).toBe(secondSetId)
+
+      // Delete the second (last) set -> expect 204. Since this is the last set in the workoutSet,
+      // it should delete the workoutSet. Since that is the only workoutSet in the workout,
+      // it should delete the workout.
+      const resDeleteLast = await requireApp().inject({
+        method: 'DELETE',
+        url: `/api/workout/sets/${secondSetId}`,
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      expect(resDeleteLast.statusCode).toBe(204)
+
+      // Verify that the whole workout is deleted
+      const resReadAfterAllDeleted = await requireApp().inject({
+        method: 'GET',
+        url: '/api/workout/workouts/2026-03-29?timezone=Europe/Madrid',
+        headers: { authorization: authHeader(ownerId, 'del-set-owner') },
+      })
+      expect(resReadAfterAllDeleted.json()).toHaveLength(0)
+    })
+  })
 })
 
 function workoutPayload(

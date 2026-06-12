@@ -57,3 +57,10 @@ export class InvalidTimezoneError extends WorkoutApplicationError {
     this.name = 'InvalidTimezoneError'
   }
 }
+
+export class SetNotFoundError extends WorkoutApplicationError {
+  constructor() {
+    super(404, 'set_not_found', 'Set not found')
+    this.name = 'SetNotFoundError'
+  }
+}

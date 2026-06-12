@@ -154,9 +154,10 @@ The application supports viewing historical workouts loaded from the backend:
 6. **Query Caching & Invalidation:**
    - Utilizes TanStack Query keys starting with `['mobile', 'workouts']`.
    - Creating a workout invalidates this query tree, automatically updating the history tab.
-7. **Editing Saved Workouts (Unsupported / Deferred):**
-   - The backend API does not currently support any mutation endpoints for saved workouts or sets (e.g. no PUT/PATCH/DELETE for workouts/sets).
-   - Consequently, to prevent contract errors, the mobile application does not expose any edit/delete actions for workouts or sets in the user interface. These operations are deferred to a future phase when backend/API mutation support becomes available.
+7. **Editing Saved Workouts:**
+   - The backend API now supports deleting workouts (`DELETE /api/workout/:workoutId`), updating completed sets (`PATCH /api/workout/sets/:setId`), and deleting completed sets (`DELETE /api/workout/sets/:setId`).
+   - Adding a new set to an existing completed workout remains unsupported/deferred on the backend.
+   - Frontend mobile UI controls for history editing are ready to be integrated using these endpoints.
 
 ## Mobile Authentication
 

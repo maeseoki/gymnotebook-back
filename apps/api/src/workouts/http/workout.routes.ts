@@ -1,6 +1,10 @@
 import {
   CreateWorkoutRequestSchema,
+  DeleteWorkoutResponseSchema,
+  DeleteWorkoutSetResponseSchema,
   ErrorResponseSchema,
+  UpdateWorkoutSetRequestSchema,
+  UpdateWorkoutSetResponseSchema,
   WorkoutDateParamSchema,
   WorkoutDaysParamSchema,
   WorkoutResponseSchema,
@@ -11,8 +15,11 @@ import type { ZodTypeProvider } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { isUniqueConstraintError } from '../../shared/persistence-errors.js'
 import { createWorkout } from '../application/create-workout.js'
+import { deleteWorkout } from '../application/delete-workout.js'
+import { deleteWorkoutSet } from '../application/delete-workout-set.js'
 import { getWorkoutsByDate } from '../application/get-workouts-by-date.js'
 import { listWorkoutDays } from '../application/list-workout-days.js'
+import { updateWorkoutSet } from '../application/update-workout-set.js'
 import { DrizzleWorkoutRepository } from '../infrastructure/drizzle-workout.repository.js'
 import { DrizzleWorkoutExerciseAccess } from '../infrastructure/drizzle-workout-exercise-access.js'
 import { toWorkoutResponse } from './workout.mapper.js'
@@ -118,6 +125,106 @@ export async function workoutRoutes(fastify: FastifyInstance) {
         workoutRepository,
       )
       return reply.send(workouts.map(toWorkoutResponse))
+    },
+  )
+
+  app.delete(
+    '/:workoutId',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        tags: ['workouts'],
+        summary: 'Delete workout',
+        description: 'Deletes a workout and cascades its workout sets and sets.',
+        security: [{ bearerAuth: [] }],
+        params: z.strictObject({
+          workoutId: z.coerce.number().int().positive(),
+        }),
+        response: {
+          204: DeleteWorkoutResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      await deleteWorkout(
+        { workoutId: request.params.workoutId, userId: request.user.userId },
+        workoutRepository,
+      )
+      return reply.status(204).send(null)
+    },
+  )
+
+  app.patch(
+    '/sets/:setId',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        tags: ['workouts'],
+        summary: 'Update workout set',
+        description:
+          'Updates reps, weight, time, distance, notes, dropSet status, or date of a set.',
+        security: [{ bearerAuth: [] }],
+        params: z.strictObject({
+          setId: z.coerce.number().int().positive(),
+        }),
+        body: UpdateWorkoutSetRequestSchema,
+        response: {
+          200: UpdateWorkoutSetResponseSchema,
+          400: ErrorResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const updated = await updateWorkoutSet(
+        {
+          ...request.body,
+          setId: request.params.setId,
+          userId: request.user.userId,
+        },
+        workoutRepository,
+      )
+      return reply.send({
+        id: updated.id,
+        reps: updated.reps,
+        weight: updated.weight,
+        time: updated.time,
+        distance: updated.distance,
+        notes: updated.notes,
+        isDropSet: updated.isDropSet,
+        startDate: updated.startDate,
+      })
+    },
+  )
+
+  app.delete(
+    '/sets/:setId',
+    {
+      preHandler: [fastify.authenticate],
+      schema: {
+        tags: ['workouts'],
+        summary: 'Delete workout set',
+        description: 'Deletes an individual set, and cleans up empty parents.',
+        security: [{ bearerAuth: [] }],
+        params: z.strictObject({
+          setId: z.coerce.number().int().positive(),
+        }),
+        response: {
+          204: DeleteWorkoutSetResponseSchema,
+          401: ErrorResponseSchema,
+          404: ErrorResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      await deleteWorkoutSet(
+        { setId: request.params.setId, userId: request.user.userId },
+        workoutRepository,
+      )
+      return reply.status(204).send(null)
     },
   )
 }

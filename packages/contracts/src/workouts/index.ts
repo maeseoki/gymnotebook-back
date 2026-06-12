@@ -85,3 +85,27 @@ export const WorkoutTimezoneQuerySchema = z.strictObject({
   timezone: z.string().optional(),
 })
 export type WorkoutTimezoneQuery = z.infer<typeof WorkoutTimezoneQuerySchema>
+
+export const UpdateWorkoutSetRequestSchema = z
+  .strictObject({
+    reps: z.number().int().min(0).optional(),
+    weight: z.number().int().min(0).optional(),
+    time: z.number().int().min(0).optional(),
+    distance: z.number().int().min(0).optional(),
+    notes: z.string().trim().max(255).optional().nullable(),
+    isDropSet: z.boolean().optional(),
+    startDate: IsoInstantStringSchema.optional().nullable(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field must be provided',
+  })
+export type UpdateWorkoutSetRequest = z.infer<typeof UpdateWorkoutSetRequestSchema>
+
+export const UpdateWorkoutSetResponseSchema = SetResponseSchema
+export type UpdateWorkoutSetResponse = z.infer<typeof UpdateWorkoutSetResponseSchema>
+
+export const DeleteWorkoutResponseSchema = z.null()
+export type DeleteWorkoutResponse = z.infer<typeof DeleteWorkoutResponseSchema>
+
+export const DeleteWorkoutSetResponseSchema = z.null()
+export type DeleteWorkoutSetResponse = z.infer<typeof DeleteWorkoutSetResponseSchema>

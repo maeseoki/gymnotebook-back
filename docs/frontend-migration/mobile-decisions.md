@@ -200,6 +200,8 @@ See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [
   - No local SQLite or AsyncStorage persistence is implemented for history in this phase.
 - **Local Timezone support:**
   - Queries automatically forward the local user timezone from the mobile runtime via `Intl.DateTimeFormat().resolvedOptions().timeZone` to calculate correct calendar day boundaries.
-- **Editing Saved Workouts (Unsupported):**
-  - The backend/API/DB does not support deleting workouts, editing sets, adding sets, or deleting sets for saved history (missing PUT/PATCH/DELETE endpoints on `/workout` or `/workout-sets`).
-  - To prevent runtime or contract validation failures, the frontend does not expose any editing or deleting elements/actions on the History Detail Screen. These are deferred.
+- **Editing Saved Workouts:**
+  - The backend now supports workout deletion (`DELETE /api/workout/:workoutId`), updating completed sets (`PATCH /api/workout/sets/:setId`), and deleting completed sets (`DELETE /api/workout/sets/:setId`).
+  - All operations are strictly authenticated and user-scoped. Deleting a workout cascades to all its sets. Deleting a set will delete empty parent `workout_sets` and `workouts` if they are left empty.
+  - Adding a new set to an existing completed workout remains unsupported/deferred on the backend.
+  - Mobile UI/mutations for editing workout history can now be implemented on top of these endpoints.

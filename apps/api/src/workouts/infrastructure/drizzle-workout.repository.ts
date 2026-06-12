@@ -1,4 +1,5 @@
-import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm'
+import { and, asc, count, eq, gte, inArray, lt } from 'drizzle-orm'
+import type { ResultSetHeader } from 'mysql2'
 import * as schema from '../../../drizzle/schema.js'
 import type { Database } from '../../shared/db.js'
 import type { DbExecutor, Transaction } from '../../shared/transaction.js'
@@ -192,9 +193,178 @@ export class DrizzleWorkoutRepository implements WorkoutRepository {
 
     return { id: workoutId }
   }
+
+  async deleteWorkoutForUser(workoutId: number, userId: number): Promise<boolean> {
+    const result = await this.db
+      .delete(schema.workouts)
+      .where(and(eq(schema.workouts.id, workoutId), eq(schema.workouts.userId, userId)))
+    return getAffectedRows(result) > 0
+  }
+
+  async findSetByIdAndUserId(
+    setId: number,
+    userId: number,
+  ): Promise<(WorkoutSetEntryReadModel & { workoutSetId: number }) | null> {
+    const rows = await this.db
+      .select({
+        id: schema.sets.id,
+        reps: schema.sets.reps,
+        weight: schema.sets.weight,
+        time: schema.sets.time,
+        distance: schema.sets.distance,
+        notes: schema.sets.notes,
+        isDropSet: schema.sets.isDropSet,
+        startDate: schema.sets.startDate,
+        workoutSetId: schema.sets.workoutSetId,
+      })
+      .from(schema.sets)
+      .innerJoin(schema.workoutSets, eq(schema.workoutSets.id, schema.sets.workoutSetId))
+      .innerJoin(schema.workouts, eq(schema.workouts.id, schema.workoutSets.workoutId))
+      .where(and(eq(schema.sets.id, setId), eq(schema.workouts.userId, userId)))
+      .limit(1)
+
+    const row = rows[0]
+    if (!row) {
+      return null
+    }
+
+    return {
+      id: row.id,
+      reps: row.reps,
+      weight: row.weight,
+      time: row.time,
+      distance: row.distance,
+      notes: row.notes,
+      isDropSet: row.isDropSet,
+      startDate: mysqlUtcToIsoInstant(row.startDate),
+      workoutSetId: row.workoutSetId,
+    }
+  }
+
+  async updateSetForUser(
+    setId: number,
+    userId: number,
+    input: Partial<Omit<WorkoutSetEntryReadModel, 'id'>>,
+  ): Promise<WorkoutSetEntryReadModel | null> {
+    const owned = await this.findSetByIdAndUserId(setId, userId)
+    if (!owned) {
+      return null
+    }
+
+    await this.db.update(schema.sets).set(input).where(eq(schema.sets.id, setId))
+
+    const updated = await this.findSetByIdAndUserId(setId, userId)
+    return updated
+  }
+
+  async deleteSetForUser(
+    setId: number,
+    userId: number,
+  ): Promise<{ deleted: boolean; deletedWorkoutSetId?: number; deletedWorkoutId?: number }> {
+    if (isDatabase(this.db)) {
+      return inTransaction(this.db, (tx) => this.deleteSetForUserInTransaction(tx, setId, userId))
+    }
+    return this.deleteSetForUserInTransaction(this.db, setId, userId)
+  }
+
+  private async deleteSetForUserInTransaction(
+    tx: Transaction,
+    setId: number,
+    userId: number,
+  ): Promise<{ deleted: boolean; deletedWorkoutSetId?: number; deletedWorkoutId?: number }> {
+    const rows = await tx
+      .select({
+        setId: schema.sets.id,
+        workoutSetId: schema.sets.workoutSetId,
+        workoutId: schema.workoutSets.workoutId,
+      })
+      .from(schema.sets)
+      .innerJoin(schema.workoutSets, eq(schema.workoutSets.id, schema.sets.workoutSetId))
+      .innerJoin(schema.workouts, eq(schema.workouts.id, schema.workoutSets.workoutId))
+      .where(and(eq(schema.sets.id, setId), eq(schema.workouts.userId, userId)))
+      .limit(1)
+
+    const firstRow = rows[0]
+    if (!firstRow) {
+      return { deleted: false }
+    }
+    const { workoutSetId, workoutId } = firstRow
+
+    await tx.delete(schema.sets).where(eq(schema.sets.id, setId))
+
+    const setsLeft = await tx
+      .select({ count: count() })
+      .from(schema.sets)
+      .where(eq(schema.sets.workoutSetId, workoutSetId))
+
+    let deletedWorkoutSetId: number | undefined
+    let deletedWorkoutId: number | undefined
+
+    if (setsLeft[0]?.count === 0) {
+      await tx.delete(schema.workoutSets).where(eq(schema.workoutSets.id, workoutSetId))
+      deletedWorkoutSetId = workoutSetId
+
+      const groupsLeft = await tx
+        .select({ count: count() })
+        .from(schema.workoutSets)
+        .where(eq(schema.workoutSets.workoutId, workoutId))
+
+      if (groupsLeft[0]?.count === 0) {
+        await tx.delete(schema.workouts).where(eq(schema.workouts.id, workoutId))
+        deletedWorkoutId = workoutId
+      }
+    }
+
+    return {
+      deleted: true,
+      deletedWorkoutSetId,
+      deletedWorkoutId,
+    }
+  }
+
+  async getContainingBoundsForSet(setId: number): Promise<{
+    groupStartDate: string | null
+    groupEndDate: string | null
+    workoutStartDate: string
+    workoutEndDate: string
+  } | null> {
+    const rows = await this.db
+      .select({
+        groupStartDate: schema.workoutSets.startDate,
+        groupEndDate: schema.workoutSets.endDate,
+        workoutStartDate: schema.workouts.startDate,
+        workoutEndDate: schema.workouts.endDate,
+      })
+      .from(schema.sets)
+      .innerJoin(schema.workoutSets, eq(schema.workoutSets.id, schema.sets.workoutSetId))
+      .innerJoin(schema.workouts, eq(schema.workouts.id, schema.workoutSets.workoutId))
+      .where(eq(schema.sets.id, setId))
+      .limit(1)
+
+    const row = rows[0]
+    if (!row) {
+      return null
+    }
+
+    return {
+      groupStartDate: row.groupStartDate,
+      groupEndDate: row.groupEndDate,
+      workoutStartDate: row.workoutStartDate ?? '',
+      workoutEndDate: row.workoutEndDate ?? '',
+    }
+  }
 }
 
 function isDatabase(db: DbExecutor): db is Database {
   const maybeDatabase = db as Partial<Database>
   return typeof maybeDatabase.transaction === 'function'
+}
+
+function getAffectedRows(result: unknown): number {
+  if (Array.isArray(result)) {
+    const [header] = result
+    return getAffectedRows(header)
+  }
+  const header = result as Partial<ResultSetHeader>
+  return typeof header.affectedRows === 'number' ? header.affectedRows : 0
 }

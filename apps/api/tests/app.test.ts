@@ -255,7 +255,9 @@ describe('Fastify foundation', () => {
       '/api/workout-sets/exercise/{exerciseId}',
       '/api/workout/',
       '/api/workout/days/{month}/{year}',
+      '/api/workout/sets/{setId}',
       '/api/workout/workouts/{date}',
+      '/api/workout/{workoutId}',
       '/health/live',
       '/health/ready',
     ])
