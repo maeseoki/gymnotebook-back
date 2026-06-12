@@ -27,6 +27,9 @@ References used:
 | `getWorkoutDaysForMonth` | `GET /api/workout/days/:month/:year` | same + timezone support | no timezone query | supports optional `timezone`; returns local day numbers based on timezone | auth | Compatible with enhancement | send user timezone for correctness |
 | `getWorkoutsByDate` | `GET /api/workout/workouts/:date` | same path with stricter param | frontend sends ISO datetime via `toISOString()` | new route requires strict `YYYY-MM-DD`; optional timezone query | auth | **Incompatible** | send date-only param and timezone query |
 | `getWorkoutSetsByExerciseId` | `GET /api/workout-sets/exercise/:id?page&size&sort` | same path, query changed | uses `size` + `sort` and expects legacy pageable response and `dropSet` field | contract now uses `page,pageSize,sortBy,sortDirection`; response pagination fields changed; set field is `isDropSet` | auth | **Incompatible** | update query params and response mappers/types |
+| `deleteWorkout` | `DELETE /api/workout/:id` | N/A | N/A | No endpoint exists on backend | auth | **Unsupported** | Unsupported/deferred; do not expose in UI |
+| `updateWorkoutSet` | `PUT/PATCH /api/workout/set/:id` | N/A | N/A | No endpoint exists on backend | auth | **Unsupported** | Unsupported/deferred; do not expose in UI |
+| `deleteWorkoutSet` | `DELETE /api/workout/set/:id` | N/A | N/A | No endpoint exists on backend | auth | **Unsupported** | Unsupported/deferred; do not expose in UI |
 
 ## Critical migration notes (decided)
 

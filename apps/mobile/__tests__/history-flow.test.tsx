@@ -178,5 +178,21 @@ describe('History Workflows', () => {
         expect(view.getByText('82.5 kg x 10 reps')).toBeTruthy()
       })
     })
+
+    it('does not expose unsupported backend operations (edit/delete) in the UI', async () => {
+      mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
+      const { view } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
+
+      await waitFor(() => {
+        expect(view.getByText('Bench Press')).toBeTruthy()
+      })
+
+      // Ensure that unsupported edit/delete/add controls are NOT rendered/exposed in the UI
+      expect(view.queryByText('Editar')).toBeNull()
+      expect(view.queryByText('Eliminar')).toBeNull()
+      expect(view.queryByText('Eliminar serie')).toBeNull()
+      expect(view.queryByText('Agregar serie')).toBeNull()
+      expect(view.queryByText('Eliminar entrenamiento')).toBeNull()
+    })
   })
 })

@@ -238,10 +238,12 @@ This section covers every user-visible routed page and modal/dialog.
 - Refreshes on pull-to-refresh.
 - Shows error state with retry option.
 - Formats weight to kg, time to m/s, distance to meters.
+- Note: Editing/deleting saved workouts or sets is not exposed in the UI because the backend API currently lacks mutation endpoints for these entities.
 
 **Data/API**
 - GET `workout/days/:month/:year`
 - GET `workout/workouts/:date`
+- Note: Mutations like PUT, PATCH, or DELETE for workouts or sets are unsupported on the backend and thus omitted on the mobile client.
 
 ---
 
