@@ -139,6 +139,22 @@ The application supports an offline-first active workout draft tracking flow:
    - Confetti success feedback, active templates, and timers are deferred.
    - History / calendar / charts synchronization is deferred.
 
+## Workout History Flow
+
+The application supports viewing historical workouts loaded from the backend:
+
+1. **History List Tab:** Accessible via the main tab bar. Displays a list of workouts for the selected month. Users can navigate months using the month header controls.
+2. **Workout/Day Detail Screen:** Accessible by tapping any workout card in the history list. Displays the workout date/time range, notes, and the list of exercises performed (including reps, weight in kg, time in m/s, and distance in meters).
+3. **Pull-to-Refresh:** Pulling down on either the history list or detail screen triggers a TanStack query refetch.
+4. **Error Handling & Retry:** Network or backend failures display a localized message (in Spanish) with a "Reintentar" button.
+5. **Unit Conversions:**
+   - Weight is formatted from grams to kilograms (e.g. `82500` -> `82.5 kg`, `80000` -> `80 kg`). Zero weights are omitted for non-weight exercises to keep the UI clean.
+   - Time is formatted from seconds to `Xm Ys` or `Xs`.
+   - Distance is formatted to meters (`X m`).
+6. **Query Caching & Invalidation:**
+   - Utilizes TanStack Query keys starting with `['mobile', 'workouts']`.
+   - Creating a workout invalidates this query tree, automatically updating the history tab.
+
 ## Mobile Authentication
 
 Implemented flow:

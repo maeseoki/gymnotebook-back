@@ -1,9 +1,5 @@
-import { Screen, Text } from '@/shared/ui/primitives';
+import { HistoryListScreen } from '@/features/history/components/HistoryListScreen';
 
 export default function HistoryScreen() {
-  return (
-    <Screen>
-      <Text>History foundation placeholder.</Text>
-    </Screen>
-  );
+  return <HistoryListScreen />;
 }

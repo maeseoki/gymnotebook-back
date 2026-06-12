@@ -224,6 +224,27 @@ This section covers every user-visible routed page and modal/dialog.
 
 ---
 
+### 10) Workout History (`/history` and `/history/day/:date`)
+- **Source:** `features/history/components/HistoryListScreen.tsx`, `HistoryWorkoutDetailScreen.tsx`
+- **Purpose:** browse monthly workout lists and drill down into daily workout details.
+
+**Layout**
+1. History list tab: month selector (with previous/next buttons) + list of workout cards.
+2. Workout detail page: title with date + list of exercise cards with sets, reps, weight, time, and distance.
+
+**Behavior**
+- Loads workout days for month and fetches details for each day in parallel.
+- Sorts workouts descending (newest first).
+- Refreshes on pull-to-refresh.
+- Shows error state with retry option.
+- Formats weight to kg, time to m/s, distance to meters.
+
+**Data/API**
+- GET `workout/days/:month/:year`
+- GET `workout/workouts/:date`
+
+---
+
 ## Modals and dialogs
 
 1. `SetForm` (`Workout/SetForm.tsx`): dynamic fields by exercise type. Displays and accepts weight input in kilograms (kg) and converts to grams on submit without silent rounding. Distance is labeled as `Distancia (m)` and accepts only integer values. Labels and error validation messages are localized in Spanish.
