@@ -53,6 +53,13 @@ Required behavior:
    - submitting
    - failed and retryable
    - successfully synchronized
+11. **Draft Resume/Discard Behavior (Safety & UX):**
+   - Active drafts are not immediately forced on the user upon landing on the workout tab; instead, an explicit resume/discard summary is displayed.
+   - The summary displays compact metadata: number of exercises, total sets, started date/time, and last updated date/time.
+   - Continuing the workout transitions to the active workout editor form.
+   - Discarding clears the draft from memory and AsyncStorage. This is local-only and does not delete any backend-saved workouts.
+   - Starting a new workout while a draft exists requires confirmation to discard the active draft first, avoiding accidental loss of local work.
+   - Timer countdowns or elapsed workout duration clocks are deferred (no timer feature is present in this phase).
 
 `successfully synchronized` may be implemented as a short-lived UI feedback state. It does not need to be part of the persisted `PersistedWorkoutDraft.status` union.
 

@@ -75,29 +75,40 @@ This section covers every user-visible routed page and modal/dialog.
 ---
 
 ### 4) Workout Root (`/workout/*`)
-- **Source:** `components/Workout/Workout.tsx`
-- **Purpose:** active workout flow or start prompt.
+- **Source:** `app/(authenticated)/(tabs)/workout.tsx`
+- **Purpose:** active workout flow or start prompt, and draft resume management.
 
 **States**
 - `workout == null`: render `NoWorkout` start screen.
+- `workout !== null && !isEditing`: render explicit `Resume/Summary` screen.
+- `workout !== null && isEditing`: render active workout dashboard form.
 - `isAddingExercise == true`: render `Exercises` selector mode.
-- else: render active workout dashboard.
 
 #### 4A) NoWorkout state
-- Start button creates workout draft with `crypto.randomUUID()` and `startDate`.
+- Start button creates workout draft with UUID and `startedAt` timestamp, transitioning immediately to the active workout editor (`isEditing = true`).
 - Secondary CTAs to exercises and profile.
 
-#### 4B) Active workout state layout
-1. Title: “Workout en marcha”.
-2. `WorkoutInfo` summary card (duration, exercise count, set count).
-3. `WorkoutSets` list (cards per exercise + sets table + add set).
-4. `WorkoutControls` bottom actions (add exercise, finish, discard).
+#### 4B) Resume/Summary state (New Active Workout UX)
+- Renders when a local draft is restored on component mount.
+- Displays Title: "Entrenamiento en curso".
+- Subtitle: "Tienes un entrenamiento sin finalizar."
+- Summary Card showing: number of exercises, total sets, started date/time, and last updated date/time.
+- Primary CTA: "Continuar entrenamiento" (transitions to active workout editor dashboard).
+- Secondary CTA: "Descartar entrenamiento" (asks for destructive confirmation: `¿Descartar entrenamiento? Se perderán las series registradas en este entrenamiento.`, clearing draft from store and local storage upon confirmation).
+- Start new workout option: "Iniciar un nuevo entrenamiento" (asks for confirmation to discard the active draft and starts a new blank workout).
+
+#### 4C) Active workout state layout
+1. Title: “Entrenamiento en marcha”.
+2. Subtitle with start date/time.
+3. List of exercise cards with sets, reps, weight, time, and distance.
+4. Action buttons: "Añadir Ejercicio", "Descartar", "Finalizar".
 
 **Behavior highlights**
 - Finish confirms in dialog. If there are no sets at all or no exercises added, finishing is blocked and the user is shown an alert. A successful save clears the local draft and redirects to history; save failure preserves the draft.
-- Discard confirms in dialog; clears draft.
+- Discard confirms in dialog; clears draft locally (no backend delete).
 - On successful finish: redirects to history. Toast and confetti feedback are deferred.
 - Excludes empty exercises (with zero sets) from the payload sent to the backend.
+- No timer feature yet (displays static starting date/time and last updated date/time).
 
 **Data/API**
 - POST `workout` when finishing.

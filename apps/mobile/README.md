@@ -135,14 +135,21 @@ The application supports an offline-first active workout draft tracking flow:
    - Saving/finishing a workout requires at least one exercise and at least one set across the whole workout. Saving empty workouts is blocked.
    - A successful save clears the local draft from AsyncStorage and redirects the user to the history tab.
    - A save failure (e.g. network error) preserves the local draft.
-6. **Recent Exercise Set History:**
+6. **Active Workout Resume UX:**
+   - When an active workout draft exists, landing on the Workout tab displays an explicit resume/discard summary instead of forcing the user directly into the active workout form.
+   - The summary displays compact info: number of exercises, total sets, started date/time, and last updated date/time if available.
+   - **Primary Action (`Continuar entrenamiento`):** Opens the active workout editor form.
+   - **Secondary/Destructive Action (`Descartar entrenamiento`):** Prompts for confirmation before clearing the draft from store and local persisted storage.
+   - **Start New Workout:** Starting a new workout while a draft exists requires explicit destructive confirmation to prevent accidental loss of the active draft.
+   - **Local-Only Nature:** Discarding clears only the local draft from AsyncStorage; no backend workout deletion is performed.
+7. **Recent Exercise Set History:**
    - Displays a compact "Últimas series" section for the selected exercise in the set-entry/edit modal.
    - Fetches recent sets using the `GET /api/workout-sets/exercise/:exerciseId` endpoint.
    - Uses formatting utilities for weight (grams to kg), time (seconds to min/sec), and distance (meters).
    - Handles loading ("Cargando historial..."), empty ("Sin historial previo para este ejercicio."), and error ("No se pudo cargar el historial reciente.") states without blocking the active workout form.
    - Auto-progression/auto-fill or suggestions are intentionally deferred (display-only MVP).
-7. **Known Limitations:**
-   - Confetti success feedback, active templates, and timers are deferred.
+8. **Known Limitations:**
+   - Confetti success feedback, active templates, and timers (workout duration countdown/elapsed clocks) are deferred.
    - History / calendar / charts synchronization is deferred.
 
 ## Workout History Flow

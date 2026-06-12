@@ -1,11 +1,11 @@
 import type { ExerciseResponse } from '@gymnotebook/contracts'
 import { useEffect, useState } from 'react'
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { ExercisePicker } from '@/features/workout/components/ExercisePicker'
 import { WorkoutExerciseCard } from '@/features/workout/components/WorkoutExerciseCard'
 import { useActiveWorkoutDraft } from '@/features/workout/hooks/use-active-workout-draft'
 import { useFinishWorkout } from '@/features/workout/hooks/use-finish-workout'
-import { colors, spacing } from '@/shared/theme/tokens'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function WorkoutScreen() {
@@ -25,11 +25,19 @@ export default function WorkoutScreen() {
 
   const finishMutation = useFinishWorkout()
   const [pickerVisible, setPickerVisible] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   // Restore the draft on component mount (when Workout tab opens)
   useEffect(() => {
     restoreDraft()
   }, [restoreDraft])
+
+  // Reset editing mode if draft is cleared
+  useEffect(() => {
+    if (!draft) {
+      setIsEditing(false)
+    }
+  }, [draft])
 
   const confirmAction = (title: string, message: string, onConfirm: () => void) => {
     if (Platform.OS === 'web') {
@@ -47,9 +55,21 @@ export default function WorkoutScreen() {
   const handleDiscard = () => {
     confirmAction(
       '¿Descartar entrenamiento?',
-      '¿Estás seguro de que quieres descartar este entrenamiento? Todos los datos se perderán de forma permanente.',
+      'Se perderán las series registradas en este entrenamiento.',
       () => {
         discardWorkout()
+      },
+    )
+  }
+
+  const handleStartNewWithConfirmation = () => {
+    confirmAction(
+      '¿Descartar entrenamiento?',
+      'Se perderán las series registradas en este entrenamiento.',
+      async () => {
+        await discardWorkout()
+        await startWorkout()
+        setIsEditing(true)
       },
     )
   }
@@ -92,6 +112,11 @@ export default function WorkoutScreen() {
     )
   }
 
+  const handleStartWorkout = async () => {
+    await startWorkout()
+    setIsEditing(true)
+  }
+
   // 1. Loading State
   if (isLoading) {
     return (
@@ -131,9 +156,68 @@ export default function WorkoutScreen() {
           </Text>
           <Button
             label="Comenzar Entrenamiento"
-            onPress={startWorkout}
+            onPress={handleStartWorkout}
             accessibilityLabel="Comenzar Entrenamiento"
           />
+        </Card>
+      </Screen>
+    )
+  }
+
+  // 3.5. Resume / Summary State (Draft exists but not actively editing)
+  if (draft && !isEditing) {
+    const totalSets = draft.exercises.reduce((acc, ex) => acc + ex.sets.length, 0)
+    return (
+      <Screen style={styles.center}>
+        <Card style={styles.resumeCard}>
+          <Text style={styles.resumeTitle}>Entrenamiento en curso</Text>
+          <Text style={styles.resumeSubtitle}>Tienes un entrenamiento sin finalizar.</Text>
+
+          <View style={styles.summaryContainer}>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Ejercicios:</Text>
+              <Text style={styles.summaryValue}>{draft.exercises.length}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Series totales:</Text>
+              <Text style={styles.summaryValue}>{totalSets}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Iniciado:</Text>
+              <Text style={styles.summaryValue}>{formatStartedTime(draft.startedAt)}</Text>
+            </View>
+            {draft.updatedAt && draft.updatedAt !== draft.startedAt && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Última actualización:</Text>
+                <Text style={styles.summaryValue}>{formatStartedTime(draft.updatedAt)}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.resumeControls}>
+            <Button
+              label="Continuar entrenamiento"
+              onPress={() => setIsEditing(true)}
+              accessibilityLabel="Continuar entrenamiento"
+            />
+            <Button
+              label="Descartar entrenamiento"
+              onPress={handleDiscard}
+              variant="outline"
+              accessibilityLabel="Descartar entrenamiento"
+            />
+          </View>
+
+          <Pressable
+            onPress={handleStartNewWithConfirmation}
+            accessibilityLabel="Iniciar nuevo entrenamiento"
+            style={({ pressed }: { pressed: boolean }) => [
+              styles.startNewButton,
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Text style={styles.startNewText}>Iniciar un nuevo entrenamiento</Text>
+          </Pressable>
         </Card>
       </Screen>
     )
@@ -299,5 +383,65 @@ const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: spacing[3],
+  },
+  resumeCard: {
+    width: '100%',
+    padding: spacing[6],
+    gap: spacing[4],
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.lg,
+  },
+  resumeTitle: {
+    fontSize: 22,
+    fontFamily: 'SpaceGrotesk_700Bold',
+    color: colors.text,
+    textAlign: 'center',
+  },
+  resumeSubtitle: {
+    fontSize: 15,
+    fontFamily: 'SpaceGrotesk_400Regular',
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginBottom: spacing[2],
+  },
+  summaryContainer: {
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.md,
+    padding: spacing[4],
+    gap: spacing[2],
+    marginVertical: spacing[2],
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: colors.textMuted,
+    fontFamily: 'SpaceGrotesk_400Regular',
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: colors.text,
+    fontFamily: 'SpaceGrotesk_500Medium',
+  },
+  resumeControls: {
+    gap: spacing[3],
+    marginTop: spacing[2],
+  },
+  startNewButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing[2],
+    marginTop: spacing[2],
+  },
+  startNewText: {
+    fontSize: 14,
+    color: colors.textMuted,
+    fontFamily: 'SpaceGrotesk_400Regular',
+    textDecorationLine: 'underline',
   },
 })

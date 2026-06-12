@@ -26,8 +26,14 @@ export type ActiveWorkoutExercise = z.infer<typeof ActiveWorkoutExerciseSchema>
 export const ActiveWorkoutDraftSchema = z.strictObject({
   version: z.literal(1),
   id: z.string().uuid(),
-  startedAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  startedAt: z.preprocess(
+    (val) => (typeof val === 'string' ? val : new Date().toISOString()),
+    z.string().datetime(),
+  ),
+  updatedAt: z.preprocess(
+    (val) => (typeof val === 'string' ? val : new Date().toISOString()),
+    z.string().datetime(),
+  ),
   exercises: z.array(ActiveWorkoutExerciseSchema),
 })
 
