@@ -37,6 +37,8 @@
       "!!**/.turbo",
       "!!**/.expo",
       "!!**/coverage",
+      "!!legacy",
+      "!!legacy/**",
       "!apps/api/drizzle/migrations"
     ]
   }
