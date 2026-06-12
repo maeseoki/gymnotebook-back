@@ -1,10 +1,24 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, type RenderResult, render, waitFor } from '@testing-library/react-native'
 import type React from 'react'
+import { Alert } from 'react-native'
 import { createTestQueryClient } from '@/shared/query/client'
 import { historyApi } from '../src/features/history/api/history-api'
 import { HistoryListScreen } from '../src/features/history/components/HistoryListScreen'
 import { HistoryWorkoutDetailScreen } from '../src/features/history/components/HistoryWorkoutDetailScreen'
+
+// Mock react-native Modal for tests
+jest.mock('react-native/Libraries/Modal/Modal', () => {
+  const MockModal = ({ children, visible }: { children: React.ReactNode; visible: boolean }) => {
+    const { View } = require('react-native')
+    if (visible === false) return null
+    return <View>{children}</View>
+  }
+  return {
+    __esModule: true,
+    default: MockModal,
+  }
+})
 
 // Mock expo-router
 const mockPush = jest.fn()
@@ -36,8 +50,24 @@ jest.mock('../src/features/history/api/history-api', () => {
   }
 })
 
+// Mock historyMutationsApi
+jest.mock('../src/features/history/api/history-mutations-api', () => {
+  return {
+    historyMutationsApi: {
+      updateWorkoutSet: jest.fn(),
+      deleteWorkoutSet: jest.fn(),
+      deleteWorkout: jest.fn(),
+    },
+  }
+})
+
+import { historyMutationsApi } from '../src/features/history/api/history-mutations-api'
+
 const mockGetWorkoutDays = historyApi.getWorkoutDays as jest.Mock
 const mockGetWorkoutsByDate = historyApi.getWorkoutsByDate as jest.Mock
+const mockUpdateWorkoutSet = historyMutationsApi.updateWorkoutSet as jest.Mock
+const mockDeleteWorkoutSet = historyMutationsApi.deleteWorkoutSet as jest.Mock
+const mockDeleteWorkout = historyMutationsApi.deleteWorkout as jest.Mock
 
 const mockWorkout = {
   id: 1,
@@ -91,6 +121,14 @@ describe('History Workflows', () => {
     jest.clearAllMocks()
     activeViews = []
     activeQueryClients = []
+    jest.spyOn(Alert, 'alert').mockImplementation((title, message, buttons) => {
+      const confirmButton = buttons?.find(
+        (btn) => btn.style === 'destructive' || btn.text === 'Eliminar',
+      )
+      if (confirmButton && confirmButton.onPress) {
+        confirmButton.onPress()
+      }
+    })
   })
 
   afterEach(async () => {
@@ -104,6 +142,7 @@ describe('History Workflows', () => {
     }
     activeQueryClients = []
     activeViews = []
+    jest.restoreAllMocks()
     await new Promise((resolve) => setTimeout(resolve, 50))
   })
 
@@ -169,7 +208,7 @@ describe('History Workflows', () => {
       })
     })
 
-    it('renders detailed exercise list when workouts exist', async () => {
+    it('renders detailed exercise list and exposes edit/delete buttons', async () => {
       mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
       const { view } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
 
@@ -177,22 +216,130 @@ describe('History Workflows', () => {
         expect(view.getByText('Bench Press')).toBeTruthy()
         expect(view.getByText('82.5 kg x 10 reps')).toBeTruthy()
       })
+
+      // Ensure that edit/delete controls ARE rendered/exposed in the UI now
+      expect(view.getByText('Editar')).toBeTruthy()
+      expect(view.getAllByText('Eliminar').length).toBeGreaterThan(0)
+
+      // Ensure unsupported add controls (e.g. adding set/exercise to completed workout) are NOT shown
+      expect(view.queryByText('Agregar serie')).toBeNull()
+      expect(view.queryByText('Añadir Serie')).toBeNull()
+      expect(view.queryByText('Agregar ejercicio')).toBeNull()
     })
 
-    it('does not expose unsupported backend operations (edit/delete) in the UI', async () => {
+    it('edit set success invalidates workouts queries', async () => {
+      mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
+      const { view, qc } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
+
+      await waitFor(() => {
+        expect(view.getByText('Editar')).toBeTruthy()
+      })
+
+      const invalidateSpy = jest.spyOn(qc, 'invalidateQueries')
+      mockUpdateWorkoutSet.mockResolvedValue({
+        id: 1,
+        reps: 12,
+        weight: 85000,
+        time: 0,
+        distance: 0,
+        notes: 'Feel good',
+        isDropSet: false,
+      })
+
+      // Open Edit Modal
+      fireEvent.press(view.getByText('Editar'))
+
+      // Save (await findByLabelText to wait for Modal updates)
+      const saveBtn = await view.findByLabelText('Boton Guardar Serie')
+      fireEvent.press(saveBtn)
+
+      await waitFor(() => {
+        expect(mockUpdateWorkoutSet).toHaveBeenCalledWith(
+          1,
+          expect.objectContaining({ reps: 10, weight: 82500 }),
+        )
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['mobile', 'workouts'],
+        })
+      })
+    })
+
+    it('edit set failure keeps modal/screen usable', async () => {
       mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
       const { view } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
 
       await waitFor(() => {
-        expect(view.getByText('Bench Press')).toBeTruthy()
+        expect(view.getByText('Editar')).toBeTruthy()
       })
 
-      // Ensure that unsupported edit/delete/add controls are NOT rendered/exposed in the UI
-      expect(view.queryByText('Editar')).toBeNull()
-      expect(view.queryByText('Eliminar')).toBeNull()
-      expect(view.queryByText('Eliminar serie')).toBeNull()
-      expect(view.queryByText('Agregar serie')).toBeNull()
-      expect(view.queryByText('Eliminar entrenamiento')).toBeNull()
+      mockUpdateWorkoutSet.mockRejectedValue(new Error('Update failed'))
+
+      // Open Edit Modal
+      fireEvent.press(view.getByText('Editar'))
+
+      // Save (await findByLabelText to wait for Modal updates)
+      const saveBtn = await view.findByLabelText('Boton Guardar Serie')
+      fireEvent.press(saveBtn)
+
+      await waitFor(() => {
+        // Modal is still open (contains the Cancel/Save buttons)
+        expect(view.getByLabelText('Boton Guardar Serie')).toBeTruthy()
+        expect(view.getByText('Ocurrió un error inesperado al cargar el historial.')).toBeTruthy()
+      })
+    })
+
+    it('delete set requires confirmation and calls endpoint', async () => {
+      mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
+      const { view, qc } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
+
+      await waitFor(() => {
+        expect(view.getByText('Editar')).toBeTruthy()
+      })
+
+      const invalidateSpy = jest.spyOn(qc, 'invalidateQueries')
+      mockDeleteWorkoutSet.mockResolvedValue(null)
+
+      // Press delete on the set row
+      fireEvent.press(view.getByRole('button', { name: 'Eliminar serie 1' }))
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Eliminar serie',
+          '¿Estás seguro de que deseas eliminar esta serie?',
+          expect.any(Array),
+        )
+        expect(mockDeleteWorkoutSet).toHaveBeenCalledWith(1)
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['mobile', 'workouts'],
+        })
+      })
+    })
+
+    it('delete workout requires confirmation and calls endpoint', async () => {
+      mockGetWorkoutsByDate.mockResolvedValue([mockWorkout])
+      const { view, qc } = await renderWithQuery(<HistoryWorkoutDetailScreen date="2026-06-12" />)
+
+      await waitFor(() => {
+        expect(view.getByLabelText('Eliminar entrenamiento completo')).toBeTruthy()
+      })
+
+      const invalidateSpy = jest.spyOn(qc, 'invalidateQueries')
+      mockDeleteWorkout.mockResolvedValue(null)
+
+      // Press delete on workout card
+      fireEvent.press(view.getByLabelText('Eliminar entrenamiento completo'))
+
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Eliminar entrenamiento',
+          '¿Estás seguro de que deseas eliminar por completo este entrenamiento? Esta acción no se puede deshacer.',
+          expect.any(Array),
+        )
+        expect(mockDeleteWorkout).toHaveBeenCalledWith(1)
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: ['mobile', 'workouts'],
+        })
+      })
     })
   })
 })

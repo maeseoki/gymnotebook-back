@@ -12,6 +12,7 @@ import {
 import { useWorkoutDetail } from '../hooks/use-workout-detail'
 import { getHistoryErrorMessage } from '../utils/history-errors'
 import { formatDate, formatTimeRange } from '../utils/history-formatters'
+import { DeleteWorkoutButton } from './DeleteWorkoutButton'
 import { HistoryExerciseCard } from './HistoryExerciseCard'
 
 interface HistoryWorkoutDetailScreenProps {
@@ -53,9 +54,12 @@ export function HistoryWorkoutDetailScreen({ date }: HistoryWorkoutDetailScreenP
           workouts.map((workout) => (
             <View key={workout.uuid} style={styles.workoutContainer}>
               <View style={styles.workoutHeader}>
-                <Text style={styles.timeRange}>
-                  {formatTimeRange(workout.startDate, workout.endDate)}
-                </Text>
+                <View style={styles.workoutHeaderRow}>
+                  <Text style={styles.timeRange}>
+                    {formatTimeRange(workout.startDate, workout.endDate)}
+                  </Text>
+                  <DeleteWorkoutButton workoutId={workout.id} />
+                </View>
                 {workout.notes ? <Text style={styles.notes}>{workout.notes}</Text> : null}
               </View>
 
@@ -103,6 +107,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
     paddingBottom: spacing[2],
+  },
+  workoutHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   timeRange: {
     fontSize: 14,

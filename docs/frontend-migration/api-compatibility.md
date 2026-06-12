@@ -74,4 +74,7 @@ Recommended migration: import directly from `@gymnotebook/contracts` and keep UI
 The workout history integration utilizes:
 - `GET /workout/days/:month/:year` to retrieve calendar days with workouts.
 - `GET /workout/workouts/:date` to retrieve workouts by date.
-Both endpoints query using the user's local timezone (via `Intl.DateTimeFormat().resolvedOptions().timeZone`) to ensure correct day bounds calculation in the backend. Zod contract schemas are strictly enforced on the frontend.
+- `PATCH /workout/sets/:setId` to update completed set details.
+- `DELETE /workout/sets/:setId` to delete a set.
+- `DELETE /workout/:workoutId` to delete an entire workout.
+Queries utilize the user's local timezone (via `Intl.DateTimeFormat().resolvedOptions().timeZone`) for day bounds. Zod contract schemas are strictly enforced on the frontend. Query invalidation is performed under `['mobile', 'workouts']`.
