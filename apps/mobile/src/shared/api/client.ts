@@ -1,12 +1,12 @@
-import axios, { type AxiosInstance } from 'axios';
-import { mobileEnv } from '@/shared/config/env';
+import axios, { type AxiosInstance } from 'axios'
+import { mobileEnv } from '@/shared/config/env'
 
-export type AccessTokenGetter = () => string | null;
+export type AccessTokenGetter = () => string | null
 
 export interface MobileApiClientOptions {
-  baseUrl?: string;
-  accessToken?: AccessTokenGetter;
-  timeoutMs?: number;
+  baseUrl?: string
+  accessToken?: AccessTokenGetter
+  timeoutMs?: number
 }
 
 export function createMobileApiClient(options: MobileApiClientOptions = {}): AxiosInstance {
@@ -16,15 +16,15 @@ export function createMobileApiClient(options: MobileApiClientOptions = {}): Axi
     headers: {
       Accept: 'application/json',
     },
-  });
+  })
 
   client.interceptors.request.use((config) => {
-    const token = options.accessToken?.();
+    const token = options.accessToken?.()
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`
     }
-    return config;
-  });
+    return config
+  })
 
-  return client;
+  return client
 }

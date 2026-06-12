@@ -1,7 +1,7 @@
-import { and, eq } from 'drizzle-orm';
-import * as schema from '../../../drizzle/schema.js';
-import type { DbExecutor } from '../../shared/transaction.js';
-import type { ExerciseImageAccess } from '../domain/exercise-image-access.js';
+import { and, eq } from 'drizzle-orm'
+import * as schema from '../../../drizzle/schema.js'
+import type { DbExecutor } from '../../shared/transaction.js'
+import type { ExerciseImageAccess } from '../domain/exercise-image-access.js'
 
 export class DrizzleExerciseImageAccess implements ExerciseImageAccess {
   constructor(private readonly db: DbExecutor) {}
@@ -11,7 +11,7 @@ export class DrizzleExerciseImageAccess implements ExerciseImageAccess {
       .select({ id: schema.imageData.id })
       .from(schema.imageData)
       .where(and(eq(schema.imageData.id, imageId), eq(schema.imageData.userId, userId)))
-      .limit(1);
-    return rows.length > 0;
+      .limit(1)
+    return rows.length > 0
   }
 }

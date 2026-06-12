@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const EExerciseTypeSchema = z.enum([
   'WEIGHT',
@@ -7,8 +7,8 @@ export const EExerciseTypeSchema = z.enum([
   'DISTANCE',
   'WEIGHT_REPS',
   'TIME_DISTANCE',
-]);
-export type EExerciseType = z.infer<typeof EExerciseTypeSchema>;
+])
+export type EExerciseType = z.infer<typeof EExerciseTypeSchema>
 
 export const EMuscleGroupSchema = z.enum([
   'ABDOMINALS',
@@ -29,8 +29,8 @@ export const EMuscleGroupSchema = z.enum([
   'TRICEPS',
   'UPPER_BACK',
   'OTHER',
-]);
-export type EMuscleGroup = z.infer<typeof EMuscleGroupSchema>;
+])
+export type EMuscleGroup = z.infer<typeof EMuscleGroupSchema>
 
 const ExerciseRequestBaseSchema = z
   .strictObject({
@@ -54,13 +54,13 @@ const ExerciseRequestBaseSchema = z
       path: ['secondaryMuscleGroup'],
       message: 'Secondary muscle group must differ from primary muscle group',
     },
-  );
+  )
 
-export const CreateExerciseRequestSchema = ExerciseRequestBaseSchema;
-export type CreateExerciseRequest = z.infer<typeof CreateExerciseRequestSchema>;
+export const CreateExerciseRequestSchema = ExerciseRequestBaseSchema
+export type CreateExerciseRequest = z.infer<typeof CreateExerciseRequestSchema>
 
-export const UpdateExerciseRequestSchema = ExerciseRequestBaseSchema;
-export type UpdateExerciseRequest = z.infer<typeof UpdateExerciseRequestSchema>;
+export const UpdateExerciseRequestSchema = ExerciseRequestBaseSchema
+export type UpdateExerciseRequest = z.infer<typeof UpdateExerciseRequestSchema>
 
 export const ExerciseResponseSchema = z.object({
   id: z.number().int(),
@@ -70,5 +70,5 @@ export const ExerciseResponseSchema = z.object({
   type: EExerciseTypeSchema,
   primaryMuscleGroup: EMuscleGroupSchema,
   secondaryMuscleGroup: EMuscleGroupSchema.optional().nullable(),
-});
-export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>;
+})
+export type ExerciseResponse = z.infer<typeof ExerciseResponseSchema>

@@ -1,4 +1,4 @@
-import type { AnyMySqlColumn } from 'drizzle-orm/mysql-core';
+import type { AnyMySqlColumn } from 'drizzle-orm/mysql-core'
 import {
   bigint,
   boolean,
@@ -10,10 +10,10 @@ import {
   primaryKey,
   uniqueIndex,
   varchar,
-} from 'drizzle-orm/mysql-core';
+} from 'drizzle-orm/mysql-core'
 
-export const roleNames = ['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN'] as const;
-export type RoleName = (typeof roleNames)[number];
+export const roleNames = ['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN'] as const
+export type RoleName = (typeof roleNames)[number]
 
 export const exerciseTypes = [
   'WEIGHT',
@@ -22,8 +22,8 @@ export const exerciseTypes = [
   'DISTANCE',
   'WEIGHT_REPS',
   'TIME_DISTANCE',
-] as const;
-export type ExerciseType = (typeof exerciseTypes)[number];
+] as const
+export type ExerciseType = (typeof exerciseTypes)[number]
 
 export const muscleGroups = [
   'ABDOMINALS',
@@ -44,16 +44,16 @@ export const muscleGroups = [
   'TRICEPS',
   'UPPER_BACK',
   'OTHER',
-] as const;
-export type MuscleGroup = (typeof muscleGroups)[number];
+] as const
+export type MuscleGroup = (typeof muscleGroups)[number]
 
 const mediumblob = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {
-    return 'mediumblob';
+    return 'mediumblob'
   },
-});
+})
 
-const id = (name = 'id') => bigint(name, { mode: 'number', unsigned: false });
+const id = (name = 'id') => bigint(name, { mode: 'number', unsigned: false })
 
 export const roles = mysqlTable(
   'roles',
@@ -62,7 +62,7 @@ export const roles = mysqlTable(
     name: varchar('name', { length: 20 }).notNull().$type<RoleName>(),
   },
   (table) => [uniqueIndex('roles_name_unique').on(table.name)],
-);
+)
 
 export const users = mysqlTable(
   'users',
@@ -76,10 +76,10 @@ export const users = mysqlTable(
     uniqueIndex('users_username_unique').on(table.username),
     uniqueIndex('users_email_unique').on(table.email),
   ],
-);
+)
 
-export const mobileDevicePlatforms = ['android', 'ios'] as const;
-export type MobileDevicePlatform = (typeof mobileDevicePlatforms)[number];
+export const mobileDevicePlatforms = ['android', 'ios'] as const
+export type MobileDevicePlatform = (typeof mobileDevicePlatforms)[number]
 
 export const mobileSessions = mysqlTable(
   'mobile_sessions',
@@ -122,7 +122,7 @@ export const mobileSessions = mysqlTable(
     index('mobile_sessions_previous_row_idx').on(table.previousSessionRowId),
     index('mobile_sessions_replaced_by_row_idx').on(table.replacedBySessionRowId),
   ],
-);
+)
 
 export const userRoles = mysqlTable(
   'user_roles',
@@ -138,7 +138,7 @@ export const userRoles = mysqlTable(
     primaryKey({ columns: [table.userId, table.roleId] }),
     index('user_roles_role_id_idx').on(table.roleId),
   ],
-);
+)
 
 export const imageData = mysqlTable(
   'image_data',
@@ -150,7 +150,7 @@ export const imageData = mysqlTable(
     userId: id('user_id').references(() => users.id, { onDelete: 'set null' }),
   },
   (table) => [index('image_data_user_id_idx').on(table.userId)],
-);
+)
 
 export const exercises = mysqlTable(
   'exercises',
@@ -172,7 +172,7 @@ export const exercises = mysqlTable(
     index('exercises_user_id_idx').on(table.userId),
     index('exercises_image_id_idx').on(table.imageId),
   ],
-);
+)
 
 export const workouts = mysqlTable(
   'workouts',
@@ -188,7 +188,7 @@ export const workouts = mysqlTable(
     uniqueIndex('workouts_uuid_unique').on(table.uuid),
     index('workouts_user_start_date_idx').on(table.userId, table.startDate),
   ],
-);
+)
 
 export const workoutSets = mysqlTable(
   'workout_sets',
@@ -208,7 +208,7 @@ export const workoutSets = mysqlTable(
     index('workout_sets_workout_id_idx').on(table.workoutId),
     index('workout_sets_exercise_id_idx').on(table.exerciseId),
   ],
-);
+)
 
 export const sets = mysqlTable(
   'sets',
@@ -226,4 +226,4 @@ export const sets = mysqlTable(
     startDate: datetime('start_date', { mode: 'string' }),
   },
   (table) => [index('sets_workout_set_id_idx').on(table.workoutSetId)],
-);
+)

@@ -1,5 +1,5 @@
-import type { ConfigContext, ExpoConfig } from 'expo/config';
-import { z } from 'zod';
+import type { ConfigContext, ExpoConfig } from 'expo/config'
+import { z } from 'zod'
 
 const AppConfigEnvSchema = z
   .strictObject({
@@ -16,19 +16,19 @@ const AppConfigEnvSchema = z
         code: 'custom',
         path: ['EXPO_PUBLIC_API_URL'],
         message: 'Preview and production API URLs must use HTTPS.',
-      });
+      })
     }
   })
   .transform((value) => ({
     appEnv: value.EXPO_PUBLIC_APP_ENV,
     apiUrl: value.EXPO_PUBLIC_API_URL,
     projectId: value.EXPO_PROJECT_ID,
-  }));
+  }))
 
 function normalizeBaseUrl(value: string): string {
-  const url = new URL(value);
-  url.pathname = url.pathname.replace(/\/+$/, '');
-  return url.toString().replace(/\/$/, '');
+  const url = new URL(value)
+  url.pathname = url.pathname.replace(/\/+$/, '')
+  return url.toString().replace(/\/$/, '')
 }
 
 export default ({ config }: ConfigContext): ExpoConfig => {
@@ -36,11 +36,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
     EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
     EXPO_PROJECT_ID: process.env.EXPO_PROJECT_ID,
-  });
+  })
   const name =
     environment.appEnv === 'production'
       ? 'The Gym Notebook'
-      : `The Gym Notebook (${environment.appEnv})`;
+      : `The Gym Notebook (${environment.appEnv})`
 
   return {
     ...config,
@@ -91,5 +91,5 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         projectId: environment.projectId,
       },
     },
-  };
-};
+  }
+}

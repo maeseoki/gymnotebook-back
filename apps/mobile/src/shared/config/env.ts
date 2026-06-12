@@ -1,11 +1,11 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-export const MobileAppEnvSchema = z.enum(['development', 'preview', 'production', 'test']);
-export type MobileAppEnv = z.infer<typeof MobileAppEnvSchema>;
+export const MobileAppEnvSchema = z.enum(['development', 'preview', 'production', 'test'])
+export type MobileAppEnv = z.infer<typeof MobileAppEnvSchema>
 
-const MobileApiUrlSchema = z.string().url().transform(normalizeBaseUrl);
+const MobileApiUrlSchema = z.string().url().transform(normalizeBaseUrl)
 
-const ExpoProjectIdSchema = z.string().trim().min(1).max(128).optional();
+const ExpoProjectIdSchema = z.string().trim().min(1).max(128).optional()
 
 export const MobilePublicEnvSchema = z
   .strictObject({
@@ -21,47 +21,47 @@ export const MobilePublicEnvSchema = z
         code: 'custom',
         path: ['EXPO_PUBLIC_API_URL'],
         message: 'Preview and production API URLs must use HTTPS.',
-      });
+      })
     }
   })
   .transform((value) => ({
     appEnv: value.EXPO_PUBLIC_APP_ENV,
     apiUrl: value.EXPO_PUBLIC_API_URL,
-  }));
+  }))
 
-export type MobilePublicEnv = z.infer<typeof MobilePublicEnvSchema>;
+export type MobilePublicEnv = z.infer<typeof MobilePublicEnvSchema>
 
-export type MobileExpoConfigEnv = MobilePublicEnv & { projectId?: string };
+export type MobileExpoConfigEnv = MobilePublicEnv & { projectId?: string }
 
 export function normalizeBaseUrl(value: string): string {
-  const url = new URL(value);
-  url.pathname = url.pathname.replace(/\/+$/, '');
-  return url.toString().replace(/\/$/, '');
+  const url = new URL(value)
+  url.pathname = url.pathname.replace(/\/+$/, '')
+  return url.toString().replace(/\/$/, '')
 }
 
 export function readMobileEnv(raw: Record<string, string | undefined>): MobilePublicEnv {
   return MobilePublicEnvSchema.parse({
     EXPO_PUBLIC_APP_ENV: raw.EXPO_PUBLIC_APP_ENV,
     EXPO_PUBLIC_API_URL: raw.EXPO_PUBLIC_API_URL,
-  });
+  })
 }
 
 export function readMobileExpoConfigEnv(
   raw: Record<string, string | undefined>,
 ): MobileExpoConfigEnv {
-  const publicEnv = readMobileEnv(raw);
+  const publicEnv = readMobileEnv(raw)
   const projectEnv = z
     .strictObject({
       EXPO_PROJECT_ID: ExpoProjectIdSchema,
     })
-    .parse({ EXPO_PROJECT_ID: raw.EXPO_PROJECT_ID });
+    .parse({ EXPO_PROJECT_ID: raw.EXPO_PROJECT_ID })
 
   return projectEnv.EXPO_PROJECT_ID
     ? { ...publicEnv, projectId: projectEnv.EXPO_PROJECT_ID }
-    : publicEnv;
+    : publicEnv
 }
 
 export const mobileEnv = readMobileEnv({
   EXPO_PUBLIC_APP_ENV: process.env.EXPO_PUBLIC_APP_ENV,
   EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
-});
+})

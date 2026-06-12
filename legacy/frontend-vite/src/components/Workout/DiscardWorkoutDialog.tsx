@@ -1,17 +1,26 @@
-import { AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button } from '@chakra-ui/react'
+import {
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  Button,
+} from '@chakra-ui/react'
 import { DiscardWorkoutDialogProps } from '../../types'
 
-export default function DiscardWorkoutDialog ({ isDiscardOpen, onDiscardClose, discardRef, confirmDiscardWorkout }: DiscardWorkoutDialogProps) {
+export default function DiscardWorkoutDialog({
+  isDiscardOpen,
+  onDiscardClose,
+  discardRef,
+  confirmDiscardWorkout,
+}: DiscardWorkoutDialogProps) {
   return (
     <>
-      <AlertDialog
-        isOpen={isDiscardOpen}
-        leastDestructiveRef={discardRef}
-        onClose={onDiscardClose}
-      >
+      <AlertDialog isOpen={isDiscardOpen} leastDestructiveRef={discardRef} onClose={onDiscardClose}>
         <AlertDialogOverlay>
           <AlertDialogContent>
-            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
               Descartar Workout
             </AlertDialogHeader>
 
@@ -23,7 +32,7 @@ export default function DiscardWorkoutDialog ({ isDiscardOpen, onDiscardClose, d
               <Button ref={discardRef} onClick={onDiscardClose}>
                 Cancelar
               </Button>
-              <Button colorScheme='red' onClick={confirmDiscardWorkout} ml={3}>
+              <Button colorScheme="red" onClick={confirmDiscardWorkout} ml={3}>
                 Descartar
               </Button>
             </AlertDialogFooter>

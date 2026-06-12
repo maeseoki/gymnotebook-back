@@ -1,24 +1,24 @@
-import type { ERole } from '../domain/role.js';
-import { isElevatedRole } from '../domain/role.js';
-import type { RoleRepository } from '../domain/role.repository.js';
+import type { ERole } from '../domain/role.js'
+import { isElevatedRole } from '../domain/role.js'
+import type { RoleRepository } from '../domain/role.repository.js'
 import {
   CannotDeleteLastAdminError,
   InvalidRoleChangeError,
   RoleNotAssignedError,
   RoleNotFoundError,
   UserNotFoundError,
-} from '../domain/user.errors.js';
-import type { UserRepository } from '../domain/user.repository.js';
+} from '../domain/user.errors.js'
+import type { UserRepository } from '../domain/user.repository.js'
 
 export interface RemoveRoleTransactionRepositories {
-  users: UserRepository;
-  roles: RoleRepository;
+  users: UserRepository
+  roles: RoleRepository
 }
 
 export interface RemoveRoleDeps {
   transaction: <T>(
     work: (repositories: RemoveRoleTransactionRepositories) => Promise<T>,
-  ) => Promise<T>;
+  ) => Promise<T>
 }
 
 export async function removeRole(
@@ -27,26 +27,26 @@ export async function removeRole(
 ): Promise<void> {
   await deps.transaction(async ({ users, roles }) => {
     if (!isElevatedRole(input.role)) {
-      throw new InvalidRoleChangeError();
+      throw new InvalidRoleChangeError()
     }
 
     if (!(await users.existsById(input.userId))) {
-      throw new UserNotFoundError();
+      throw new UserNotFoundError()
     }
 
-    const role = await roles.findByName(input.role);
+    const role = await roles.findByName(input.role)
     if (!role) {
-      throw new RoleNotFoundError();
+      throw new RoleNotFoundError()
     }
 
     if (!(await users.hasRole(input.userId, input.role))) {
-      throw new RoleNotAssignedError();
+      throw new RoleNotAssignedError()
     }
 
     if (input.role === 'ROLE_ADMIN' && (await users.countUsersByRole('ROLE_ADMIN')) <= 1) {
-      throw new CannotDeleteLastAdminError();
+      throw new CannotDeleteLastAdminError()
     }
 
-    await users.removeRole(input.userId, role.id);
-  });
+    await users.removeRole(input.userId, role.id)
+  })
 }

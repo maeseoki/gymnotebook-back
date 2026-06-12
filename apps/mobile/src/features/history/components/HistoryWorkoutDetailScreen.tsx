@@ -1,6 +1,6 @@
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { normalizeApiError } from '@/shared/api/errors';
-import { colors, spacing } from '@/shared/theme/tokens';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native'
+import { normalizeApiError } from '@/shared/api/errors'
+import { colors, spacing } from '@/shared/theme/tokens'
 import {
   Button,
   EmptyState,
@@ -8,20 +8,20 @@ import {
   LoadingIndicator,
   Screen,
   Text,
-} from '@/shared/ui/primitives';
-import { useWorkoutDetail } from '../hooks/use-workout-detail';
-import { getHistoryErrorMessage } from '../utils/history-errors';
-import { formatDate, formatTimeRange } from '../utils/history-formatters';
-import { HistoryExerciseCard } from './HistoryExerciseCard';
+} from '@/shared/ui/primitives'
+import { useWorkoutDetail } from '../hooks/use-workout-detail'
+import { getHistoryErrorMessage } from '../utils/history-errors'
+import { formatDate, formatTimeRange } from '../utils/history-formatters'
+import { HistoryExerciseCard } from './HistoryExerciseCard'
 
 interface HistoryWorkoutDetailScreenProps {
-  date: string;
+  date: string
 }
 
 export function HistoryWorkoutDetailScreen({ date }: HistoryWorkoutDetailScreenProps) {
-  const { data: workouts, isLoading, error, refetch, isFetching } = useWorkoutDetail(date);
+  const { data: workouts, isLoading, error, refetch, isFetching } = useWorkoutDetail(date)
 
-  const formattedDate = formatDate(date);
+  const formattedDate = formatDate(date)
 
   return (
     <Screen style={styles.screen}>
@@ -71,7 +71,7 @@ export function HistoryWorkoutDetailScreen({ date }: HistoryWorkoutDetailScreenP
         )}
       </ScrollView>
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -118,4 +118,4 @@ const styles = StyleSheet.create({
   exercisesList: {
     gap: spacing[3],
   },
-});
+})

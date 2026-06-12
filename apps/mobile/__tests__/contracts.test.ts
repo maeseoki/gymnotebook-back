@@ -1,11 +1,11 @@
-import { MobileSignInRequestSchema, MobileTokenPairResponseSchema } from '@gymnotebook/contracts';
+import { MobileSignInRequestSchema, MobileTokenPairResponseSchema } from '@gymnotebook/contracts'
 
 describe('contracts import', () => {
   it('uses shared mobile auth schemas from the workspace package', () => {
     expect(MobileSignInRequestSchema.parse({ username: 'victor', password: 'secret' })).toEqual({
       username: 'victor',
       password: 'secret',
-    });
+    })
 
     expect(
       MobileTokenPairResponseSchema.parse({
@@ -20,6 +20,6 @@ describe('contracts import', () => {
           roles: ['ROLE_USER'],
         },
       }),
-    ).toMatchObject({ accessToken: 'access' });
-  });
-});
+    ).toMatchObject({ accessToken: 'access' })
+  })
+})

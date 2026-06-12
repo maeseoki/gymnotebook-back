@@ -1,12 +1,12 @@
-import { type WorkoutResponse, WorkoutResponseSchema } from '@gymnotebook/contracts';
-import { z } from 'zod';
-import { mobileApiClient } from '@/features/auth/api/mobile-auth-api';
-import { type ApiFailure, normalizeApiError } from '@/shared/api/errors';
+import { type WorkoutResponse, WorkoutResponseSchema } from '@gymnotebook/contracts'
+import { z } from 'zod'
+import { mobileApiClient } from '@/features/auth/api/mobile-auth-api'
+import { type ApiFailure, normalizeApiError } from '@/shared/api/errors'
 
 export class HistoryApiError extends Error {
   constructor(readonly failure: ApiFailure) {
-    super(failure.message);
-    this.name = 'HistoryApiError';
+    super(failure.message)
+    this.name = 'HistoryApiError'
   }
 }
 
@@ -18,10 +18,10 @@ export const historyApi = {
     try {
       const response = await mobileApiClient.get(`/workout/days/${month}/${year}`, {
         params: timezone ? { timezone } : undefined,
-      });
-      return z.array(z.number().int().min(1).max(31)).parse(response.data);
+      })
+      return z.array(z.number().int().min(1).max(31)).parse(response.data)
     } catch (error) {
-      throw new HistoryApiError(normalizeApiError(error));
+      throw new HistoryApiError(normalizeApiError(error))
     }
   },
 
@@ -32,10 +32,10 @@ export const historyApi = {
     try {
       const response = await mobileApiClient.get(`/workout/workouts/${date}`, {
         params: timezone ? { timezone } : undefined,
-      });
-      return z.array(WorkoutResponseSchema).parse(response.data);
+      })
+      return z.array(WorkoutResponseSchema).parse(response.data)
     } catch (error) {
-      throw new HistoryApiError(normalizeApiError(error));
+      throw new HistoryApiError(normalizeApiError(error))
     }
   },
-};
+}

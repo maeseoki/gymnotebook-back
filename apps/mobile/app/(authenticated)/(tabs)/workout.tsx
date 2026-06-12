@@ -1,12 +1,12 @@
-import type { ExerciseResponse } from '@gymnotebook/contracts';
-import { useEffect, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { ExercisePicker } from '@/features/workout/components/ExercisePicker';
-import { WorkoutExerciseCard } from '@/features/workout/components/WorkoutExerciseCard';
-import { useActiveWorkoutDraft } from '@/features/workout/hooks/use-active-workout-draft';
-import { useFinishWorkout } from '@/features/workout/hooks/use-finish-workout';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives';
+import type { ExerciseResponse } from '@gymnotebook/contracts'
+import { useEffect, useState } from 'react'
+import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native'
+import { ExercisePicker } from '@/features/workout/components/ExercisePicker'
+import { WorkoutExerciseCard } from '@/features/workout/components/WorkoutExerciseCard'
+import { useActiveWorkoutDraft } from '@/features/workout/hooks/use-active-workout-draft'
+import { useFinishWorkout } from '@/features/workout/hooks/use-finish-workout'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function WorkoutScreen() {
   const {
@@ -21,76 +21,76 @@ export default function WorkoutScreen() {
     updateSet,
     deleteSet,
     discardWorkout,
-  } = useActiveWorkoutDraft();
+  } = useActiveWorkoutDraft()
 
-  const finishMutation = useFinishWorkout();
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const finishMutation = useFinishWorkout()
+  const [pickerVisible, setPickerVisible] = useState(false)
 
   // Restore the draft on component mount (when Workout tab opens)
   useEffect(() => {
-    restoreDraft();
-  }, [restoreDraft]);
+    restoreDraft()
+  }, [restoreDraft])
 
   const confirmAction = (title: string, message: string, onConfirm: () => void) => {
     if (Platform.OS === 'web') {
       if (window.confirm(`${title}\n\n${message}`)) {
-        onConfirm();
+        onConfirm()
       }
     } else {
       Alert.alert(title, message, [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Confirmar', style: 'destructive', onPress: onConfirm },
-      ]);
+      ])
     }
-  };
+  }
 
   const handleDiscard = () => {
     confirmAction(
       '¿Descartar entrenamiento?',
       '¿Estás seguro de que quieres descartar este entrenamiento? Todos los datos se perderán de forma permanente.',
       () => {
-        discardWorkout();
+        discardWorkout()
       },
-    );
-  };
+    )
+  }
 
   const handleFinish = () => {
-    if (!draft) return;
+    if (!draft) return
 
-    const totalSets = draft.exercises.reduce((acc, ex) => acc + ex.sets.length, 0);
+    const totalSets = draft.exercises.reduce((acc, ex) => acc + ex.sets.length, 0)
 
     if (draft.exercises.length === 0 || totalSets === 0) {
       confirmAction(
         'Entrenamiento vacío',
         'No puedes guardar un entrenamiento sin series registradas. ¿Quieres descartarlo?',
         () => {
-          discardWorkout();
+          discardWorkout()
         },
-      );
-      return;
+      )
+      return
     }
 
     confirmAction(
       '¿Finalizar entrenamiento?',
       '¿Deseas guardar y finalizar el entrenamiento actual?',
       () => {
-        finishMutation.mutate();
+        finishMutation.mutate()
       },
-    );
-  };
+    )
+  }
 
   const handleSelectExercise = (exercise: ExerciseResponse) => {
-    addExercise(exercise.id, exercise.name, exercise.type);
-  };
+    addExercise(exercise.id, exercise.name, exercise.type)
+  }
 
   const formatStartedTime = (isoString: string) => {
-    const date = new Date(isoString);
+    const date = new Date(isoString)
     return (
       date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
       ' - ' +
       date.toLocaleDateString()
-    );
-  };
+    )
+  }
 
   // 1. Loading State
   if (isLoading) {
@@ -98,7 +98,7 @@ export default function WorkoutScreen() {
       <Screen style={styles.center}>
         <LoadingIndicator label="Cargando entrenamiento..." />
       </Screen>
-    );
+    )
   }
 
   // 2. Corrupted State Recovery
@@ -117,7 +117,7 @@ export default function WorkoutScreen() {
           />
         </Card>
       </Screen>
-    );
+    )
   }
 
   // 3. Empty State (No Active Workout)
@@ -136,11 +136,11 @@ export default function WorkoutScreen() {
           />
         </Card>
       </Screen>
-    );
+    )
   }
 
   // 4. Active Workout State
-  const alreadySelectedIds = draft.exercises.map((e) => e.exerciseId);
+  const alreadySelectedIds = draft.exercises.map((e) => e.exerciseId)
 
   return (
     <Screen style={{ padding: 0 }}>
@@ -217,7 +217,7 @@ export default function WorkoutScreen() {
         alreadySelectedIds={alreadySelectedIds}
       />
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -300,4 +300,4 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing[3],
   },
-});
+})

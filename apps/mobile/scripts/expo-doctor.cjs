@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 
-const { chmodSync, mkdirSync, writeFileSync } = require('node:fs');
-const { tmpdir } = require('node:os');
-const { delimiter, join } = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { chmodSync, mkdirSync, writeFileSync } = require('node:fs')
+const { tmpdir } = require('node:os')
+const { delimiter, join } = require('node:path')
+const { spawnSync } = require('node:child_process')
 
-const expoCliPath = require.resolve('expo/bin/cli');
-const expoPackageRoot = join(expoCliPath, '..', '..');
-const workspacePnpmNodeModules = join(expoPackageRoot, '..', '..', '..', 'node_modules');
+const expoCliPath = require.resolve('expo/bin/cli')
+const expoPackageRoot = join(expoCliPath, '..', '..')
+const workspacePnpmNodeModules = join(expoPackageRoot, '..', '..', '..', 'node_modules')
 const expoNodePaths = [
   join(expoPackageRoot, 'node_modules'),
   join(expoPackageRoot, '..'),
   workspacePnpmNodeModules,
-];
-const nodeShimDir = join(tmpdir(), 'gymnotebook-mobile-expo-doctor-bin');
-const nodeShimPath = join(nodeShimDir, 'node');
-const npmShimPath = join(nodeShimDir, 'npm');
-const yarnpkgShimPath = join(nodeShimDir, 'yarnpkg');
+]
+const nodeShimDir = join(tmpdir(), 'gymnotebook-mobile-expo-doctor-bin')
+const nodeShimPath = join(nodeShimDir, 'node')
+const npmShimPath = join(nodeShimDir, 'npm')
+const yarnpkgShimPath = join(nodeShimDir, 'yarnpkg')
 
-mkdirSync(nodeShimDir, { recursive: true });
+mkdirSync(nodeShimDir, { recursive: true })
 writeFileSync(
   nodeShimPath,
   `#!/bin/sh
@@ -41,8 +41,8 @@ if [ "$is_expo_cli" = "1" ] && [ "$2" = "config" ] && [ "$3" = "--json" ] && [ "
 fi
 exec "$EXPO_DOCTOR_REAL_NODE" "$@"
 `,
-);
-chmodSync(nodeShimPath, 0o755);
+)
+chmodSync(nodeShimPath, 0o755)
 writeFileSync(
   npmShimPath,
   `#!/bin/sh
@@ -56,8 +56,8 @@ if [ "$1" = "explain" ] && [ -n "$2" ]; then
 fi
 exec "$EXPO_DOCTOR_REAL_NPM" "$@"
 `,
-);
-chmodSync(npmShimPath, 0o755);
+)
+chmodSync(npmShimPath, 0o755)
 writeFileSync(
   yarnpkgShimPath,
   `#!/bin/sh
@@ -67,8 +67,8 @@ if [ "$1" = "--version" ]; then
 fi
 exit 1
 `,
-);
-chmodSync(yarnpkgShimPath, 0o755);
+)
+chmodSync(yarnpkgShimPath, 0o755)
 
 const env = {
   ...process.env,
@@ -85,17 +85,17 @@ const env = {
   EXPO_DOCTOR_REAL_NPM: join(process.execPath, '..', 'npm'),
   EXPO_DOCTOR_CONFIG_STDOUT: join(tmpdir(), 'gymnotebook-mobile-expo-doctor-config.stdout'),
   EXPO_DOCTOR_CONFIG_STDERR: join(tmpdir(), 'gymnotebook-mobile-expo-doctor-config.stderr'),
-};
+}
 
-const doctorBin = require.resolve('expo-doctor/bin/expo-doctor');
+const doctorBin = require.resolve('expo-doctor/bin/expo-doctor')
 const result = spawnSync(process.execPath, [doctorBin], {
   cwd: process.cwd(),
   env,
   stdio: 'inherit',
-});
+})
 
 if (result.error) {
-  throw result.error;
+  throw result.error
 }
 
-process.exit(result.status ?? 1);
+process.exit(result.status ?? 1)

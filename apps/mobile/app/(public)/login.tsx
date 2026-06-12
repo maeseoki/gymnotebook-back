@@ -1,16 +1,16 @@
-import { Link } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
-import { View } from 'react-native';
-import { userFacingAuthError } from '@/features/auth/application/auth-errors';
-import { AuthErrorMessage } from '@/features/auth/components/AuthErrorMessage';
-import { AuthFormContainer } from '@/features/auth/components/AuthFormContainer';
-import { useSignInAction } from '@/features/auth/hooks/use-auth-actions';
-import { type LoginFormValues, loginFormResolver } from '@/features/auth/schemas/login-form';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, FormField, Text, TextInput } from '@/shared/ui/primitives';
+import { Link } from 'expo-router'
+import { Controller, useForm } from 'react-hook-form'
+import { View } from 'react-native'
+import { userFacingAuthError } from '@/features/auth/application/auth-errors'
+import { AuthErrorMessage } from '@/features/auth/components/AuthErrorMessage'
+import { AuthFormContainer } from '@/features/auth/components/AuthFormContainer'
+import { useSignInAction } from '@/features/auth/hooks/use-auth-actions'
+import { type LoginFormValues, loginFormResolver } from '@/features/auth/schemas/login-form'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, FormField, Text, TextInput } from '@/shared/ui/primitives'
 
 export default function LoginScreen() {
-  const signIn = useSignInAction();
+  const signIn = useSignInAction()
   const {
     control,
     handleSubmit,
@@ -18,8 +18,8 @@ export default function LoginScreen() {
   } = useForm<LoginFormValues>({
     resolver: loginFormResolver,
     defaultValues: { username: '', password: '' },
-  });
-  const submitting = isSubmitting || signIn.isPending;
+  })
+  const submitting = isSubmitting || signIn.isPending
 
   return (
     <AuthFormContainer title="Sign in" subtitle="Use your Gym Notebook account.">
@@ -79,5 +79,5 @@ export default function LoginScreen() {
         </Link>
       </View>
     </AuthFormContainer>
-  );
+  )
 }

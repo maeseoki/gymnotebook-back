@@ -8,7 +8,7 @@ import { ExerciseTypeWithImage, WorkoutSet } from '../../types'
 import Exercises from '../Exercises/Exercises'
 import WorkoutSets from './WorkoutSets'
 
-export default function Workout () {
+export default function Workout() {
   const { workout, setWorkout } = useContext(WorkoutContext)
   const [isAddingExercise, setIsAddingExercise] = useState(false)
 
@@ -18,12 +18,12 @@ export default function Workout () {
     const workoutSet: WorkoutSet = {
       exercise,
       startDate: new Date(),
-      sets: []
+      sets: [],
     }
 
     setWorkout({
       ...workout,
-      workoutSets: [...(workout.workoutSets ?? []), workoutSet]
+      workoutSets: [...(workout.workoutSets ?? []), workoutSet],
     })
 
     setIsAddingExercise(false)
@@ -33,8 +33,10 @@ export default function Workout () {
   if (isAddingExercise) return <Exercises onExerciseClick={handleExerciseClick} />
 
   return (
-    <Flex direction='column' minH='calc(100vh - 8rem)'>
-      <Heading as='h2' textAlign='center' my={4}>¡Workout en marcha!</Heading>
+    <Flex direction="column" minH="calc(100vh - 8rem)">
+      <Heading as="h2" textAlign="center" my={4}>
+        ¡Workout en marcha!
+      </Heading>
       <WorkoutInfo />
       <WorkoutSets />
       <WorkoutControls setIsAddingExercise={setIsAddingExercise} />

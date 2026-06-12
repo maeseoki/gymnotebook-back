@@ -5,7 +5,7 @@ export const EXERCISE_TYPE_OPTIONS = [
   { label: 'Time Only', value: 'TIME' },
   { label: 'Distance Only', value: 'DISTANCE' },
   { label: 'Time & Distance', value: 'TIME_DISTANCE' },
-] as const;
+] as const
 
 export const MUSCLE_GROUP_OPTIONS = [
   { label: 'Chest', value: 'CHEST' },
@@ -26,4 +26,4 @@ export const MUSCLE_GROUP_OPTIONS = [
   { label: 'Full Body', value: 'FULL_BODY' },
   { label: 'Cardio', value: 'CARDIO' },
   { label: 'Other', value: 'OTHER' },
-] as const;
+] as const

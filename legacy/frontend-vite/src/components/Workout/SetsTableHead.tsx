@@ -1,7 +1,7 @@
 import { Thead, Tr, Th } from '@chakra-ui/react'
 import { ExerciseTypeType, SetsTableHeadProps } from '../../types.d'
 
-export default function SetsTableHead ({ exerciseType }: SetsTableHeadProps) {
+export default function SetsTableHead({ exerciseType }: SetsTableHeadProps) {
   return (
     <Thead>
       <Tr>

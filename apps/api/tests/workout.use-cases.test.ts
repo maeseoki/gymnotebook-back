@@ -1,53 +1,53 @@
-import type { CreateWorkoutRequest } from '@gymnotebook/contracts';
-import { describe, expect, it } from 'vitest';
-import { createWorkout } from '../src/workouts/application/create-workout.js';
-import { getWorkoutsByDate } from '../src/workouts/application/get-workouts-by-date.js';
-import { listWorkoutDays } from '../src/workouts/application/list-workout-days.js';
+import type { CreateWorkoutRequest } from '@gymnotebook/contracts'
+import { describe, expect, it } from 'vitest'
+import { createWorkout } from '../src/workouts/application/create-workout.js'
+import { getWorkoutsByDate } from '../src/workouts/application/get-workouts-by-date.js'
+import { listWorkoutDays } from '../src/workouts/application/list-workout-days.js'
 import {
   InvalidWorkoutGroupPeriodError,
   InvalidWorkoutPeriodError,
   InvalidWorkoutSetTimeError,
   WorkoutAlreadyExistsError,
   WorkoutExerciseNotAvailableError,
-} from '../src/workouts/domain/workout.errors.js';
-import type { WorkoutDraft, WorkoutReadModel } from '../src/workouts/domain/workout.js';
-import type { WorkoutRepository } from '../src/workouts/domain/workout.repository.js';
+} from '../src/workouts/domain/workout.errors.js'
+import type { WorkoutDraft, WorkoutReadModel } from '../src/workouts/domain/workout.js'
+import type { WorkoutRepository } from '../src/workouts/domain/workout.repository.js'
 import {
   calendarDateUtcRange,
   calendarMonthUtcRange,
   isoInstantToMysqlUtc,
   mysqlUtcToIsoInstant,
-} from '../src/workouts/domain/workout-dates.js';
-import type { WorkoutExerciseAccess } from '../src/workouts/domain/workout-exercise-access.js';
+} from '../src/workouts/domain/workout-dates.js'
+import type { WorkoutExerciseAccess } from '../src/workouts/domain/workout-exercise-access.js'
 
 class FakeWorkoutRepository implements WorkoutRepository {
-  created: WorkoutDraft | null = null;
-  duplicate = false;
-  startDates: string[] = [];
-  graphs: WorkoutReadModel[] = [];
+  created: WorkoutDraft | null = null
+  duplicate = false
+  startDates: string[] = []
+  graphs: WorkoutReadModel[] = []
 
   async createWorkoutGraph(input: WorkoutDraft) {
     if (this.duplicate) {
-      throw new Error('duplicate uuid');
+      throw new Error('duplicate uuid')
     }
-    this.created = input;
-    return { id: 1 };
+    this.created = input
+    return { id: 1 }
   }
 
   async listWorkoutStartDatesByUtcRange() {
-    return this.startDates;
+    return this.startDates
   }
 
   async getWorkoutGraphByUtcRange() {
-    return this.graphs;
+    return this.graphs
   }
 }
 
 class FakeExerciseAccess implements WorkoutExerciseAccess {
-  availableCount = 1;
+  availableCount = 1
 
   async countAvailableExercises() {
-    return this.availableCount;
+    return this.availableCount
   }
 }
 
@@ -77,55 +77,55 @@ function validWorkout(overrides: Partial<CreateWorkoutRequest> = {}): CreateWork
       },
     ],
     ...overrides,
-  };
+  }
 }
 
 describe('workout use cases and date policy', () => {
   it('creates workouts with UTC-normalized dates and exercise ownership validation', async () => {
-    const workouts = new FakeWorkoutRepository();
-    const exerciseAccess = new FakeExerciseAccess();
+    const workouts = new FakeWorkoutRepository()
+    const exerciseAccess = new FakeExerciseAccess()
 
     await createWorkout(
       { ...validWorkout(), userId: 1 },
       { workouts, exerciseAccess, isDuplicateWorkoutUuidError: () => false },
-    );
+    )
 
     expect(workouts.created).toMatchObject({
       userId: 1,
       startDate: '2026-03-29 00:30:00',
       notes: 'workout',
       groups: [{ exerciseId: 10, startDate: '2026-03-29 00:35:00' }],
-    });
-  });
+    })
+  })
 
   it('maps duplicate UUID races and missing or foreign exercises', async () => {
-    const workouts = new FakeWorkoutRepository();
-    workouts.duplicate = true;
-    const exerciseAccess = new FakeExerciseAccess();
+    const workouts = new FakeWorkoutRepository()
+    workouts.duplicate = true
+    const exerciseAccess = new FakeExerciseAccess()
 
     await expect(
       createWorkout(
         { ...validWorkout(), userId: 1 },
         { workouts, exerciseAccess, isDuplicateWorkoutUuidError: () => true },
       ),
-    ).rejects.toBeInstanceOf(WorkoutAlreadyExistsError);
+    ).rejects.toBeInstanceOf(WorkoutAlreadyExistsError)
 
-    workouts.duplicate = false;
-    exerciseAccess.availableCount = 0;
+    workouts.duplicate = false
+    exerciseAccess.availableCount = 0
     await expect(
       createWorkout(
         { ...validWorkout(), userId: 1 },
         { workouts, exerciseAccess, isDuplicateWorkoutUuidError: () => false },
       ),
-    ).rejects.toBeInstanceOf(WorkoutExerciseNotAvailableError);
-  });
+    ).rejects.toBeInstanceOf(WorkoutExerciseNotAvailableError)
+  })
 
   it('rejects invalid workout, group and set periods', async () => {
     const dependencies = {
       workouts: new FakeWorkoutRepository(),
       exerciseAccess: new FakeExerciseAccess(),
       isDuplicateWorkoutUuidError: () => false,
-    };
+    }
 
     await expect(
       createWorkout(
@@ -135,7 +135,7 @@ describe('workout use cases and date policy', () => {
         },
         dependencies,
       ),
-    ).rejects.toBeInstanceOf(InvalidWorkoutPeriodError);
+    ).rejects.toBeInstanceOf(InvalidWorkoutPeriodError)
     await expect(
       createWorkout(
         {
@@ -152,7 +152,7 @@ describe('workout use cases and date policy', () => {
         },
         dependencies,
       ),
-    ).rejects.toBeInstanceOf(InvalidWorkoutGroupPeriodError);
+    ).rejects.toBeInstanceOf(InvalidWorkoutGroupPeriodError)
     await expect(
       createWorkout(
         {
@@ -170,32 +170,32 @@ describe('workout use cases and date policy', () => {
         },
         dependencies,
       ),
-    ).rejects.toBeInstanceOf(InvalidWorkoutSetTimeError);
-  });
+    ).rejects.toBeInstanceOf(InvalidWorkoutSetTimeError)
+  })
 
   it('converts instants and calendar ranges without server timezone dependence', () => {
-    expect(isoInstantToMysqlUtc('2026-03-29T01:30:00+02:00')).toBe('2026-03-28 23:30:00');
-    expect(mysqlUtcToIsoInstant('2026-03-28 23:30:00')).toBe('2026-03-28T23:30:00Z');
+    expect(isoInstantToMysqlUtc('2026-03-29T01:30:00+02:00')).toBe('2026-03-28 23:30:00')
+    expect(mysqlUtcToIsoInstant('2026-03-28 23:30:00')).toBe('2026-03-28T23:30:00Z')
     expect(calendarDateUtcRange('2026-03-29', 'Europe/Madrid')).toEqual({
       start: '2026-03-28 23:00:00',
       end: '2026-03-29 22:00:00',
-    });
+    })
     expect(calendarDateUtcRange('2026-10-25', 'Europe/Madrid')).toEqual({
       start: '2026-10-24 22:00:00',
       end: '2026-10-25 23:00:00',
-    });
+    })
     expect(calendarMonthUtcRange(2026, 1, 'Europe/Madrid')).toEqual({
       start: '2025-12-31 23:00:00',
       end: '2026-01-31 23:00:00',
-    });
-  });
+    })
+  })
 
   it('lists workout days and fetches workouts through timezone ranges', async () => {
-    const workouts = new FakeWorkoutRepository();
-    workouts.startDates = ['2026-03-28 23:30:00', '2026-03-29 21:00:00'];
+    const workouts = new FakeWorkoutRepository()
+    workouts.startDates = ['2026-03-28 23:30:00', '2026-03-29 21:00:00']
     await expect(
       listWorkoutDays({ userId: 1, month: 3, year: 2026, timezone: 'Europe/Madrid' }, workouts),
-    ).resolves.toEqual([29]);
+    ).resolves.toEqual([29])
 
     workouts.graphs = [
       {
@@ -206,9 +206,9 @@ describe('workout use cases and date policy', () => {
         notes: null,
         workoutSets: [],
       },
-    ];
+    ]
     await expect(
       getWorkoutsByDate({ userId: 1, date: '2026-03-29', timezone: 'Europe/Madrid' }, workouts),
-    ).resolves.toHaveLength(1);
-  });
-});
+    ).resolves.toHaveLength(1)
+  })
+})

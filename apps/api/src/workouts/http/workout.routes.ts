@@ -5,22 +5,22 @@ import {
   WorkoutDaysParamSchema,
   WorkoutResponseSchema,
   WorkoutTimezoneQuerySchema,
-} from '@gymnotebook/contracts';
-import type { FastifyInstance } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
-import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { createWorkout } from '../application/create-workout.js';
-import { getWorkoutsByDate } from '../application/get-workouts-by-date.js';
-import { listWorkoutDays } from '../application/list-workout-days.js';
-import { DrizzleWorkoutRepository } from '../infrastructure/drizzle-workout.repository.js';
-import { DrizzleWorkoutExerciseAccess } from '../infrastructure/drizzle-workout-exercise-access.js';
-import { toWorkoutResponse } from './workout.mapper.js';
+} from '@gymnotebook/contracts'
+import type { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js'
+import { createWorkout } from '../application/create-workout.js'
+import { getWorkoutsByDate } from '../application/get-workouts-by-date.js'
+import { listWorkoutDays } from '../application/list-workout-days.js'
+import { DrizzleWorkoutRepository } from '../infrastructure/drizzle-workout.repository.js'
+import { DrizzleWorkoutExerciseAccess } from '../infrastructure/drizzle-workout-exercise-access.js'
+import { toWorkoutResponse } from './workout.mapper.js'
 
 export async function workoutRoutes(fastify: FastifyInstance) {
-  const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const workoutRepository = new DrizzleWorkoutRepository(fastify.db);
-  const exerciseAccess = new DrizzleWorkoutExerciseAccess(fastify.db);
+  const app = fastify.withTypeProvider<ZodTypeProvider>()
+  const workoutRepository = new DrizzleWorkoutRepository(fastify.db)
+  const exerciseAccess = new DrizzleWorkoutExerciseAccess(fastify.db)
 
   app.post(
     '/',
@@ -51,10 +51,10 @@ export async function workoutRoutes(fastify: FastifyInstance) {
           isDuplicateWorkoutUuidError: (error) =>
             isUniqueConstraintError(error, ['workouts_uuid_unique', 'uuid']),
         },
-      );
-      return reply.status(201).send(null);
+      )
+      return reply.status(201).send(null)
     },
-  );
+  )
 
   app.get(
     '/days/:month/:year',
@@ -84,10 +84,10 @@ export async function workoutRoutes(fastify: FastifyInstance) {
           timezone: request.query.timezone ?? fastify.config.DEFAULT_TIMEZONE,
         },
         workoutRepository,
-      );
-      return reply.send(days);
+      )
+      return reply.send(days)
     },
-  );
+  )
 
   app.get(
     '/workouts/:date',
@@ -116,8 +116,8 @@ export async function workoutRoutes(fastify: FastifyInstance) {
           timezone: request.query.timezone ?? fastify.config.DEFAULT_TIMEZONE,
         },
         workoutRepository,
-      );
-      return reply.send(workouts.map(toWorkoutResponse));
+      )
+      return reply.send(workouts.map(toWorkoutResponse))
     },
-  );
+  )
 }

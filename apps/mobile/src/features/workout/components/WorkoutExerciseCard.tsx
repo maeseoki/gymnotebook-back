@@ -1,30 +1,30 @@
-import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, radius, spacing } from '@/shared/theme/tokens';
-import { Button, Card, Text } from '@/shared/ui/primitives';
-import type { ActiveWorkoutExercise, ActiveWorkoutSet } from '../schemas/active-workout-draft';
-import { SetForm } from './SetForm';
-import { WorkoutSetRow } from './WorkoutSetRow';
+import { useState } from 'react'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
+import { Button, Card, Text } from '@/shared/ui/primitives'
+import type { ActiveWorkoutExercise, ActiveWorkoutSet } from '../schemas/active-workout-draft'
+import { SetForm } from './SetForm'
+import { WorkoutSetRow } from './WorkoutSetRow'
 
 interface WorkoutExerciseCardProps {
-  exercise: ActiveWorkoutExercise;
-  onRemoveExercise: () => void;
+  exercise: ActiveWorkoutExercise
+  onRemoveExercise: () => void
   onAddSet: (setFields: {
-    weightGrams?: number | null;
-    reps?: number | null;
-    timeSeconds?: number | null;
-    distanceMeters?: number | null;
-  }) => void;
+    weightGrams?: number | null
+    reps?: number | null
+    timeSeconds?: number | null
+    distanceMeters?: number | null
+  }) => void
   onUpdateSet: (
     draftSetId: string,
     setFields: {
-      weightGrams?: number | null;
-      reps?: number | null;
-      timeSeconds?: number | null;
-      distanceMeters?: number | null;
+      weightGrams?: number | null
+      reps?: number | null
+      timeSeconds?: number | null
+      distanceMeters?: number | null
     },
-  ) => void;
-  onDeleteSet: (draftSetId: string) => void;
+  ) => void
+  onDeleteSet: (draftSetId: string) => void
 }
 
 export function WorkoutExerciseCard({
@@ -34,31 +34,31 @@ export function WorkoutExerciseCard({
   onUpdateSet,
   onDeleteSet,
 }: WorkoutExerciseCardProps) {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingSet, setEditingSet] = useState<ActiveWorkoutSet | null>(null);
+  const [modalVisible, setModalVisible] = useState(false)
+  const [editingSet, setEditingSet] = useState<ActiveWorkoutSet | null>(null)
 
   const handleOpenAdd = () => {
-    setEditingSet(null);
-    setModalVisible(true);
-  };
+    setEditingSet(null)
+    setModalVisible(true)
+  }
 
   const handleOpenEdit = (set: ActiveWorkoutSet) => {
-    setEditingSet(set);
-    setModalVisible(true);
-  };
+    setEditingSet(set)
+    setModalVisible(true)
+  }
 
   const handleFormSubmit = (data: {
-    weightGrams?: number | null;
-    reps?: number | null;
-    timeSeconds?: number | null;
-    distanceMeters?: number | null;
+    weightGrams?: number | null
+    reps?: number | null
+    timeSeconds?: number | null
+    distanceMeters?: number | null
   }) => {
     if (editingSet) {
-      onUpdateSet(editingSet.draftSetId, data);
+      onUpdateSet(editingSet.draftSetId, data)
     } else {
-      onAddSet(data);
+      onAddSet(data)
     }
-  };
+  }
 
   return (
     <Card style={styles.card}>
@@ -113,7 +113,7 @@ export function WorkoutExerciseCard({
         onSubmit={handleFormSubmit}
       />
     </Card>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -168,4 +168,4 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     paddingVertical: spacing[2],
   },
-});
+})

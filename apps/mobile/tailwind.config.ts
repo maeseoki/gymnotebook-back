@@ -1,6 +1,6 @@
-import nativewindPreset from 'nativewind/preset';
-import type { Config } from 'tailwindcss';
-import { colors, radius, spacing } from './src/shared/theme/tokens';
+import nativewindPreset from 'nativewind/preset'
+import type { Config } from 'tailwindcss'
+import { colors, radius, spacing } from './src/shared/theme/tokens'
 
 export default {
   content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
@@ -16,4 +16,4 @@ export default {
     },
   },
   plugins: [],
-} satisfies Config;
+} satisfies Config

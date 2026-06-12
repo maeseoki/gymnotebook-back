@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
-const DEFAULT_DEV_JWT_SECRET = 'development-only-jwt-secret-change-before-production';
+const DEFAULT_DEV_JWT_SECRET = 'development-only-jwt-secret-change-before-production'
 const DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER =
-  'development-only-mobile-refresh-token-pepper-change-before-production';
+  'development-only-mobile-refresh-token-pepper-change-before-production'
 
 const envSchema = z
   .object({
@@ -34,7 +34,7 @@ const envSchema = z
   })
   .superRefine((raw, ctx) => {
     if (raw.NODE_ENV !== 'production') {
-      return;
+      return
     }
 
     for (const key of [
@@ -51,7 +51,7 @@ const envSchema = z
           code: 'custom',
           path: [key],
           message: `${key} is required in production`,
-        });
+        })
       }
     }
 
@@ -60,7 +60,7 @@ const envSchema = z
         code: 'custom',
         path: ['JWT_SECRET'],
         message: 'JWT_SECRET must be at least 32 characters in production',
-      });
+      })
     }
 
     if (raw.JWT_SECRET === DEFAULT_DEV_JWT_SECRET) {
@@ -68,7 +68,7 @@ const envSchema = z
         code: 'custom',
         path: ['JWT_SECRET'],
         message: 'JWT_SECRET must not use the development default in production',
-      });
+      })
     }
 
     if (raw.MOBILE_REFRESH_TOKEN_PEPPER && raw.MOBILE_REFRESH_TOKEN_PEPPER.length < 32) {
@@ -76,7 +76,7 @@ const envSchema = z
         code: 'custom',
         path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
         message: 'MOBILE_REFRESH_TOKEN_PEPPER must be at least 32 characters in production',
-      });
+      })
     }
 
     if (raw.MOBILE_REFRESH_TOKEN_PEPPER === DEFAULT_DEV_MOBILE_REFRESH_TOKEN_PEPPER) {
@@ -84,7 +84,7 @@ const envSchema = z
         code: 'custom',
         path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
         message: 'MOBILE_REFRESH_TOKEN_PEPPER must not use the development default in production',
-      });
+      })
     }
 
     if (raw.MOBILE_REFRESH_TOKEN_PEPPER && raw.MOBILE_REFRESH_TOKEN_PEPPER === raw.JWT_SECRET) {
@@ -92,16 +92,16 @@ const envSchema = z
         code: 'custom',
         path: ['MOBILE_REFRESH_TOKEN_PEPPER'],
         message: 'MOBILE_REFRESH_TOKEN_PEPPER must not reuse JWT_SECRET',
-      });
+      })
     }
   })
   .transform((raw) => {
-    const isProduction = raw.NODE_ENV === 'production';
+    const isProduction = raw.NODE_ENV === 'production'
     const defaultOrigins =
       raw.NODE_ENV === 'test'
         ? ['http://localhost:3000']
-        : ['http://localhost:3000', 'http://localhost:5173'];
-    const corsOrigins = parseCorsOrigins(raw.CORS_ORIGINS) ?? (isProduction ? [] : defaultOrigins);
+        : ['http://localhost:3000', 'http://localhost:5173']
+    const corsOrigins = parseCorsOrigins(raw.CORS_ORIGINS) ?? (isProduction ? [] : defaultOrigins)
 
     return {
       NODE_ENV: raw.NODE_ENV,
@@ -131,27 +131,27 @@ const envSchema = z
       AUTH_RATE_LIMIT_WINDOW_MS: raw.AUTH_RATE_LIMIT_WINDOW_MS ?? 60000,
       SWAGGER_ENABLED: raw.SWAGGER_ENABLED ? raw.SWAGGER_ENABLED === 'true' : !isProduction,
       DEFAULT_TIMEZONE: raw.DEFAULT_TIMEZONE ?? 'Europe/Madrid',
-    };
-  });
+    }
+  })
 
 function parseCorsOrigins(value: string | undefined): string[] | undefined {
   if (value === undefined) {
-    return undefined;
+    return undefined
   }
 
   return value
     .split(',')
     .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
+    .filter((origin) => origin.length > 0)
 }
 
-export type Env = z.infer<typeof envSchema>;
+export type Env = z.infer<typeof envSchema>
 
 export function parseEnv(raw: NodeJS.ProcessEnv): Env {
-  const result = envSchema.safeParse(raw);
+  const result = envSchema.safeParse(raw)
   if (!result.success) {
-    const issues = result.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n');
-    throw new Error(`Invalid environment variables:\n${issues}`);
+    const issues = result.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`).join('\n')
+    throw new Error(`Invalid environment variables:\n${issues}`)
   }
-  return result.data;
+  return result.data
 }

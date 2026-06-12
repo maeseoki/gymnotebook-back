@@ -6,7 +6,7 @@ import { Card, CardBody, CardHeader, Flex, Heading, Link, Table, Tbody } from '@
 import SetsTableHead from '../Workout/SetsTableHead'
 import Set from '../Workout/Set'
 
-export default function ExerciseDetail ({ exerciseId }: ExerciseDetailProps) {
+export default function ExerciseDetail({ exerciseId }: ExerciseDetailProps) {
   const [workoutSets, setWorkoutSets] = useState<WorkoutSetResponse[]>([])
   const [exercise, setExercise] = useState<ExerciseType>(null as unknown as ExerciseType)
   const [loading, setLoading] = useState(true)
@@ -43,27 +43,22 @@ export default function ExerciseDetail ({ exerciseId }: ExerciseDetailProps) {
 
   return (
     <>
-      <Flex justify='space-between' alignItems='baseline' pb={2}>
-        <Heading as='h2'> {exercise?.name} </Heading>
-        {editable && <Link as={RouterLink} to={`/exercises/edit/${exerciseId ?? 0}`} color='red.300'>Editar ejercicio</Link>}
+      <Flex justify="space-between" alignItems="baseline" pb={2}>
+        <Heading as="h2"> {exercise?.name} </Heading>
+        {editable && (
+          <Link as={RouterLink} to={`/exercises/edit/${exerciseId ?? 0}`} color="red.300">
+            Editar ejercicio
+          </Link>
+        )}
       </Flex>
-      <Flex
-        direction='column'
-        alignItems='center'
-        mb={4}
-        gap={4}
-      >
-        {!loading &&
-        workoutSets.length > 0
-          ? workoutSets.map((workoutSet: WorkoutSetResponse) => (
-            <Card key={workoutSet.id} w='full'>
+      <Flex direction="column" alignItems="center" mb={4} gap={4}>
+        {!loading && workoutSets.length > 0 ? (
+          workoutSets.map((workoutSet: WorkoutSetResponse) => (
+            <Card key={workoutSet.id} w="full">
               <CardHeader p={2}>
-                <Heading
-                  as='h3'
-                  size='sm'
-                  textAlign='center'
-                  color='primary.500'
-                > {formatDate(workoutSet.startDate)}
+                <Heading as="h3" size="sm" textAlign="center" color="primary.500">
+                  {' '}
+                  {formatDate(workoutSet.startDate)}
                 </Heading>
               </CardHeader>
               <CardBody p={2}>
@@ -82,15 +77,22 @@ export default function ExerciseDetail ({ exerciseId }: ExerciseDetailProps) {
                         exerciseType={workoutSet.exercise.type}
                         startDate={new Date(set.startDate)}
                       />
-                    )
-                    )}
+                    ))}
                   </Tbody>
                 </Table>
               </CardBody>
             </Card>
           ))
-          : <Heading as='h3' size='md' textAlign='center'>Cargando..</Heading>}
-        {loading && <Heading as='h3' size='md' textAlign='center'>Cargando...</Heading>}
+        ) : (
+          <Heading as="h3" size="md" textAlign="center">
+            Cargando..
+          </Heading>
+        )}
+        {loading && (
+          <Heading as="h3" size="md" textAlign="center">
+            Cargando...
+          </Heading>
+        )}
       </Flex>
     </>
   )

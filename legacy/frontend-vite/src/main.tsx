@@ -14,9 +14,9 @@ const queryClient = new QueryClient({
       refetchOnMount: false,
       refetchOnReconnect: false,
       retry: false,
-      staleTime: 1000 * 60 * 5
-    }
-  }
+      staleTime: 1000 * 60 * 5,
+    },
+  },
 })
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
@@ -25,5 +25,5 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <RouterProvider router={router} fallbackElement={<p>Cargando...</p>} />
     </ChakraProvider>
     {/* <ReactQueryDevtools initialIsOpen={false} /> */}
-  </QueryClientProvider>
+  </QueryClientProvider>,
 )

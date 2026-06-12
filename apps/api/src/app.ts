@@ -1,61 +1,61 @@
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
-import multipart from '@fastify/multipart';
-import rateLimit from '@fastify/rate-limit';
-import sensible from '@fastify/sensible';
-import swagger from '@fastify/swagger';
-import swaggerUi from '@fastify/swagger-ui';
-import Fastify, { type FastifyServerOptions } from 'fastify';
+import cors from '@fastify/cors'
+import helmet from '@fastify/helmet'
+import multipart from '@fastify/multipart'
+import rateLimit from '@fastify/rate-limit'
+import sensible from '@fastify/sensible'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+import Fastify, { type FastifyServerOptions } from 'fastify'
 import {
   jsonSchemaTransform,
   serializerCompiler,
   validatorCompiler,
-} from 'fastify-type-provider-zod';
-import { authRoutes } from './auth/http/auth.routes.js';
-import { exerciseRoutes } from './exercises/http/exercise.routes.js';
-import { healthRoutes } from './health/health.routes.js';
-import { imageRoutes } from './images/http/image.routes.js';
-import { mobileAuthRoutes } from './mobile-auth/http/mobile-auth.routes.js';
-import { configPlugin } from './shared/config.js';
-import { createTestDatabaseClient, type DatabasePluginOptions, dbPlugin } from './shared/db.js';
-import type { Env } from './shared/env.js';
-import { registerErrorHandlers } from './shared/errors.js';
-import { jwtAuthPlugin } from './shared/jwt.js';
-import { userRoutes } from './users/http/user.routes.js';
-import { workoutHistoryRoutes } from './workout-history/http/workout-history.routes.js';
-import { workoutRoutes } from './workouts/http/workout.routes.js';
+} from 'fastify-type-provider-zod'
+import { authRoutes } from './auth/http/auth.routes.js'
+import { exerciseRoutes } from './exercises/http/exercise.routes.js'
+import { healthRoutes } from './health/health.routes.js'
+import { imageRoutes } from './images/http/image.routes.js'
+import { mobileAuthRoutes } from './mobile-auth/http/mobile-auth.routes.js'
+import { configPlugin } from './shared/config.js'
+import { createTestDatabaseClient, type DatabasePluginOptions, dbPlugin } from './shared/db.js'
+import type { Env } from './shared/env.js'
+import { registerErrorHandlers } from './shared/errors.js'
+import { jwtAuthPlugin } from './shared/jwt.js'
+import { userRoutes } from './users/http/user.routes.js'
+import { workoutHistoryRoutes } from './workout-history/http/workout-history.routes.js'
+import { workoutRoutes } from './workouts/http/workout.routes.js'
 
 export interface BuildAppOptions {
-  config?: Env;
-  configOverrides?: Partial<Env>;
-  databaseClient?: DatabasePluginOptions['client'];
+  config?: Env
+  configOverrides?: Partial<Env>
+  databaseClient?: DatabasePluginOptions['client']
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
-  const config = options.config ?? createTestConfig(options.configOverrides);
+  const config = options.config ?? createTestConfig(options.configOverrides)
   const fastify = Fastify({
     logger: createLoggerOptions(config),
     disableRequestLogging: false,
-  });
+  })
 
-  fastify.setValidatorCompiler(validatorCompiler);
-  fastify.setSerializerCompiler(serializerCompiler);
+  fastify.setValidatorCompiler(validatorCompiler)
+  fastify.setSerializerCompiler(serializerCompiler)
 
-  registerErrorHandlers(fastify);
+  registerErrorHandlers(fastify)
 
-  await fastify.register(configPlugin, { config });
-  await fastify.register(sensible);
+  await fastify.register(configPlugin, { config })
+  await fastify.register(sensible)
   await fastify.register(cors, {
     origin: (origin, callback) => {
-      callback(null, origin === undefined || config.CORS_ORIGINS.includes(origin));
+      callback(null, origin === undefined || config.CORS_ORIGINS.includes(origin))
     },
     credentials: true,
     maxAge: 3600,
-  });
+  })
   await fastify.register(helmet, {
     contentSecurityPolicy: false,
     hsts: config.NODE_ENV === 'production' ? undefined : false,
-  });
+  })
   await fastify.register(multipart, {
     attachFieldsToBody: false,
     limits: {
@@ -64,11 +64,11 @@ export async function buildApp(options: BuildAppOptions = {}) {
       fields: 10,
       parts: 20,
     },
-  });
+  })
   await fastify.register(rateLimit, {
     max: config.RATE_LIMIT_MAX,
     timeWindow: config.RATE_LIMIT_WINDOW_MS,
-  });
+  })
 
   if (config.SWAGGER_ENABLED) {
     await fastify.register(swagger, {
@@ -90,29 +90,29 @@ export async function buildApp(options: BuildAppOptions = {}) {
         },
       },
       transform: jsonSchemaTransform,
-    });
+    })
 
     await fastify.register(swaggerUi, {
       routePrefix: '/docs',
-    });
+    })
   }
 
   await fastify.register(dbPlugin, {
     client: options.databaseClient,
-  });
-  await fastify.register(jwtAuthPlugin);
+  })
+  await fastify.register(jwtAuthPlugin)
 
-  await fastify.register(authRoutes, { prefix: '/api/auth' });
-  await fastify.register(mobileAuthRoutes, { prefix: '/api/auth/mobile' });
-  await fastify.register(userRoutes, { prefix: '/api/user' });
-  await fastify.register(exerciseRoutes, { prefix: '/api/exercise' });
-  await fastify.register(imageRoutes, { prefix: '/api/image' });
-  await fastify.register(workoutRoutes, { prefix: '/api/workout' });
-  await fastify.register(workoutHistoryRoutes, { prefix: '/api/workout-sets' });
-  await fastify.register(healthRoutes);
+  await fastify.register(authRoutes, { prefix: '/api/auth' })
+  await fastify.register(mobileAuthRoutes, { prefix: '/api/auth/mobile' })
+  await fastify.register(userRoutes, { prefix: '/api/user' })
+  await fastify.register(exerciseRoutes, { prefix: '/api/exercise' })
+  await fastify.register(imageRoutes, { prefix: '/api/image' })
+  await fastify.register(workoutRoutes, { prefix: '/api/workout' })
+  await fastify.register(workoutHistoryRoutes, { prefix: '/api/workout-sets' })
+  await fastify.register(healthRoutes)
 
-  await fastify.ready();
-  return fastify;
+  await fastify.ready()
+  return fastify
 }
 
 export function createTestConfig(overrides: Partial<Env> = {}): Env {
@@ -143,11 +143,11 @@ export function createTestConfig(overrides: Partial<Env> = {}): Env {
     SWAGGER_ENABLED: true,
     DEFAULT_TIMEZONE: 'Europe/Madrid',
     ...overrides,
-  };
+  }
 }
 
 export function createTestDatabase(options?: Parameters<typeof createTestDatabaseClient>[0]) {
-  return createTestDatabaseClient(options);
+  return createTestDatabaseClient(options)
 }
 
 function createLoggerOptions(config: Env): FastifyServerOptions['logger'] {
@@ -170,13 +170,13 @@ function createLoggerOptions(config: Env): FastifyServerOptions['logger'] {
       'DB_PASSWORD',
     ],
     censor: '[Redacted]',
-  };
+  }
 
   if (config.NODE_ENV === 'production' || config.NODE_ENV === 'test') {
     return {
       level: config.LOG_LEVEL,
       redact,
-    };
+    }
   }
 
   return {
@@ -190,5 +190,5 @@ function createLoggerOptions(config: Env): FastifyServerOptions['logger'] {
         ignore: 'pid,hostname',
       },
     },
-  };
+  }
 }

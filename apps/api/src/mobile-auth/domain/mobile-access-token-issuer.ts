@@ -1,17 +1,17 @@
-import type { ERole } from '@gymnotebook/contracts';
+import type { ERole } from '@gymnotebook/contracts'
 
 export interface MobileAccessTokenClaims {
-  sub: string;
-  userId: number;
-  roles: ERole[];
-  sessionId: string;
+  sub: string
+  userId: number
+  roles: ERole[]
+  sessionId: string
 }
 
 export interface MobileAccessTokenIssued {
-  token: string;
-  expiresAt: string;
+  token: string
+  expiresAt: string
 }
 
 export interface MobileAccessTokenIssuer {
-  issue(claims: MobileAccessTokenClaims): MobileAccessTokenIssued;
+  issue(claims: MobileAccessTokenClaims): MobileAccessTokenIssued
 }

@@ -1,12 +1,32 @@
 import { useForm, Controller, FieldValues } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
-import { Button, FormControl, FormLabel, Input, Textarea, Select, Image, Center, Icon, Stack, Text, useToast, Skeleton } from '@chakra-ui/react'
+import {
+  Button,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+  Select,
+  Image,
+  Center,
+  Icon,
+  Stack,
+  Text,
+  useToast,
+  Skeleton,
+} from '@chakra-ui/react'
 import { FaCamera } from 'react-icons/fa'
 import { useDropzone } from 'react-dropzone'
 import * as yup from 'yup'
 import { useEffect, useState } from 'react'
 import Compressor from 'compressorjs'
-import { MuscleGroups, ExerciseType, GenericResponse, ExerciseTypeType, ExerciseTypeUpdate } from '../../types'
+import {
+  MuscleGroups,
+  ExerciseType,
+  GenericResponse,
+  ExerciseTypeType,
+  ExerciseTypeUpdate,
+} from '../../types'
 import { compressorConfig } from '../../utils/compressor'
 import { uploadImage } from '../../services/imageService'
 import { AxiosError } from 'axios'
@@ -20,10 +40,10 @@ const schema = yup.object().shape({
   primaryMuscle: yup.string().required(),
   secondaryMuscle: yup.string().optional(),
   type: yup.string().required(),
-  description: yup.string().optional()
+  description: yup.string().optional(),
 })
 
-export default function ExerciseEdit () {
+export default function ExerciseEdit() {
   const [file, setFile] = useState<Blob | undefined>()
   const [urlImage, setUrlImage] = useState<string | undefined>(undefined)
   const [loading, setLoading] = useState(false)
@@ -38,14 +58,20 @@ export default function ExerciseEdit () {
       ...compressorConfig,
       success: (result) => {
         setFile(result)
-      }
+      },
     })
   }
 
   const { getRootProps, getInputProps } = useDropzone({ onDrop })
 
-  const { register, handleSubmit, control, formState: { errors }, setValue } = useForm({
-    resolver: yupResolver(schema)
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    setValue,
+  } = useForm({
+    resolver: yupResolver(schema),
   })
 
   const onSubmit = async (data: FieldValues) => {
@@ -62,7 +88,7 @@ export default function ExerciseEdit () {
       setLoading(false)
       toast({
         description: 'Ha ocurrido un error al subir la imagen',
-        status: 'error'
+        status: 'error',
       })
       return
     }
@@ -73,10 +99,10 @@ export default function ExerciseEdit () {
         id: exercise?.id,
         name: data.name,
         primaryMuscleGroup: data.primaryMuscle as MuscleGroups,
-        secondaryMuscleGroup: data.secondaryMuscle ? data.secondaryMuscle as MuscleGroups : null,
+        secondaryMuscleGroup: data.secondaryMuscle ? (data.secondaryMuscle as MuscleGroups) : null,
         type: data.type as ExerciseTypeType,
         description: data.description,
-        imageId
+        imageId,
       }
 
       // Si estamos editando un ejercicio, usamos el método de update, si no, usamos el de create
@@ -90,7 +116,7 @@ export default function ExerciseEdit () {
       toast({
         title: 'Ejercicio guardado',
         description: 'El ejercicio se ha guardado correctamente',
-        status: 'success'
+        status: 'success',
       })
       navigate(-1)
     } catch (error) {
@@ -99,7 +125,7 @@ export default function ExerciseEdit () {
       setLoading(false)
       toast({
         description: 'Ha ocurrido un error al guardar el ejercicio',
-        status: 'error'
+        status: 'error',
       })
     }
   }
@@ -125,9 +151,11 @@ export default function ExerciseEdit () {
         const exercise = await getExercise(parseInt(id))
         setValue('name', exercise.name, { shouldValidate: true })
         setValue('primaryMuscle', exercise.primaryMuscleGroup, { shouldValidate: true })
-        if (exercise.secondaryMuscleGroup) setValue('secondaryMuscle', exercise.secondaryMuscleGroup, { shouldValidate: false })
+        if (exercise.secondaryMuscleGroup)
+          setValue('secondaryMuscle', exercise.secondaryMuscleGroup, { shouldValidate: false })
         setValue('type', exercise.type, { shouldValidate: true })
-        if (exercise.description) setValue('description', exercise.description, { shouldValidate: false })
+        if (exercise.description)
+          setValue('description', exercise.description, { shouldValidate: false })
         setExercise(exercise)
       }
     }
@@ -142,51 +170,59 @@ export default function ExerciseEdit () {
           <Skeleton isLoaded={!id || !!exercise}>
             <Center
               {...getRootProps()}
-              border='2px dashed'
-              borderRadius='50%'
+              border="2px dashed"
+              borderRadius="50%"
               width={150}
               height={150}
-              color='gray.400'
-              position='relative'
-              cursor='pointer'
+              color="gray.400"
+              position="relative"
+              cursor="pointer"
             >
-
-              <input {...getInputProps()} accept='image/*' capture />
-              {urlImage
-                ? <Image
-                    borderRadius='50%'
-                    src={urlImage}
-                    boxSize='150px'
-                    objectFit='cover'
-                  />
-                : exercise?.imageId
-                  ? <Image
-                      borderRadius='50%'
-                      src={`${import.meta.env.VITE_API_URL as string}image/${exercise.imageId}`}
-                      boxSize='150px'
-                      objectFit='cover'
-                    />
-                  : <Icon as={FaCamera} boxSize={10} />}
+              <input {...getInputProps()} accept="image/*" capture />
+              {urlImage ? (
+                <Image borderRadius="50%" src={urlImage} boxSize="150px" objectFit="cover" />
+              ) : exercise?.imageId ? (
+                <Image
+                  borderRadius="50%"
+                  src={`${import.meta.env.VITE_API_URL as string}image/${exercise.imageId}`}
+                  boxSize="150px"
+                  objectFit="cover"
+                />
+              ) : (
+                <Icon as={FaCamera} boxSize={10} />
+              )}
             </Center>
           </Skeleton>
         </Center>
         <Skeleton isLoaded={!id || !!exercise}>
           <FormControl isInvalid={!!errors.name}>
-            <FormLabel>Nombre del ejercicio <Text as='b' color='red.400'>*</Text></FormLabel>
+            <FormLabel>
+              Nombre del ejercicio{' '}
+              <Text as="b" color="red.400">
+                *
+              </Text>
+            </FormLabel>
             <Input defaultValue={exercise?.name} {...register('name')} />
           </FormControl>
         </Skeleton>
 
         <Skeleton isLoaded={!id || !!exercise}>
           <FormControl isInvalid={!!errors.primaryMuscle}>
-            <FormLabel>Grupo muscular primario <Text as='b' color='red.400'>*</Text></FormLabel>
+            <FormLabel>
+              Grupo muscular primario{' '}
+              <Text as="b" color="red.400">
+                *
+              </Text>
+            </FormLabel>
             <Controller
-              name='primaryMuscle'
+              name="primaryMuscle"
               control={control}
               defaultValue={exercise?.primaryMuscleGroup ?? ''}
               render={({ field }) => (
                 <Select {...field}>
-                  <option value='' disabled>Selecciona un grupo muscular</option>
+                  <option value="" disabled>
+                    Selecciona un grupo muscular
+                  </option>
                   {Object.entries(muscleGroupNames).map(([key, value]) => (
                     <option key={key} value={key}>
                       {value}
@@ -202,12 +238,14 @@ export default function ExerciseEdit () {
           <FormControl isInvalid={!!errors.secondaryMuscle}>
             <FormLabel>Grupo muscular secundario</FormLabel>
             <Controller
-              name='secondaryMuscle'
+              name="secondaryMuscle"
               control={control}
               defaultValue={exercise?.secondaryMuscleGroup ?? ''}
               render={({ field }) => (
                 <Select {...field}>
-                  <option value='' disabled>Selecciona un grupo muscular</option>
+                  <option value="" disabled>
+                    Selecciona un grupo muscular
+                  </option>
                   {Object.entries(muscleGroupNames).map(([key, value]) => (
                     <option key={key} value={key}>
                       {value}
@@ -221,14 +259,21 @@ export default function ExerciseEdit () {
 
         <Skeleton isLoaded={!id || !!exercise}>
           <FormControl isInvalid={!!errors.type}>
-            <FormLabel>Tipo de ejercicio <Text as='b' color='red.400'>*</Text></FormLabel>
+            <FormLabel>
+              Tipo de ejercicio{' '}
+              <Text as="b" color="red.400">
+                *
+              </Text>
+            </FormLabel>
             <Controller
-              name='type'
+              name="type"
               control={control}
               defaultValue={exercise?.type ?? ''}
               render={({ field }) => (
                 <Select {...field}>
-                  <option value='' disabled>Selecciona un tipo de ejercicio</option>
+                  <option value="" disabled>
+                    Selecciona un tipo de ejercicio
+                  </option>
                   {Object.entries(exerciseTypeNames).map(([key, value]) => (
                     <option key={key} value={key}>
                       {value}
@@ -247,15 +292,9 @@ export default function ExerciseEdit () {
           </FormControl>
         </Skeleton>
 
-        <Button
-          type='submit'
-          colorScheme='blue'
-          isLoading={loading}
-          loadingText='Guardando...'
-        >
+        <Button type="submit" colorScheme="blue" isLoading={loading} loadingText="Guardando...">
           Guardar ejercicio
         </Button>
-
       </Stack>
     </form>
   )

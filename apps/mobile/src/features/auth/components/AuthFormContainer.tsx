@@ -1,16 +1,16 @@
-import type { ReactNode } from 'react';
-import { View } from 'react-native';
-import { spacing, typography } from '@/shared/theme/tokens';
-import { Card, KeyboardSafeScreen, Text } from '@/shared/ui/primitives';
+import type { ReactNode } from 'react'
+import { View } from 'react-native'
+import { spacing, typography } from '@/shared/theme/tokens'
+import { Card, KeyboardSafeScreen, Text } from '@/shared/ui/primitives'
 
 export function AuthFormContainer({
   title,
   subtitle,
   children,
 }: {
-  title: string;
-  subtitle: string;
-  children: ReactNode;
+  title: string
+  subtitle: string
+  children: ReactNode
 }): ReactNode {
   return (
     <KeyboardSafeScreen>
@@ -27,5 +27,5 @@ export function AuthFormContainer({
         </Card>
       </View>
     </KeyboardSafeScreen>
-  );
+  )
 }

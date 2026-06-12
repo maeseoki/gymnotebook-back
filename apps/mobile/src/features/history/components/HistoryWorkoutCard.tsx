@@ -1,18 +1,18 @@
-import type { WorkoutResponse } from '@gymnotebook/contracts';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Card, Text } from '@/shared/ui/primitives';
-import { formatDateTime } from '../utils/history-formatters';
+import type { WorkoutResponse } from '@gymnotebook/contracts'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Card, Text } from '@/shared/ui/primitives'
+import { formatDateTime } from '../utils/history-formatters'
 
 interface HistoryWorkoutCardProps {
-  workout: WorkoutResponse;
-  onPress: () => void;
+  workout: WorkoutResponse
+  onPress: () => void
 }
 
 export function HistoryWorkoutCard({ workout, onPress }: HistoryWorkoutCardProps) {
-  const exerciseNames = workout.workoutSets.map((ws) => ws.exercise.name).join(', ');
+  const exerciseNames = workout.workoutSets.map((ws) => ws.exercise.name).join(', ')
 
-  const totalSets = workout.workoutSets.reduce((acc, ws) => acc + ws.sets.length, 0);
+  const totalSets = workout.workoutSets.reduce((acc, ws) => acc + ws.sets.length, 0)
 
   return (
     <Pressable
@@ -36,7 +36,7 @@ export function HistoryWorkoutCard({ workout, onPress }: HistoryWorkoutCardProps
         </Text>
       </Card>
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -70,4 +70,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
   },
-});
+})

@@ -1,5 +1,5 @@
-import { Link } from 'expo-router';
-import { Screen, Text } from '@/shared/ui/primitives';
+import { Link } from 'expo-router'
+import { Screen, Text } from '@/shared/ui/primitives'
 
 export default function NotFound() {
   return (
@@ -7,5 +7,5 @@ export default function NotFound() {
       <Text>Screen not found.</Text>
       <Link href="/(authenticated)/(tabs)">Go home</Link>
     </Screen>
-  );
+  )
 }

@@ -1,5 +1,5 @@
-import type { MeResponse, UserResponse } from '@gymnotebook/contracts';
-import type { PublicUser } from '../domain/user.js';
+import type { MeResponse, UserResponse } from '@gymnotebook/contracts'
+import type { PublicUser } from '../domain/user.js'
 
 export function toUserResponse(user: PublicUser): UserResponse {
   return {
@@ -7,9 +7,9 @@ export function toUserResponse(user: PublicUser): UserResponse {
     username: user.username,
     email: user.email,
     roles: user.roles,
-  };
+  }
 }
 
 export function toMeResponse(user: PublicUser): MeResponse {
-  return toUserResponse(user);
+  return toUserResponse(user)
 }

@@ -1,8 +1,8 @@
-import type { UserRepository } from '../domain/user.repository.js';
+import type { UserRepository } from '../domain/user.repository.js'
 
 export interface UserAvailability {
-  usernameAvailable: boolean;
-  emailAvailable: boolean;
+  usernameAvailable: boolean
+  emailAvailable: boolean
 }
 
 export async function verifyUserAvailability(
@@ -12,9 +12,9 @@ export async function verifyUserAvailability(
   const [usernameExists, emailExists] = await Promise.all([
     users.existsByUsername(input.username),
     users.existsByEmail(input.email),
-  ]);
+  ])
   return {
     usernameAvailable: !usernameExists,
     emailAvailable: !emailExists,
-  };
+  }
 }

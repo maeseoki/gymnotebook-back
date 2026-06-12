@@ -1,7 +1,7 @@
-import type { Config } from 'drizzle-kit';
-import { parseEnv } from './src/shared/env.js';
+import type { Config } from 'drizzle-kit'
+import { parseEnv } from './src/shared/env.js'
 
-const env = parseEnv(process.env);
+const env = parseEnv(process.env)
 
 export default {
   schema: './drizzle/schema.ts',
@@ -14,4 +14,4 @@ export default {
     password: env.DB_PASSWORD,
     database: env.DB_NAME,
   },
-} satisfies Config;
+} satisfies Config

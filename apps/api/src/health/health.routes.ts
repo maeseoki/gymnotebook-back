@@ -1,12 +1,12 @@
-import { ErrorResponseSchema } from '@gymnotebook/contracts';
-import type { FastifyInstance } from 'fastify';
-import { z } from 'zod';
-import { AppError } from '../shared/errors.js';
+import { ErrorResponseSchema } from '@gymnotebook/contracts'
+import type { FastifyInstance } from 'fastify'
+import { z } from 'zod'
+import { AppError } from '../shared/errors.js'
 
 const HealthResponseSchema = z.object({
   status: z.literal('ok'),
   timestamp: z.string(),
-});
+})
 
 export async function healthRoutes(fastify: FastifyInstance) {
   fastify.get(
@@ -25,9 +25,9 @@ export async function healthRoutes(fastify: FastifyInstance) {
       return reply.send({
         status: 'ok',
         timestamp: new Date().toISOString(),
-      });
+      })
     },
-  );
+  )
 
   fastify.get(
     '/health/ready',
@@ -44,15 +44,15 @@ export async function healthRoutes(fastify: FastifyInstance) {
     },
     async (_request, reply) => {
       try {
-        await fastify.dbReady();
+        await fastify.dbReady()
       } catch {
-        throw new AppError(503, 'service_unavailable', 'Service unavailable');
+        throw new AppError(503, 'service_unavailable', 'Service unavailable')
       }
 
       return reply.send({
         status: 'ok',
         timestamp: new Date().toISOString(),
-      });
+      })
     },
-  );
+  )
 }

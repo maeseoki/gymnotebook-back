@@ -1,15 +1,15 @@
-import type { ExerciseResponse } from '@gymnotebook/contracts';
-import { useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native';
-import { useExercises } from '@/features/exercises/hooks/use-exercises';
-import { colors, radius, spacing } from '@/shared/theme/tokens';
-import { Button, ErrorState, LoadingIndicator, Text, TextInput } from '@/shared/ui/primitives';
+import type { ExerciseResponse } from '@gymnotebook/contracts'
+import { useState } from 'react'
+import { FlatList, Modal, Pressable, StyleSheet, View } from 'react-native'
+import { useExercises } from '@/features/exercises/hooks/use-exercises'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
+import { Button, ErrorState, LoadingIndicator, Text, TextInput } from '@/shared/ui/primitives'
 
 interface ExercisePickerProps {
-  visible: boolean;
-  onClose: () => void;
-  onSelect: (exercise: ExerciseResponse) => void;
-  alreadySelectedIds: number[];
+  visible: boolean
+  onClose: () => void
+  onSelect: (exercise: ExerciseResponse) => void
+  alreadySelectedIds: number[]
 }
 
 export function ExercisePicker({
@@ -18,14 +18,14 @@ export function ExercisePicker({
   onSelect,
   alreadySelectedIds,
 }: ExercisePickerProps) {
-  const { data: exercises = [], isLoading, isError, error } = useExercises();
-  const [search, setSearch] = useState('');
+  const { data: exercises = [], isLoading, isError, error } = useExercises()
+  const [search, setSearch] = useState('')
 
   const filteredExercises = exercises.filter((ex) => {
-    const matchesSearch = ex.name.toLowerCase().includes(search.toLowerCase());
-    const isNotSelected = !alreadySelectedIds.includes(ex.id);
-    return matchesSearch && isNotSelected;
-  });
+    const matchesSearch = ex.name.toLowerCase().includes(search.toLowerCase())
+    const isNotSelected = !alreadySelectedIds.includes(ex.id)
+    return matchesSearch && isNotSelected
+  })
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
@@ -70,8 +70,8 @@ export function ExercisePicker({
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => {
-                  onSelect(item);
-                  onClose();
+                  onSelect(item)
+                  onClose()
                 }}
                 style={({ pressed }) => [styles.item, pressed && styles.itemPressed]}
                 accessibilityRole="button"
@@ -94,7 +94,7 @@ export function ExercisePicker({
         )}
       </View>
     </Modal>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -165,4 +165,4 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: colors.textMuted,
   },
-});
+})

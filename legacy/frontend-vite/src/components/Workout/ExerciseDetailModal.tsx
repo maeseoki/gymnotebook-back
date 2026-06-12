@@ -1,8 +1,21 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Button } from '@chakra-ui/react'
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Button,
+} from '@chakra-ui/react'
 import { ExerciseDetailModalProps } from '../../types.d'
 import ExerciseDetail from '../Exercises/ExerciseDetail'
 
-export default function ExerciseDetailModal ({ isOpen, onClose, exerciseId }: ExerciseDetailModalProps) {
+export default function ExerciseDetailModal({
+  isOpen,
+  onClose,
+  exerciseId,
+}: ExerciseDetailModalProps) {
   return (
     <Modal onClose={onClose} isOpen={isOpen} isCentered>
       <ModalOverlay />

@@ -8,26 +8,26 @@ import {
   UserParamSchema,
   UserResponseSchema,
   VerifyUserAvailabilityQuerySchema,
-} from '@gymnotebook/contracts';
-import type { FastifyInstance } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
-import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { assignRole } from '../application/assign-role.js';
-import { deleteUser } from '../application/delete-user.js';
-import { getCurrentUser } from '../application/get-current-user.js';
-import { listUsers } from '../application/list-users.js';
-import { removeRole } from '../application/remove-role.js';
-import { verifyUserAvailability } from '../application/verify-user-availability.js';
-import { EmailAlreadyExistsError, UsernameAlreadyExistsError } from '../domain/user.errors.js';
-import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js';
-import { DrizzleUserUnitOfWork } from '../infrastructure/drizzle-user-unit-of-work.js';
-import { toMeResponse, toUserResponse } from './user.mapper.js';
+} from '@gymnotebook/contracts'
+import type { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js'
+import { assignRole } from '../application/assign-role.js'
+import { deleteUser } from '../application/delete-user.js'
+import { getCurrentUser } from '../application/get-current-user.js'
+import { listUsers } from '../application/list-users.js'
+import { removeRole } from '../application/remove-role.js'
+import { verifyUserAvailability } from '../application/verify-user-availability.js'
+import { EmailAlreadyExistsError, UsernameAlreadyExistsError } from '../domain/user.errors.js'
+import { DrizzleUserRepository } from '../infrastructure/drizzle-user.repository.js'
+import { DrizzleUserUnitOfWork } from '../infrastructure/drizzle-user-unit-of-work.js'
+import { toMeResponse, toUserResponse } from './user.mapper.js'
 
 export async function userRoutes(fastify: FastifyInstance) {
-  const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const userRepository = new DrizzleUserRepository(fastify.db);
-  const userUnitOfWork = new DrizzleUserUnitOfWork(fastify.db);
+  const app = fastify.withTypeProvider<ZodTypeProvider>()
+  const userRepository = new DrizzleUserRepository(fastify.db)
+  const userUnitOfWork = new DrizzleUserUnitOfWork(fastify.db)
 
   app.get(
     '/',
@@ -46,10 +46,10 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     async (_request, reply) => {
-      const users = await listUsers(userRepository);
-      return reply.send(users.map(toUserResponse));
+      const users = await listUsers(userRepository)
+      return reply.send(users.map(toUserResponse))
     },
-  );
+  )
 
   app.get(
     '/verifyuser/:username/:email',
@@ -71,16 +71,16 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const availability = await verifyUserAvailability(request.params, userRepository);
+      const availability = await verifyUserAvailability(request.params, userRepository)
       if (!availability.usernameAvailable) {
-        throw new UsernameAlreadyExistsError();
+        throw new UsernameAlreadyExistsError()
       }
       if (!availability.emailAvailable) {
-        throw new EmailAlreadyExistsError();
+        throw new EmailAlreadyExistsError()
       }
-      return reply.send({ message: '¡Usuario y email disponibles!' });
+      return reply.send({ message: '¡Usuario y email disponibles!' })
     },
-  );
+  )
 
   app.get(
     '/verifyuser',
@@ -100,9 +100,9 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      return reply.send(await verifyUserAvailability(request.query, userRepository));
+      return reply.send(await verifyUserAvailability(request.query, userRepository))
     },
-  );
+  )
 
   app.get(
     '/me',
@@ -125,10 +125,10 @@ export async function userRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const user = await getCurrentUser(request.user.userId, userRepository);
-      return reply.send(toMeResponse(user));
+      const user = await getCurrentUser(request.user.userId, userRepository)
+      return reply.send(toMeResponse(user))
     },
-  );
+  )
 
   app.put(
     '/setpermissions',
@@ -159,11 +159,11 @@ export async function userRoutes(fastify: FastifyInstance) {
           isDuplicateUserRoleError: (error) =>
             isUniqueConstraintError(error, ['user_roles_user_id_role_id_pk', 'PRIMARY']),
         },
-      );
+      )
 
-      return reply.send({ message: 'Permisos actualizados correctamente.' });
+      return reply.send({ message: 'Permisos actualizados correctamente.' })
     },
-  );
+  )
 
   app.put(
     '/removepermissions',
@@ -192,11 +192,11 @@ export async function userRoutes(fastify: FastifyInstance) {
         {
           transaction: (work) => userUnitOfWork.withUsersAndRoles(work),
         },
-      );
+      )
 
-      return reply.send({ message: 'Permisos eliminados correctamente.' });
+      return reply.send({ message: 'Permisos eliminados correctamente.' })
     },
-  );
+  )
 
   app.delete(
     '/:id',
@@ -225,9 +225,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         {
           transaction: (work) => userUnitOfWork.withUsers(work),
         },
-      );
+      )
 
-      return reply.status(204).send(null);
+      return reply.status(204).send(null)
     },
-  );
+  )
 }

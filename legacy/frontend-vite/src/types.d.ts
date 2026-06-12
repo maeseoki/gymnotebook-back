@@ -19,7 +19,7 @@ export interface Role {
 export enum Roles {
   ROLE_USER = 'ROLE_USER',
   ROLE_ADMIN = 'ROLE_ADMIN',
-  ROLE_MODERATOR = 'ROLE_MODERATOR'
+  ROLE_MODERATOR = 'ROLE_MODERATOR',
 }
 
 export interface Children {
@@ -103,7 +103,7 @@ export enum MuscleGroups {
   TRAPS = 'TRAPS',
   TRICEPS = 'TRICEPS',
   UPPER_BACK = 'UPPER_BACK',
-  OTHER = 'OTHER'
+  OTHER = 'OTHER',
 }
 
 export enum ExerciseTypeType {
@@ -112,7 +112,7 @@ export enum ExerciseTypeType {
   TIME = 'TIME',
   DISTANCE = 'DISTANCE',
   WEIGHT_REPS = 'WEIGHT_REPS',
-  TIME_DISTANCE = 'TIME_DISTANCE'
+  TIME_DISTANCE = 'TIME_DISTANCE',
 }
 
 export interface ExerciseType {

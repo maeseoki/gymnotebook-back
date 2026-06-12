@@ -1,4 +1,3 @@
-
 import { Auth, Role, Roles, User } from '../types'
 import { useLocalStorage } from './useLocalStorage'
 import { parseJwt } from '../utils/helpers'
@@ -37,7 +36,7 @@ export const useUser = (): Auth => {
     authenticated: true,
     name: decodedToken.sub,
     authToken: token,
-    roles
+    roles,
   }
 
   return { user, addUser, removeUser }

@@ -2,14 +2,14 @@ import { Tr, Td, Icon } from '@chakra-ui/react'
 import { ExerciseTypeType, SetProps } from '../../types.d'
 import { BsLightningChargeFill } from 'react-icons/bs'
 
-export default function Set ({
+export default function Set({
   index,
   reps,
   weight,
   time,
   distance,
   isDropSet,
-  exerciseType
+  exerciseType,
 }: SetProps) {
   return (
     <Tr>

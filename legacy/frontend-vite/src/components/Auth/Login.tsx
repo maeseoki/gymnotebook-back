@@ -1,4 +1,16 @@
-import { Box, Button, Container, FormControl, FormLabel, HStack, Heading, Input, Stack, Text, useToast } from '@chakra-ui/react'
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  FormLabel,
+  HStack,
+  Heading,
+  Input,
+  Stack,
+  Text,
+  useToast,
+} from '@chakra-ui/react'
 import { PasswordField } from './PasswordFIeld'
 import Logo from '../Shared/Logo'
 import { FormEvent, useState } from 'react'
@@ -9,7 +21,7 @@ import { useUser } from '../../hooks/userUser'
 import { useGenericToast } from '../../hooks/useGenericToast'
 import Copyright from '../Shared/Copyright'
 
-export default function Login () {
+export default function Login() {
   const navigate = useNavigate()
   const { addUser } = useUser()
   const toast = useToast()
@@ -17,7 +29,7 @@ export default function Login () {
   const [loading, setLoading] = useState(false)
   const [loginRequest, setLoginRequest] = useState<LoginRequest>({
     username: '',
-    password: ''
+    password: '',
   })
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -33,7 +45,7 @@ export default function Login () {
         description: 'Nombre de usuario o contraseña incorrectos',
         status: 'error',
         duration: 4000,
-        isClosable: true
+        isClosable: true,
       })
       console.error('Error en la autenticación: ', error)
     } finally {
@@ -46,18 +58,20 @@ export default function Login () {
   }
 
   return (
-    <Container maxW='lg' py={{ base: '12', md: '24' }} px={{ base: '2', sm: '8' }}>
-      <Stack spacing='8'>
-        <Stack spacing='6'>
+    <Container maxW="lg" py={{ base: '12', md: '24' }} px={{ base: '2', sm: '8' }}>
+      <Stack spacing="8">
+        <Stack spacing="6">
           <Logo />
-          <Heading as='h1' size='xl' textAlign='center'>
+          <Heading as="h1" size="xl" textAlign="center">
             The Gym Notebook
           </Heading>
-          <Stack spacing={{ base: '2', md: '3' }} textAlign='center'>
+          <Stack spacing={{ base: '2', md: '3' }} textAlign="center">
             <Heading size={{ base: 'xs', md: 'sm' }}>Inicia sesión en tu cuenta</Heading>
-            <HStack spacing='1' justify='center'>
-              <Text color='muted' pe={1}>¿No tienes una cuenta?</Text>
-              <Button variant='link' colorScheme='primary' onClick={() => navigate('/signUp')}>
+            <HStack spacing="1" justify="center">
+              <Text color="muted" pe={1}>
+                ¿No tienes una cuenta?
+              </Text>
+              <Button variant="link" colorScheme="primary" onClick={() => navigate('/signUp')}>
                 Créala aquí
               </Button>
             </HStack>
@@ -71,36 +85,35 @@ export default function Login () {
           borderRadius={{ base: 'xl' }}
         >
           <form onSubmit={handleLogin}>
-            <Stack spacing='6'>
-              <Stack spacing='5'>
+            <Stack spacing="6">
+              <Stack spacing="5">
                 <FormControl>
-                  <FormLabel htmlFor='username'>Nombre de usuario</FormLabel>
+                  <FormLabel htmlFor="username">Nombre de usuario</FormLabel>
                   <Input
-                    id='username'
-                    type='text'
+                    id="username"
+                    type="text"
                     value={loginRequest.username}
-                    onChange={e => setLoginRequest({ ...loginRequest, username: e.target.value })}
+                    onChange={(e) => setLoginRequest({ ...loginRequest, username: e.target.value })}
                   />
                 </FormControl>
-                <PasswordField value={loginRequest.password} onChange={e => setLoginRequest({ ...loginRequest, password: e.target.value })} />
+                <PasswordField
+                  value={loginRequest.password}
+                  onChange={(e) => setLoginRequest({ ...loginRequest, password: e.target.value })}
+                />
               </Stack>
-              <HStack justify='flex-end'>
-                <Button
-                  variant='link'
-                  colorScheme='primary'
-                  size='sm'
-                  onClick={passwordForgotten}
-                >
+              <HStack justify="flex-end">
+                <Button variant="link" colorScheme="primary" size="sm" onClick={passwordForgotten}>
                   ¿Olvidaste tu contraseña?
                 </Button>
               </HStack>
-              <Stack spacing='6'>
+              <Stack spacing="6">
                 <Button
-                  type='submit'
+                  type="submit"
                   isLoading={loading}
-                  loadingText='Calentando...'
-                  variant='primarySolid'
-                >Iniciar sesión
+                  loadingText="Calentando..."
+                  variant="primarySolid"
+                >
+                  Iniciar sesión
                 </Button>
               </Stack>
             </Stack>

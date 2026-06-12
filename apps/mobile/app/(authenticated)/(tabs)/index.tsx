@@ -1,5 +1,5 @@
-import { Link } from 'expo-router';
-import { Button, Card, Screen, Text } from '@/shared/ui/primitives';
+import { Link } from 'expo-router'
+import { Button, Card, Screen, Text } from '@/shared/ui/primitives'
 
 export default function HomeScreen() {
   return (
@@ -11,5 +11,5 @@ export default function HomeScreen() {
         </Link>
       </Card>
     </Screen>
-  );
+  )
 }

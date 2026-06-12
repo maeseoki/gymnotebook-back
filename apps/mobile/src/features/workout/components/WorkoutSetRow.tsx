@@ -1,48 +1,48 @@
-import type { EExerciseType } from '@gymnotebook/contracts';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Text } from '@/shared/ui/primitives';
-import type { ActiveWorkoutSet } from '../schemas/active-workout-draft';
+import type { EExerciseType } from '@gymnotebook/contracts'
+import { Pressable, StyleSheet, View } from 'react-native'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Text } from '@/shared/ui/primitives'
+import type { ActiveWorkoutSet } from '../schemas/active-workout-draft'
 
 interface WorkoutSetRowProps {
-  set: ActiveWorkoutSet;
-  index: number;
-  exerciseType: EExerciseType;
-  onEdit: () => void;
-  onDelete: () => void;
+  set: ActiveWorkoutSet
+  index: number
+  exerciseType: EExerciseType
+  onEdit: () => void
+  onDelete: () => void
 }
 
 function formatWeight(grams: number | null | undefined): string {
-  if (grams === null || grams === undefined) return '0 kg';
-  const kg = grams / 1000;
-  return `${Number(kg.toFixed(3))} kg`;
+  if (grams === null || grams === undefined) return '0 kg'
+  const kg = grams / 1000
+  return `${Number(kg.toFixed(3))} kg`
 }
 
 export function formatSetValues(set: ActiveWorkoutSet, type: EExerciseType): string {
   switch (type) {
     case 'WEIGHT_REPS':
-      return `${formatWeight(set.weightGrams)} x ${set.reps ?? 0} reps`;
+      return `${formatWeight(set.weightGrams)} x ${set.reps ?? 0} reps`
     case 'WEIGHT':
-      return formatWeight(set.weightGrams);
+      return formatWeight(set.weightGrams)
     case 'REPS':
-      return `${set.reps ?? 0} reps`;
+      return `${set.reps ?? 0} reps`
     case 'TIME': {
-      const secs = set.timeSeconds ?? 0;
-      const m = Math.floor(secs / 60);
-      const s = secs % 60;
-      return m > 0 ? `${m}m ${s}s` : `${s}s`;
+      const secs = set.timeSeconds ?? 0
+      const m = Math.floor(secs / 60)
+      const s = secs % 60
+      return m > 0 ? `${m}m ${s}s` : `${s}s`
     }
     case 'DISTANCE':
-      return `${set.distanceMeters ?? 0} m`;
+      return `${set.distanceMeters ?? 0} m`
     case 'TIME_DISTANCE': {
-      const secs = set.timeSeconds ?? 0;
-      const m = Math.floor(secs / 60);
-      const s = secs % 60;
-      const timeStr = m > 0 ? `${m}m ${s}s` : `${s}s`;
-      return `${timeStr} | ${set.distanceMeters ?? 0} m`;
+      const secs = set.timeSeconds ?? 0
+      const m = Math.floor(secs / 60)
+      const s = secs % 60
+      const timeStr = m > 0 ? `${m}m ${s}s` : `${s}s`
+      return `${timeStr} | ${set.distanceMeters ?? 0} m`
     }
     default:
-      return '';
+      return ''
   }
 }
 
@@ -71,7 +71,7 @@ export function WorkoutSetRow({ set, index, exerciseType, onEdit, onDelete }: Wo
         </Pressable>
       </View>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -116,4 +116,4 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontFamily: 'SpaceGrotesk_500Medium',
   },
-});
+})

@@ -4,5 +4,5 @@ import { AuthContextData } from '../types'
 export const AuthContext = createContext<AuthContextData>({
   user: null,
   setUser: () => null,
-  removeUser: () => null
+  removeUser: () => null,
 })

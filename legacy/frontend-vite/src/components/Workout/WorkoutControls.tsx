@@ -9,7 +9,7 @@ import { saveWorkout } from '../../services/workoutService'
 import confetti from 'canvas-confetti'
 import { AxiosError } from 'axios'
 
-export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControlsProps) {
+export default function WorkoutControls({ setIsAddingExercise }: WorkoutControlsProps) {
   const { workout, setWorkout } = useContext(WorkoutContext)
   const [isDiscardOpen, setIsDiscardOpen] = useState(false)
   const [isEndOpen, setIsEndOpen] = useState(false)
@@ -31,7 +31,7 @@ export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControl
     toast({
       title: 'Workout descartado',
       description: 'El workout ha sido descartado',
-      status: 'success'
+      status: 'success',
     })
     setIsDiscardOpen(false)
   }
@@ -54,7 +54,7 @@ export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControl
       toast({
         title: '¡Genial!',
         description: 'Apunta a la luna, si fallas, darás entre las estrellas!!',
-        status: 'success'
+        status: 'success',
       })
       void confetti()
       setWorkout(null)
@@ -65,7 +65,7 @@ export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControl
         toast({
           title: 'Error al guardar el workout',
           description: 'Ya existe ese workout en la base de datos',
-          status: 'error'
+          status: 'error',
         })
         setWorkout(null)
       }
@@ -73,7 +73,7 @@ export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControl
       toast({
         title: 'Error al guardar el workout',
         description: 'Ha ocurrido un error al guardar el workout',
-        status: 'error'
+        status: 'error',
       })
       console.error('Failed to end workout', error)
       onEndClose()
@@ -82,36 +82,33 @@ export default function WorkoutControls ({ setIsAddingExercise }: WorkoutControl
 
   return (
     <>
-      <Flex
-        direction='column'
-        alignItems='center'
-        gap={6}
-        mt='auto'
-        mb={4}
-      >
+      <Flex direction="column" alignItems="center" gap={6} mt="auto" mb={4}>
         <Button
-          size='lg'
-          variant='primaryGradient'
+          size="lg"
+          variant="primaryGradient"
           leftIcon={<IoMdAdd />}
           onClick={setIsAddingExercise}
-        >Añadir ejercicio
+        >
+          Añadir ejercicio
         </Button>
-        <Flex justifyContent='space-between' gap={4}>
+        <Flex justifyContent="space-between" gap={4}>
           <Button
-            size='lg'
-            colorScheme='green'
-            variant='outline'
+            size="lg"
+            colorScheme="green"
+            variant="outline"
             leftIcon={<IoMdCheckmark />}
             onClick={handleEndWorkout}
-          >Terminar
+          >
+            Terminar
           </Button>
           <Button
-            size='lg'
-            colorScheme='red'
-            variant='outline'
+            size="lg"
+            colorScheme="red"
+            variant="outline"
             leftIcon={<IoMdClose />}
             onClick={async () => await handleDiscardWorkout()}
-          >Descartar
+          >
+            Descartar
           </Button>
         </Flex>
       </Flex>

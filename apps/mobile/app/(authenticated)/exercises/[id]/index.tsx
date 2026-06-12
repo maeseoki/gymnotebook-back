@@ -1,32 +1,32 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Alert, View } from 'react-native';
-import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail';
-import { useDeleteExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations';
-import { mapExerciseError } from '@/features/exercises/utils/exercise-errors';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives';
+import { router, useLocalSearchParams } from 'expo-router'
+import { useState } from 'react'
+import { Alert, View } from 'react-native'
+import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail'
+import { useDeleteExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
+import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function ExerciseDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const numericId = Number(id);
-  const isValidId = id !== undefined && !Number.isNaN(numericId) && numericId > 0;
+  const { id } = useLocalSearchParams<{ id: string }>()
+  const numericId = Number(id)
+  const isValidId = id !== undefined && !Number.isNaN(numericId) && numericId > 0
 
-  const { data: exercise, isLoading, error } = useExerciseDetail(numericId);
-  const { mutate: deleteExercise, isPending: isDeleting } = useDeleteExerciseMutation();
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const { data: exercise, isLoading, error } = useExerciseDetail(numericId)
+  const { mutate: deleteExercise, isPending: isDeleting } = useDeleteExerciseMutation()
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const handleDelete = () => {
-    setDeleteError(null);
+    setDeleteError(null)
     deleteExercise(numericId, {
       onSuccess: () => {
-        router.replace('/(authenticated)/(tabs)/exercises');
+        router.replace('/(authenticated)/(tabs)/exercises')
       },
       onError: (err) => {
-        setDeleteError(mapExerciseError(err));
+        setDeleteError(mapExerciseError(err))
       },
-    });
-  };
+    })
+  }
 
   const showConfirmDelete = () => {
     Alert.alert(
@@ -36,8 +36,8 @@ export default function ExerciseDetailScreen() {
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: handleDelete },
       ],
-    );
-  };
+    )
+  }
 
   if (!isValidId) {
     return (
@@ -48,7 +48,7 @@ export default function ExerciseDetailScreen() {
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
-    );
+    )
   }
 
   if (isLoading) {
@@ -56,7 +56,7 @@ export default function ExerciseDetailScreen() {
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
         <LoadingIndicator label="Loading exercise details" />
       </Screen>
-    );
+    )
   }
 
   if (error || !exercise) {
@@ -68,14 +68,14 @@ export default function ExerciseDetailScreen() {
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
-    );
+    )
   }
 
-  const typeDisplay = exercise.type.replace('_', ' & ').toLowerCase();
-  const primaryMuscle = exercise.primaryMuscleGroup.replace('_', ' ').toLowerCase();
+  const typeDisplay = exercise.type.replace('_', ' & ').toLowerCase()
+  const primaryMuscle = exercise.primaryMuscleGroup.replace('_', ' ').toLowerCase()
   const secondaryMuscle = exercise.secondaryMuscleGroup
     ? exercise.secondaryMuscleGroup.replace('_', ' ').toLowerCase()
-    : null;
+    : null
 
   return (
     <Screen style={{ gap: spacing[4] }}>
@@ -129,5 +129,5 @@ export default function ExerciseDetailScreen() {
         />
       </View>
     </Screen>
-  );
+  )
 }

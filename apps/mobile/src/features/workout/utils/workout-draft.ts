@@ -1,5 +1,5 @@
-import type { CreateWorkoutRequest } from '@gymnotebook/contracts';
-import type { ActiveWorkoutDraft } from '../schemas/active-workout-draft';
+import type { CreateWorkoutRequest } from '@gymnotebook/contracts'
+import type { ActiveWorkoutDraft } from '../schemas/active-workout-draft'
 
 /**
  * Maps the local ActiveWorkoutDraft structure to the CreateWorkoutRequest required by the backend API.
@@ -9,7 +9,7 @@ export function mapDraftToCreateRequest(
   draft: ActiveWorkoutDraft,
   endDate?: string,
 ): CreateWorkoutRequest {
-  const actualEndDate = endDate ?? new Date().toISOString();
+  const actualEndDate = endDate ?? new Date().toISOString()
 
   // Exclude empty exercises
   const workoutSets = draft.exercises
@@ -28,10 +28,10 @@ export function mapDraftToCreateRequest(
         isDropSet: false, // Defaulting as not requested/supported by UI
         startDate: s.createdAt,
       })),
-    }));
+    }))
 
   if (workoutSets.length === 0) {
-    throw new Error('No se puede guardar un entrenamiento con cero series');
+    throw new Error('No se puede guardar un entrenamiento con cero series')
   }
 
   return {
@@ -40,5 +40,5 @@ export function mapDraftToCreateRequest(
     endDate: actualEndDate,
     notes: null,
     workoutSets,
-  };
+  }
 }

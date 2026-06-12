@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Text } from '@/shared/ui/primitives';
+import type { ReactNode } from 'react'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Text } from '@/shared/ui/primitives'
 
 export function AuthErrorMessage({ message }: { message?: string | null }): ReactNode {
   if (!message) {
-    return null;
+    return null
   }
 
   return (
@@ -17,5 +17,5 @@ export function AuthErrorMessage({ message }: { message?: string | null }): Reac
     >
       {message}
     </Text>
-  );
+  )
 }

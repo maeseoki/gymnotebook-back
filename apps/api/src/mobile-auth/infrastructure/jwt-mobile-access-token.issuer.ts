@@ -1,12 +1,12 @@
 import type {
   MobileAccessTokenClaims,
   MobileAccessTokenIssuer,
-} from '../domain/mobile-access-token-issuer.js';
+} from '../domain/mobile-access-token-issuer.js'
 
 export type JwtSignFunction = (
   payload: MobileAccessTokenClaims,
   options: { expiresIn: number },
-) => string;
+) => string
 
 export class JwtMobileAccessTokenIssuer implements MobileAccessTokenIssuer {
   constructor(
@@ -16,10 +16,10 @@ export class JwtMobileAccessTokenIssuer implements MobileAccessTokenIssuer {
   ) {}
 
   issue(claims: MobileAccessTokenClaims) {
-    const expiresIn = Math.floor(this.ttlMs / 1000);
+    const expiresIn = Math.floor(this.ttlMs / 1000)
     return {
       token: this.sign(claims, { expiresIn }),
       expiresAt: new Date(this.now().getTime() + this.ttlMs).toISOString(),
-    };
+    }
   }
 }

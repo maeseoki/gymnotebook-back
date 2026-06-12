@@ -4,7 +4,7 @@ export class WorkoutHistoryApplicationError extends Error {
     readonly code: string,
     message: string,
   ) {
-    super(message);
-    this.name = 'WorkoutHistoryApplicationError';
+    super(message)
+    this.name = 'WorkoutHistoryApplicationError'
   }
 }

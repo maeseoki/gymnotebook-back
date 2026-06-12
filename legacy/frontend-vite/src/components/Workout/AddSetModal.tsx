@@ -1,9 +1,29 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, FormControl, FormLabel, Input, ModalFooter, Button, Switch, Icon, Flex } from '@chakra-ui/react'
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  FormControl,
+  FormLabel,
+  Input,
+  ModalFooter,
+  Button,
+  Switch,
+  Icon,
+  Flex,
+} from '@chakra-ui/react'
 import { BsLightningChargeFill } from 'react-icons/bs'
 import { AddSetModalProps, ExerciseTypeType, SetType } from '../../types.d'
 import { useEffect, useState } from 'react'
 
-export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAccept }: AddSetModalProps) {
+export default function AddSetModal({
+  isOpen,
+  onClose,
+  currentWorkoutSet,
+  onAccept,
+}: AddSetModalProps) {
   const [isDropSet, setIsDropSet] = useState(false)
   const [set, setSet] = useState<Partial<SetType>>({})
 
@@ -37,13 +57,13 @@ export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAcc
       <ModalContent>
         <ModalHeader>Añadir Serie</ModalHeader>
         <ModalCloseButton />
-        <ModalBody display='flex' flexDir='column' gap={4}>
+        <ModalBody display="flex" flexDir="column" gap={4}>
           {currentWorkoutSet && currentWorkoutSet.exercise.type === ExerciseTypeType.WEIGHT && (
             <FormControl>
               <FormLabel>Peso</FormLabel>
               <Input
-                name='weight'
-                placeholder='32Kg'
+                name="weight"
+                placeholder="32Kg"
                 value={set.weight ?? ''}
                 onChange={handleChanges}
               />
@@ -53,8 +73,8 @@ export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAcc
             <FormControl>
               <FormLabel>Repeticiones</FormLabel>
               <Input
-                name='reps'
-                placeholder='Repeticiones'
+                name="reps"
+                placeholder="Repeticiones"
                 value={set.reps ?? ''}
                 onChange={handleChanges}
               />
@@ -64,8 +84,8 @@ export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAcc
             <FormControl>
               <FormLabel>Tiempo</FormLabel>
               <Input
-                name='time'
-                placeholder='Tiempo'
+                name="time"
+                placeholder="Tiempo"
                 value={set.time ?? ''}
                 onChange={handleChanges}
               />
@@ -75,73 +95,75 @@ export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAcc
             <FormControl>
               <FormLabel>Distancia</FormLabel>
               <Input
-                name='distance'
-                placeholder='Distancia'
+                name="distance"
+                placeholder="Distancia"
                 value={set.distance ?? ''}
                 onChange={handleChanges}
               />
             </FormControl>
           )}
-          {currentWorkoutSet && currentWorkoutSet.exercise.type === ExerciseTypeType.WEIGHT_REPS && (
-            <>
-              <FormControl>
-                <FormLabel>Peso</FormLabel>
-                <Input
-                  name='weight'
-                  placeholder='Peso'
-                  value={set.weight ?? ''}
-                  onChange={handleChanges}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Repeticiones</FormLabel>
-                <Input
-                  name='reps'
-                  placeholder='Repeticiones'
-                  value={set.reps ?? ''}
-                  onChange={handleChanges}
-                />
-              </FormControl>
-            </>
-          )}
-          {currentWorkoutSet && currentWorkoutSet.exercise.type === ExerciseTypeType.TIME_DISTANCE && (
-            <>
-              <FormControl>
-                <FormLabel>Tiempo</FormLabel>
-                <Input
-                  name='time'
-                  placeholder='Tiempo'
-                  value={set.time ?? ''}
-                  onChange={handleChanges}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Distancia</FormLabel>
-                <Input
-                  name='distance'
-                  placeholder='Distancia'
-                  value={set.distance ?? ''}
-                  onChange={handleChanges}
-                />
-              </FormControl>
-            </>
-          )}
+          {currentWorkoutSet &&
+            currentWorkoutSet.exercise.type === ExerciseTypeType.WEIGHT_REPS && (
+              <>
+                <FormControl>
+                  <FormLabel>Peso</FormLabel>
+                  <Input
+                    name="weight"
+                    placeholder="Peso"
+                    value={set.weight ?? ''}
+                    onChange={handleChanges}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Repeticiones</FormLabel>
+                  <Input
+                    name="reps"
+                    placeholder="Repeticiones"
+                    value={set.reps ?? ''}
+                    onChange={handleChanges}
+                  />
+                </FormControl>
+              </>
+            )}
+          {currentWorkoutSet &&
+            currentWorkoutSet.exercise.type === ExerciseTypeType.TIME_DISTANCE && (
+              <>
+                <FormControl>
+                  <FormLabel>Tiempo</FormLabel>
+                  <Input
+                    name="time"
+                    placeholder="Tiempo"
+                    value={set.time ?? ''}
+                    onChange={handleChanges}
+                  />
+                </FormControl>
+                <FormControl>
+                  <FormLabel>Distancia</FormLabel>
+                  <Input
+                    name="distance"
+                    placeholder="Distancia"
+                    value={set.distance ?? ''}
+                    onChange={handleChanges}
+                  />
+                </FormControl>
+              </>
+            )}
           <FormControl>
             <FormLabel>Notas</FormLabel>
             <Input
-              name='notes'
-              placeholder='Notas'
+              name="notes"
+              placeholder="Notas"
               value={set.notes ?? ''}
               onChange={handleChanges}
             />
           </FormControl>
           <FormControl>
             <FormLabel>Es un "Drop Set"</FormLabel>
-            <Flex flexDir='row' alignItems='center' mb={4}>
+            <Flex flexDir="row" alignItems="center" mb={4}>
               <Switch
-                id='isDropSet'
-                size='lg'
-                colorScheme='primary'
+                id="isDropSet"
+                size="lg"
+                colorScheme="primary"
                 onChange={() => setIsDropSet(!isDropSet)}
               />
               <Icon
@@ -155,10 +177,12 @@ export default function AddSetModal ({ isOpen, onClose, currentWorkoutSet, onAcc
         </ModalBody>
 
         <ModalFooter>
-          <Button colorScheme='primary' mr={3} onClick={handleSubmit}>
+          <Button colorScheme="primary" mr={3} onClick={handleSubmit}>
             Aceptar
           </Button>
-          <Button variant='ghost' onClick={onClose}>Cancelar</Button>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
         </ModalFooter>
       </ModalContent>
     </Modal>

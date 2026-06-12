@@ -7,7 +7,7 @@ import {
   InputProps,
   InputRightElement,
   useDisclosure,
-  useMergeRefs
+  useMergeRefs,
 } from '@chakra-ui/react'
 import { ChangeEventHandler, forwardRef, useRef } from 'react'
 import { HiEye, HiEyeOff } from 'react-icons/hi'
@@ -31,14 +31,14 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>((p
 
   return (
     <FormControl>
-      <FormLabel htmlFor='password'>Contraseña</FormLabel>
+      <FormLabel htmlFor="password">Contraseña</FormLabel>
       <InputGroup>
         <Input
-          id='password'
+          id="password"
           ref={mergeRef}
-          name='password'
+          name="password"
           type={isOpen ? 'text' : 'password'}
-          autoComplete='current-password'
+          autoComplete="current-password"
           required
           value={props.value}
           onChange={props.onChange}
@@ -46,7 +46,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>((p
         />
         <InputRightElement>
           <IconButton
-            variant='link'
+            variant="link"
             aria-label={isOpen ? 'Mask password' : 'Reveal password'}
             icon={isOpen ? <HiEyeOff /> : <HiEye />}
             onClick={onClickReveal}

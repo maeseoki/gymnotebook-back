@@ -1,15 +1,15 @@
-import type { WorkoutSetResponse } from '@gymnotebook/contracts';
-import { StyleSheet, View } from 'react-native';
-import { spacing } from '@/shared/theme/tokens';
-import { Card, Text } from '@/shared/ui/primitives';
-import { HistorySetRow } from './HistorySetRow';
+import type { WorkoutSetResponse } from '@gymnotebook/contracts'
+import { StyleSheet, View } from 'react-native'
+import { spacing } from '@/shared/theme/tokens'
+import { Card, Text } from '@/shared/ui/primitives'
+import { HistorySetRow } from './HistorySetRow'
 
 interface HistoryExerciseCardProps {
-  workoutSet: WorkoutSetResponse;
+  workoutSet: WorkoutSetResponse
 }
 
 export function HistoryExerciseCard({ workoutSet }: HistoryExerciseCardProps) {
-  const { exercise, sets } = workoutSet;
+  const { exercise, sets } = workoutSet
 
   return (
     <Card style={styles.card}>
@@ -20,7 +20,7 @@ export function HistoryExerciseCard({ workoutSet }: HistoryExerciseCardProps) {
         ))}
       </View>
     </Card>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -34,4 +34,4 @@ const styles = StyleSheet.create({
   setsList: {
     marginTop: spacing[1],
   },
-});
+})

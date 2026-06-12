@@ -7,7 +7,7 @@ export const useGenericToast = () => {
     toast({
       title: 'No implementado',
       description: 'Esta característica aún no está implementada. ¡Seguimos en beta!',
-      status: 'warning'
+      status: 'warning',
     })
   }
 
@@ -15,7 +15,7 @@ export const useGenericToast = () => {
     toast({
       title: 'Beta',
       description: 'Esta característica está en beta. ¡Seguimos trabajando!',
-      status: 'warning'
+      status: 'warning',
     })
   }
 
@@ -23,7 +23,7 @@ export const useGenericToast = () => {
     toast({
       title,
       description,
-      status: 'error'
+      status: 'error',
     })
   }
 

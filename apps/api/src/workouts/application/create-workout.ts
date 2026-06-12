@@ -1,43 +1,43 @@
-import type { CreateWorkoutRequest } from '@gymnotebook/contracts';
+import type { CreateWorkoutRequest } from '@gymnotebook/contracts'
 import {
   InvalidWorkoutGroupPeriodError,
   InvalidWorkoutPeriodError,
   InvalidWorkoutSetTimeError,
   WorkoutAlreadyExistsError,
   WorkoutExerciseNotAvailableError,
-} from '../domain/workout.errors.js';
-import type { WorkoutRepository } from '../domain/workout.repository.js';
-import { compareIsoInstants, isoInstantToMysqlUtc } from '../domain/workout-dates.js';
-import type { WorkoutExerciseAccess } from '../domain/workout-exercise-access.js';
+} from '../domain/workout.errors.js'
+import type { WorkoutRepository } from '../domain/workout.repository.js'
+import { compareIsoInstants, isoInstantToMysqlUtc } from '../domain/workout-dates.js'
+import type { WorkoutExerciseAccess } from '../domain/workout-exercise-access.js'
 
 export async function createWorkout(
   input: CreateWorkoutRequest & { userId: number },
   dependencies: {
-    workouts: WorkoutRepository;
-    exerciseAccess: WorkoutExerciseAccess;
-    isDuplicateWorkoutUuidError: (error: unknown) => boolean;
+    workouts: WorkoutRepository
+    exerciseAccess: WorkoutExerciseAccess
+    isDuplicateWorkoutUuidError: (error: unknown) => boolean
   },
 ): Promise<void> {
-  validateWorkoutPeriod(input.startDate, input.endDate);
+  validateWorkoutPeriod(input.startDate, input.endDate)
   for (const group of input.workoutSets) {
-    validateGroupPeriod(group.startDate ?? null, group.endDate ?? null);
+    validateGroupPeriod(group.startDate ?? null, group.endDate ?? null)
     for (const set of group.sets) {
       validateSetTime(
         set.startDate ?? null,
         group.startDate ?? input.startDate,
         group.endDate ?? input.endDate,
-      );
+      )
     }
   }
 
-  const uniqueExerciseIds = [...new Set(input.workoutSets.map((group) => group.exercise.id))];
+  const uniqueExerciseIds = [...new Set(input.workoutSets.map((group) => group.exercise.id))]
   if (uniqueExerciseIds.length > 0) {
     const availableCount = await dependencies.exerciseAccess.countAvailableExercises(
       input.userId,
       uniqueExerciseIds,
-    );
+    )
     if (availableCount !== uniqueExerciseIds.length) {
-      throw new WorkoutExerciseNotAvailableError();
+      throw new WorkoutExerciseNotAvailableError()
     }
   }
 
@@ -63,24 +63,24 @@ export async function createWorkout(
           startDate: set.startDate ? isoInstantToMysqlUtc(set.startDate) : null,
         })),
       })),
-    });
+    })
   } catch (error) {
     if (dependencies.isDuplicateWorkoutUuidError(error)) {
-      throw new WorkoutAlreadyExistsError();
+      throw new WorkoutAlreadyExistsError()
     }
-    throw error;
+    throw error
   }
 }
 
 function validateWorkoutPeriod(startDate: string, endDate: string): void {
   if (compareIsoInstants(endDate, startDate) < 0) {
-    throw new InvalidWorkoutPeriodError();
+    throw new InvalidWorkoutPeriodError()
   }
 }
 
 function validateGroupPeriod(startDate: string | null, endDate: string | null): void {
   if (startDate && endDate && compareIsoInstants(endDate, startDate) < 0) {
-    throw new InvalidWorkoutGroupPeriodError();
+    throw new InvalidWorkoutGroupPeriodError()
   }
 }
 
@@ -90,17 +90,17 @@ function validateSetTime(
   containingEndDate: string,
 ): void {
   if (!setStartDate) {
-    return;
+    return
   }
   if (
     compareIsoInstants(setStartDate, containingStartDate) < 0 ||
     compareIsoInstants(setStartDate, containingEndDate) > 0
   ) {
-    throw new InvalidWorkoutSetTimeError();
+    throw new InvalidWorkoutSetTimeError()
   }
 }
 
 function normalizeNullableText(value: string | null): string | null {
-  const trimmed = value?.trim() ?? '';
-  return trimmed.length > 0 ? trimmed : null;
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : null
 }

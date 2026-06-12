@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from 'react'
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -10,9 +10,9 @@ import {
   type TextProps as RNTextProps,
   View,
   type ViewProps,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '@/shared/theme/tokens';
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { colors, radius, spacing, typography } from '@/shared/theme/tokens'
 
 export function Screen({ children, style, ...props }: ViewProps): ReactNode {
   return (
@@ -22,7 +22,7 @@ export function Screen({ children, style, ...props }: ViewProps): ReactNode {
     >
       {children}
     </SafeAreaView>
-  );
+  )
 }
 
 export function KeyboardSafeScreen({ children }: { children: ReactNode }): ReactNode {
@@ -33,13 +33,13 @@ export function KeyboardSafeScreen({ children }: { children: ReactNode }): React
     >
       <Screen>{children}</Screen>
     </KeyboardAvoidingView>
-  );
+  )
 }
 
 export function Text({ style, ...props }: RNTextProps): ReactNode {
   return (
     <RNText {...props} style={[{ color: colors.text, fontFamily: typography.fontFamily }, style]} />
-  );
+  )
 }
 
 export function Card({ children, style, ...props }: ViewProps): ReactNode {
@@ -59,16 +59,16 @@ export function Card({ children, style, ...props }: ViewProps): ReactNode {
     >
       {children}
     </View>
-  );
+  )
 }
 
 export interface ButtonProps {
-  label: string;
-  accessibilityLabel?: string;
-  onPress?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline';
+  label: string
+  accessibilityLabel?: string
+  onPress?: () => void
+  disabled?: boolean
+  loading?: boolean
+  variant?: 'primary' | 'secondary' | 'outline'
 }
 
 export function Button({
@@ -79,19 +79,19 @@ export function Button({
   loading = false,
   variant = 'primary',
 }: ButtonProps): ReactNode {
-  const inactive = disabled || loading;
+  const inactive = disabled || loading
   const backgroundColor =
     variant === 'outline'
       ? 'transparent'
       : variant === 'secondary'
         ? colors.secondary
-        : colors.primary;
+        : colors.primary
   const pressedBackgroundColor =
     variant === 'outline'
       ? colors.surfacePressed
       : variant === 'secondary'
         ? colors.secondaryPressed
-        : colors.primaryPressed;
+        : colors.primaryPressed
   return (
     <Pressable
       accessibilityRole="button"
@@ -113,7 +113,7 @@ export function Button({
     >
       {loading ? <ActivityIndicator color={colors.text} /> : <Text>{label}</Text>}
     </Pressable>
-  );
+  )
 }
 
 export function TextInput({ style, ...props }: RNTextInputProps): ReactNode {
@@ -135,7 +135,7 @@ export function TextInput({ style, ...props }: RNTextInputProps): ReactNode {
         style,
       ]}
     />
-  );
+  )
 }
 
 export function FormField({
@@ -143,9 +143,9 @@ export function FormField({
   error,
   children,
 }: {
-  label: string;
-  error?: string | undefined;
-  children: ReactNode;
+  label: string
+  error?: string | undefined
+  children: ReactNode
 }): ReactNode {
   return (
     <View style={{ gap: spacing[2] }}>
@@ -155,11 +155,11 @@ export function FormField({
       {children}
       {error ? <Text style={{ color: colors.danger }}>{error}</Text> : null}
     </View>
-  );
+  )
 }
 
 export function LoadingIndicator({ label = 'Loading' }: { label?: string }): ReactNode {
-  return <ActivityIndicator accessibilityLabel={label} color={colors.primary} />;
+  return <ActivityIndicator accessibilityLabel={label} color={colors.primary} />
 }
 
 export function EmptyState({ title }: { title: string }): ReactNode {
@@ -167,7 +167,7 @@ export function EmptyState({ title }: { title: string }): ReactNode {
     <Card>
       <Text>{title}</Text>
     </Card>
-  );
+  )
 }
 
 export function ErrorState({ title }: { title: string }): ReactNode {
@@ -175,5 +175,5 @@ export function ErrorState({ title }: { title: string }): ReactNode {
     <Card style={{ borderColor: colors.danger }}>
       <Text>{title}</Text>
     </Card>
-  );
+  )
 }

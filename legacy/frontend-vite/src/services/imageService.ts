@@ -2,7 +2,7 @@ import { apiClient } from '../utils/apiClient'
 
 export const getImage = async (id: number): Promise<Blob> => {
   const response = await apiClient.get(`image/${id}`, {
-    responseType: 'blob'
+    responseType: 'blob',
   })
   return response.data
 }
@@ -21,8 +21,8 @@ export const uploadImage = async (image: Blob): Promise<number> => {
   formData.append('image', image)
   const response = await apiClient.post('image', formData, {
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      'Content-Type': 'multipart/form-data',
+    },
   })
   return response.data
 }

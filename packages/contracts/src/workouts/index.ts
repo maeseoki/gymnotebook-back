@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { CalendarDateSchema, IsoInstantStringSchema } from '../common/index.js';
-import { ExerciseResponseSchema } from '../exercises/index.js';
+import { z } from 'zod'
+import { CalendarDateSchema, IsoInstantStringSchema } from '../common/index.js'
+import { ExerciseResponseSchema } from '../exercises/index.js'
 
-const NullableNotesSchema = z.string().trim().max(255).optional().nullable();
+const NullableNotesSchema = z.string().trim().max(255).optional().nullable()
 
 export const SetRequestSchema = z.strictObject({
   reps: z.number().int().min(0).default(0),
@@ -12,13 +12,13 @@ export const SetRequestSchema = z.strictObject({
   notes: NullableNotesSchema,
   isDropSet: z.boolean().default(false),
   startDate: IsoInstantStringSchema.optional().nullable(),
-});
-export type SetRequest = z.infer<typeof SetRequestSchema>;
+})
+export type SetRequest = z.infer<typeof SetRequestSchema>
 
 export const ExerciseRefSchema = z.strictObject({
   id: z.number().int().positive(),
-});
-export type ExerciseRef = z.infer<typeof ExerciseRefSchema>;
+})
+export type ExerciseRef = z.infer<typeof ExerciseRefSchema>
 
 export const WorkoutSetRequestSchema = z.strictObject({
   exercise: ExerciseRefSchema,
@@ -26,8 +26,8 @@ export const WorkoutSetRequestSchema = z.strictObject({
   startDate: IsoInstantStringSchema.optional().nullable(),
   endDate: IsoInstantStringSchema.optional().nullable(),
   notes: NullableNotesSchema,
-});
-export type WorkoutSetRequest = z.infer<typeof WorkoutSetRequestSchema>;
+})
+export type WorkoutSetRequest = z.infer<typeof WorkoutSetRequestSchema>
 
 export const CreateWorkoutRequestSchema = z.strictObject({
   uuid: z.uuid(),
@@ -35,8 +35,8 @@ export const CreateWorkoutRequestSchema = z.strictObject({
   endDate: IsoInstantStringSchema,
   workoutSets: z.array(WorkoutSetRequestSchema),
   notes: NullableNotesSchema,
-});
-export type CreateWorkoutRequest = z.infer<typeof CreateWorkoutRequestSchema>;
+})
+export type CreateWorkoutRequest = z.infer<typeof CreateWorkoutRequestSchema>
 
 export const SetResponseSchema = z.strictObject({
   id: z.number().int(),
@@ -47,8 +47,8 @@ export const SetResponseSchema = z.strictObject({
   notes: z.string().nullable().optional(),
   isDropSet: z.boolean(),
   startDate: IsoInstantStringSchema.nullable().optional(),
-});
-export type SetResponse = z.infer<typeof SetResponseSchema>;
+})
+export type SetResponse = z.infer<typeof SetResponseSchema>
 
 export const WorkoutSetResponseSchema = z.strictObject({
   id: z.number().int(),
@@ -57,8 +57,8 @@ export const WorkoutSetResponseSchema = z.strictObject({
   exercise: ExerciseResponseSchema,
   sets: z.array(SetResponseSchema),
   notes: z.string().nullable().optional(),
-});
-export type WorkoutSetResponse = z.infer<typeof WorkoutSetResponseSchema>;
+})
+export type WorkoutSetResponse = z.infer<typeof WorkoutSetResponseSchema>
 
 export const WorkoutResponseSchema = z.strictObject({
   id: z.number().int(),
@@ -67,21 +67,21 @@ export const WorkoutResponseSchema = z.strictObject({
   endDate: IsoInstantStringSchema,
   notes: z.string().nullable().optional(),
   workoutSets: z.array(WorkoutSetResponseSchema),
-});
-export type WorkoutResponse = z.infer<typeof WorkoutResponseSchema>;
+})
+export type WorkoutResponse = z.infer<typeof WorkoutResponseSchema>
 
 export const WorkoutDaysParamSchema = z.strictObject({
   month: z.coerce.number().int().min(1).max(12),
   year: z.coerce.number().int().min(2000).max(2100),
-});
-export type WorkoutDaysParam = z.infer<typeof WorkoutDaysParamSchema>;
+})
+export type WorkoutDaysParam = z.infer<typeof WorkoutDaysParamSchema>
 
 export const WorkoutDateParamSchema = z.strictObject({
   date: CalendarDateSchema,
-});
-export type WorkoutDateParam = z.infer<typeof WorkoutDateParamSchema>;
+})
+export type WorkoutDateParam = z.infer<typeof WorkoutDateParamSchema>
 
 export const WorkoutTimezoneQuerySchema = z.strictObject({
   timezone: z.string().optional(),
-});
-export type WorkoutTimezoneQuery = z.infer<typeof WorkoutTimezoneQuerySchema>;
+})
+export type WorkoutTimezoneQuery = z.infer<typeof WorkoutTimezoneQuerySchema>

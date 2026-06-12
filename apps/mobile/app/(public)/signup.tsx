@@ -1,16 +1,16 @@
-import { Link } from 'expo-router';
-import { Controller, useForm } from 'react-hook-form';
-import { View } from 'react-native';
-import { userFacingAuthError } from '@/features/auth/application/auth-errors';
-import { AuthErrorMessage } from '@/features/auth/components/AuthErrorMessage';
-import { AuthFormContainer } from '@/features/auth/components/AuthFormContainer';
-import { useSignUpAction } from '@/features/auth/hooks/use-auth-actions';
-import { type SignupFormValues, signupFormResolver } from '@/features/auth/schemas/signup-form';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, FormField, Text, TextInput } from '@/shared/ui/primitives';
+import { Link } from 'expo-router'
+import { Controller, useForm } from 'react-hook-form'
+import { View } from 'react-native'
+import { userFacingAuthError } from '@/features/auth/application/auth-errors'
+import { AuthErrorMessage } from '@/features/auth/components/AuthErrorMessage'
+import { AuthFormContainer } from '@/features/auth/components/AuthFormContainer'
+import { useSignUpAction } from '@/features/auth/hooks/use-auth-actions'
+import { type SignupFormValues, signupFormResolver } from '@/features/auth/schemas/signup-form'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, FormField, Text, TextInput } from '@/shared/ui/primitives'
 
 export default function SignupScreen() {
-  const signUp = useSignUpAction();
+  const signUp = useSignUpAction()
   const {
     control,
     handleSubmit,
@@ -23,8 +23,8 @@ export default function SignupScreen() {
       password: '',
       confirmPassword: '',
     },
-  });
-  const submitting = isSubmitting || signUp.isPending;
+  })
+  const submitting = isSubmitting || signUp.isPending
 
   return (
     <AuthFormContainer title="Create account" subtitle="Start tracking with a mobile session.">
@@ -119,5 +119,5 @@ export default function SignupScreen() {
         </Link>
       </View>
     </AuthFormContainer>
-  );
+  )
 }

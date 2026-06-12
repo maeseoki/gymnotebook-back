@@ -1,17 +1,17 @@
-import type { ReactNode } from 'react';
-import { useState } from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
-import { colors, radius, spacing } from '@/shared/theme/tokens';
-import { Card, Text } from '@/shared/ui/primitives';
+import type { ReactNode } from 'react'
+import { useState } from 'react'
+import { Modal, Pressable, ScrollView, View } from 'react-native'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
+import { Card, Text } from '@/shared/ui/primitives'
 
 export interface SelectFieldProps {
-  label: string;
-  value: string | null | undefined;
-  options: readonly { readonly label: string; readonly value: string }[];
-  onChange: (val: string | null) => void;
-  error?: string | undefined;
-  placeholder?: string;
-  allowClear?: boolean;
+  label: string
+  value: string | null | undefined
+  options: readonly { readonly label: string; readonly value: string }[]
+  onChange: (val: string | null) => void
+  error?: string | undefined
+  placeholder?: string
+  allowClear?: boolean
 }
 
 export function ExerciseSelectField({
@@ -23,8 +23,8 @@ export function ExerciseSelectField({
   placeholder = 'Select option...',
   allowClear = false,
 }: SelectFieldProps): ReactNode {
-  const [modalVisible, setModalVisible] = useState(false);
-  const selectedOption = options.find((o) => o.value === value);
+  const [modalVisible, setModalVisible] = useState(false)
+  const selectedOption = options.find((o) => o.value === value)
 
   return (
     <View style={{ gap: spacing[2] }}>
@@ -82,8 +82,8 @@ export function ExerciseSelectField({
               {allowClear && (
                 <Pressable
                   onPress={() => {
-                    onChange(null);
-                    setModalVisible(false);
+                    onChange(null)
+                    setModalVisible(false)
                   }}
                   style={{ padding: spacing[1] }}
                 >
@@ -96,8 +96,8 @@ export function ExerciseSelectField({
                 <Pressable
                   key={opt.value}
                   onPress={() => {
-                    onChange(opt.value);
-                    setModalVisible(false);
+                    onChange(opt.value)
+                    setModalVisible(false)
                   }}
                   style={{
                     padding: spacing[3],
@@ -116,5 +116,5 @@ export function ExerciseSelectField({
         </Pressable>
       </Modal>
     </View>
-  );
+  )
 }

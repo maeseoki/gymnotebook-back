@@ -10,9 +10,13 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { Workout } from './types'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 
-export default function App () {
+export default function App() {
   const { user, addUser: setUser, removeUser } = useUser()
-  const { value: savedWorkout, setItem: saveWorkout, removeItem: removeSavedWorkout } = useLocalStorage('workout')
+  const {
+    value: savedWorkout,
+    setItem: saveWorkout,
+    removeItem: removeSavedWorkout,
+  } = useLocalStorage('workout')
 
   // Creamos el estado del workout. Si hay un workout guardado en localStorage, lo cargamos como valor inicial.
   const [workout, setWorkout] = useState<Workout | null>(() => {
@@ -30,17 +34,15 @@ export default function App () {
   }, [workout, saveWorkout, removeSavedWorkout])
 
   if (user === null) {
-    return (
-      <Navigate to='/login' />
-    )
+    return <Navigate to="/login" />
   } else {
     return (
       <AuthContext.Provider value={{ user, setUser, removeUser }}>
         <WorkoutContext.Provider value={{ workout, setWorkout }}>
           <Header />
           <Container
-            maxW='2xl'
-            minH='calc(100vh - 5rem)'
+            maxW="2xl"
+            minH="calc(100vh - 5rem)"
             pb={12}
             pt={0}
             px={{ base: '2', sm: '8' }}

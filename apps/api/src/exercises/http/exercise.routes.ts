@@ -4,24 +4,24 @@ import {
   ExerciseResponseSchema,
   IdParamSchema,
   UpdateExerciseRequestSchema,
-} from '@gymnotebook/contracts';
-import type { FastifyInstance } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
-import { isForeignKeyConstraintError } from '../../shared/persistence-errors.js';
-import { createExercise } from '../application/create-exercise.js';
-import { deleteExercise } from '../application/delete-exercise.js';
-import { getExercise } from '../application/get-exercise.js';
-import { listExercises } from '../application/list-exercises.js';
-import { updateExercise } from '../application/update-exercise.js';
-import { DrizzleExerciseRepository } from '../infrastructure/drizzle-exercise.repository.js';
-import { DrizzleExerciseImageAccess } from '../infrastructure/drizzle-exercise-image-access.js';
-import { toExerciseResponse } from './exercise.mapper.js';
+} from '@gymnotebook/contracts'
+import type { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import { isForeignKeyConstraintError } from '../../shared/persistence-errors.js'
+import { createExercise } from '../application/create-exercise.js'
+import { deleteExercise } from '../application/delete-exercise.js'
+import { getExercise } from '../application/get-exercise.js'
+import { listExercises } from '../application/list-exercises.js'
+import { updateExercise } from '../application/update-exercise.js'
+import { DrizzleExerciseRepository } from '../infrastructure/drizzle-exercise.repository.js'
+import { DrizzleExerciseImageAccess } from '../infrastructure/drizzle-exercise-image-access.js'
+import { toExerciseResponse } from './exercise.mapper.js'
 
 export async function exerciseRoutes(fastify: FastifyInstance) {
-  const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const exerciseRepository = new DrizzleExerciseRepository(fastify.db);
-  const imageAccess = new DrizzleExerciseImageAccess(fastify.db);
+  const app = fastify.withTypeProvider<ZodTypeProvider>()
+  const exerciseRepository = new DrizzleExerciseRepository(fastify.db)
+  const imageAccess = new DrizzleExerciseImageAccess(fastify.db)
 
   app.get(
     '/',
@@ -39,10 +39,10 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const exercises = await listExercises({ userId: request.user.userId }, exerciseRepository);
-      return reply.send(exercises.map(toExerciseResponse));
+      const exercises = await listExercises({ userId: request.user.userId }, exerciseRepository)
+      return reply.send(exercises.map(toExerciseResponse))
     },
-  );
+  )
 
   app.get(
     '/:id',
@@ -65,10 +65,10 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exercise = await getExercise(
         { id: request.params.id, userId: request.user.userId },
         exerciseRepository,
-      );
-      return reply.send(toExerciseResponse(exercise));
+      )
+      return reply.send(toExerciseResponse(exercise))
     },
-  );
+  )
 
   app.post(
     '/',
@@ -92,10 +92,10 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exercise = await createExercise(
         { ...request.body, userId: request.user.userId },
         { exercises: exerciseRepository, imageAccess },
-      );
-      return reply.status(201).send(toExerciseResponse(exercise));
+      )
+      return reply.status(201).send(toExerciseResponse(exercise))
     },
-  );
+  )
 
   app.put(
     '/:id',
@@ -120,10 +120,10 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
       const exercise = await updateExercise(
         { ...request.body, id: request.params.id, userId: request.user.userId },
         { exercises: exerciseRepository, imageAccess },
-      );
-      return reply.send(toExerciseResponse(exercise));
+      )
+      return reply.send(toExerciseResponse(exercise))
     },
-  );
+  )
 
   app.delete(
     '/:id',
@@ -155,8 +155,8 @@ export async function exerciseRoutes(fastify: FastifyInstance) {
               'exercise_id',
             ]),
         },
-      );
-      return reply.status(204).send(null);
+      )
+      return reply.status(204).send(null)
     },
-  );
+  )
 }

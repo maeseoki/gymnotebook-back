@@ -9,38 +9,38 @@ import {
   MobileSignInRequestSchema,
   MobileSignUpRequestSchema,
   MobileTokenPairResponseSchema,
-} from '@gymnotebook/contracts';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { z } from 'zod';
-import type { JwtPayload } from '../../shared/jwt.js';
-import { createMobileAuthDependencies } from './mobile-auth.dependencies.js';
+} from '@gymnotebook/contracts'
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { z } from 'zod'
+import type { JwtPayload } from '../../shared/jwt.js'
+import { createMobileAuthDependencies } from './mobile-auth.dependencies.js'
 import {
   MobileSessionRequiredHttpError,
   mapRefreshError,
   mapRevokeOneError,
-} from './mobile-auth.mapper.js';
+} from './mobile-auth.mapper.js'
 
 export async function mobileAuthRoutes(fastify: FastifyInstance) {
-  const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const deps = createMobileAuthDependencies(fastify);
+  const app = fastify.withTypeProvider<ZodTypeProvider>()
+  const deps = createMobileAuthDependencies(fastify)
 
   const requireActiveMobileSession = async (request: FastifyRequest, reply: FastifyReply) => {
-    await fastify.authenticate(request, reply);
-    const sessionId = request.user.sessionId;
+    await fastify.authenticate(request, reply)
+    const sessionId = request.user.sessionId
     if (!sessionId) {
-      throw new MobileSessionRequiredHttpError();
+      throw new MobileSessionRequiredHttpError()
     }
 
     try {
       await deps.validateActiveMobileSessionForUser({
         userId: request.user.userId,
         sessionId,
-      });
+      })
     } catch (error) {
-      mapRefreshError(error);
+      mapRefreshError(error)
     }
-  };
+  }
 
   app.post(
     '/signin',
@@ -66,14 +66,14 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const user = await deps.validateCredentials(request.body);
+      const user = await deps.validateCredentials(request.body)
       const result = await deps.createMobileSession({
         user,
         device: request.body.device,
-      });
-      return reply.send(result);
+      })
+      return reply.send(result)
     },
-  );
+  )
 
   app.post(
     '/signup',
@@ -100,10 +100,10 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const result = await deps.signUpMobile(request.body);
-      return reply.code(201).send(result);
+      const result = await deps.signUpMobile(request.body)
+      return reply.code(201).send(result)
     },
-  );
+  )
 
   app.post(
     '/refresh',
@@ -130,13 +130,13 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
     },
     async (request, reply) => {
       try {
-        const result = await deps.rotateMobileSession(request.body);
-        return reply.send(result);
+        const result = await deps.rotateMobileSession(request.body)
+        return reply.send(result)
       } catch (error) {
-        mapRefreshError(error);
+        mapRefreshError(error)
       }
     },
-  );
+  )
 
   app.post(
     '/logout',
@@ -154,10 +154,10 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      await deps.revokeMobileSessionByRefreshToken(request.body);
-      return reply.code(204).send(null);
+      await deps.revokeMobileSessionByRefreshToken(request.body)
+      return reply.code(204).send(null)
     },
-  );
+  )
 
   app.get(
     '/sessions',
@@ -179,10 +179,10 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
       const result = await deps.listMobileSessionsForUser({
         userId: request.user.userId,
         currentSessionId: requireSessionId(request.user),
-      });
-      return reply.send({ sessions: result });
+      })
+      return reply.send({ sessions: result })
     },
-  );
+  )
 
   app.delete(
     '/sessions/:sessionId',
@@ -207,13 +207,13 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
         await deps.revokeMobileSessionByIdForUser({
           userId: request.user.userId,
           sessionId: request.params.sessionId,
-        });
-        return reply.code(204).send(null);
+        })
+        return reply.code(204).send(null)
       } catch (error) {
-        mapRevokeOneError(error);
+        mapRevokeOneError(error)
       }
     },
-  );
+  )
 
   app.delete(
     '/sessions',
@@ -233,19 +233,19 @@ export async function mobileAuthRoutes(fastify: FastifyInstance) {
       },
     },
     async (request, reply) => {
-      const currentSessionId = requireSessionId(request.user);
+      const currentSessionId = requireSessionId(request.user)
       const revoked = await deps.revokeAllMobileSessionsForUser({
         userId: request.user.userId,
         exceptSessionId: request.query.keepCurrent ? currentSessionId : undefined,
-      });
-      return reply.send({ revoked });
+      })
+      return reply.send({ revoked })
     },
-  );
+  )
 }
 
 function requireSessionId(user: JwtPayload): string {
   if (!user.sessionId) {
-    throw new MobileSessionRequiredHttpError();
+    throw new MobileSessionRequiredHttpError()
   }
-  return user.sessionId;
+  return user.sessionId
 }

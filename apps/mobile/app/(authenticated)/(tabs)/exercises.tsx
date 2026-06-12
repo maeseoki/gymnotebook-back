@@ -1,10 +1,10 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, View } from 'react-native';
-import { ExerciseCard } from '@/features/exercises/components/ExerciseCard';
-import { useExercises } from '@/features/exercises/hooks/use-exercises';
-import { mapExerciseError } from '@/features/exercises/utils/exercise-errors';
-import { spacing } from '@/shared/theme/tokens';
+import { router } from 'expo-router'
+import { useState } from 'react'
+import { FlatList, View } from 'react-native'
+import { ExerciseCard } from '@/features/exercises/components/ExerciseCard'
+import { useExercises } from '@/features/exercises/hooks/use-exercises'
+import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
+import { spacing } from '@/shared/theme/tokens'
 import {
   Button,
   EmptyState,
@@ -13,18 +13,18 @@ import {
   Screen,
   Text,
   TextInput,
-} from '@/shared/ui/primitives';
+} from '@/shared/ui/primitives'
 
 export default function ExercisesScreen() {
-  const { data: exercises, isLoading, error, refetch, isRefetching } = useExercises();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { data: exercises, isLoading, error, refetch, isRefetching } = useExercises()
+  const [searchQuery, setSearchQuery] = useState('')
 
   if (isLoading) {
     return (
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
         <LoadingIndicator label="Loading exercises" />
       </Screen>
-    );
+    )
   }
 
   if (error) {
@@ -33,12 +33,12 @@ export default function ExercisesScreen() {
         <ErrorState title={mapExerciseError(error)} />
         <Button label="Retry" onPress={() => void refetch()} />
       </Screen>
-    );
+    )
   }
 
   const handleCreateNew = () => {
-    router.push('/(authenticated)/exercises/new');
-  };
+    router.push('/(authenticated)/exercises/new')
+  }
 
   if (!exercises || exercises.length === 0) {
     return (
@@ -46,17 +46,17 @@ export default function ExercisesScreen() {
         <EmptyState title="No exercises found. Add your first exercise!" />
         <Button label="Create Exercise" onPress={handleCreateNew} />
       </Screen>
-    );
+    )
   }
 
   const filteredExercises = exercises.filter((exercise) => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
+    const query = searchQuery.toLowerCase().trim()
+    if (!query) return true
     return (
       exercise.name.toLowerCase().includes(query) ||
       exercise.description?.toLowerCase().includes(query)
-    );
-  });
+    )
+  })
 
   return (
     <Screen style={{ paddingBottom: 0 }}>
@@ -92,5 +92,5 @@ export default function ExercisesScreen() {
         contentContainerStyle={{ paddingBottom: spacing[4] }}
       />
     </Screen>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-import { pathToFileURL } from 'node:url';
-import { sql } from 'drizzle-orm';
-import { roleNames, roles } from '../drizzle/schema.js';
-import { createDatabaseClient, type Database } from '../src/shared/db.js';
-import { parseEnv } from '../src/shared/env.js';
+import { pathToFileURL } from 'node:url'
+import { sql } from 'drizzle-orm'
+import { roleNames, roles } from '../drizzle/schema.js'
+import { createDatabaseClient, type Database } from '../src/shared/db.js'
+import { parseEnv } from '../src/shared/env.js'
 
 export async function seedRoles(db: Database): Promise<void> {
   await db
@@ -12,18 +12,18 @@ export async function seedRoles(db: Database): Promise<void> {
       set: {
         name: sql`${roles.name}`,
       },
-    });
+    })
 }
 
 async function main() {
-  const client = createDatabaseClient(parseEnv(process.env));
+  const client = createDatabaseClient(parseEnv(process.env))
   try {
-    await seedRoles(client.db);
+    await seedRoles(client.db)
   } finally {
-    await client.close();
+    await client.close()
   }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await main();
+  await main()
 }

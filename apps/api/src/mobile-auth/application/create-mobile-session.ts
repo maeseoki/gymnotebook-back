@@ -1,20 +1,20 @@
-import { randomUUID } from 'node:crypto';
-import type { MobileTokenPairResponse } from '@gymnotebook/contracts';
-import type { MobileAccessTokenIssuer } from '../domain/mobile-access-token-issuer.js';
-import type { MobileDeviceMetadata, MobileSessionUser } from '../domain/mobile-session.js';
-import type { MobileSessionUnitOfWork } from '../domain/mobile-session.repository.js';
-import type { Clock } from '../domain/mobile-session-time.js';
-import { addMilliseconds, toMysqlUtc } from '../domain/mobile-session-time.js';
-import type { RefreshTokenService } from '../domain/refresh-token-service.js';
-import { issueMobileAccessToken, toMobileTokenPairResponse } from './mobile-auth-result.js';
+import { randomUUID } from 'node:crypto'
+import type { MobileTokenPairResponse } from '@gymnotebook/contracts'
+import type { MobileAccessTokenIssuer } from '../domain/mobile-access-token-issuer.js'
+import type { MobileDeviceMetadata, MobileSessionUser } from '../domain/mobile-session.js'
+import type { MobileSessionUnitOfWork } from '../domain/mobile-session.repository.js'
+import type { Clock } from '../domain/mobile-session-time.js'
+import { addMilliseconds, toMysqlUtc } from '../domain/mobile-session-time.js'
+import type { RefreshTokenService } from '../domain/refresh-token-service.js'
+import { issueMobileAccessToken, toMobileTokenPairResponse } from './mobile-auth-result.js'
 
 export interface CreateMobileSessionDeps {
-  unitOfWork: MobileSessionUnitOfWork;
-  refreshTokens: RefreshTokenService;
-  accessTokens: MobileAccessTokenIssuer;
-  clock: Clock;
-  refreshTokenTtlMs: number;
-  isRefreshTokenHashConflict: (error: unknown) => boolean;
+  unitOfWork: MobileSessionUnitOfWork
+  refreshTokens: RefreshTokenService
+  accessTokens: MobileAccessTokenIssuer
+  clock: Clock
+  refreshTokenTtlMs: number
+  isRefreshTokenHashConflict: (error: unknown) => boolean
 }
 
 export async function createMobileSession(
@@ -22,11 +22,11 @@ export async function createMobileSession(
   deps: CreateMobileSessionDeps,
 ): Promise<MobileTokenPairResponse> {
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const rawRefreshToken = deps.refreshTokens.generate();
-    const refreshTokenHash = deps.refreshTokens.hash(rawRefreshToken);
-    const nowDate = deps.clock.now();
-    const now = toMysqlUtc(nowDate);
-    const expiresAt = toMysqlUtc(addMilliseconds(nowDate, deps.refreshTokenTtlMs));
+    const rawRefreshToken = deps.refreshTokens.generate()
+    const refreshTokenHash = deps.refreshTokens.hash(rawRefreshToken)
+    const nowDate = deps.clock.now()
+    const now = toMysqlUtc(nowDate)
+    const expiresAt = toMysqlUtc(addMilliseconds(nowDate, deps.refreshTokenTtlMs))
 
     try {
       return await deps.unitOfWork.transaction(async ({ mobileSessions }) => {
@@ -39,27 +39,27 @@ export async function createMobileSession(
           device: input.device ?? {},
           now,
           expiresAt,
-        });
+        })
         const accessToken = issueMobileAccessToken({
           issuer: deps.accessTokens,
           tokenRow,
           user: input.user,
-        });
+        })
 
         return toMobileTokenPairResponse({
           accessToken,
           tokenRow,
           user: input.user,
           rawRefreshToken,
-        });
-      });
+        })
+      })
     } catch (error) {
       if (attempt < 3 && deps.isRefreshTokenHashConflict(error)) {
-        continue;
+        continue
       }
-      throw error;
+      throw error
     }
   }
 
-  throw new Error('Failed to create unique mobile refresh token');
+  throw new Error('Failed to create unique mobile refresh token')
 }

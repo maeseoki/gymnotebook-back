@@ -6,5 +6,5 @@ export const compressorConfig: Compressor.Options = {
   height: 600,
   resize: 'cover',
   mimeType: 'image/jpeg',
-  convertSize: Infinity
+  convertSize: Infinity,
 }

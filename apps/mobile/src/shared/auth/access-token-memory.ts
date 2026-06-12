@@ -1,18 +1,18 @@
 export interface AccessTokenMemory {
-  get: () => string | null;
-  set: (token: string) => void;
-  clear: () => void;
+  get: () => string | null
+  set: (token: string) => void
+  clear: () => void
 }
 
 export function createAccessTokenMemory(): AccessTokenMemory {
-  let token: string | null = null;
+  let token: string | null = null
   return {
     get: () => token,
     set: (nextToken) => {
-      token = nextToken;
+      token = nextToken
     },
     clear: () => {
-      token = null;
+      token = null
     },
-  };
+  }
 }

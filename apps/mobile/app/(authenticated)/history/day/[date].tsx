@@ -1,10 +1,10 @@
-import { useLocalSearchParams } from 'expo-router';
-import { HistoryWorkoutDetailScreen } from '@/features/history/components/HistoryWorkoutDetailScreen';
+import { useLocalSearchParams } from 'expo-router'
+import { HistoryWorkoutDetailScreen } from '@/features/history/components/HistoryWorkoutDetailScreen'
 
 export default function HistoryDayScreen() {
-  const { date } = useLocalSearchParams<{ date: string }>();
+  const { date } = useLocalSearchParams<{ date: string }>()
 
-  if (!date) return null;
+  if (!date) return null
 
-  return <HistoryWorkoutDetailScreen date={date} />;
+  return <HistoryWorkoutDetailScreen date={date} />
 }

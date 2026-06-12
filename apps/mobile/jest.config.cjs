@@ -1,4 +1,4 @@
-const expoPreset = require('jest-expo/jest-preset');
+const expoPreset = require('jest-expo/jest-preset')
 
 module.exports = {
   ...expoPreset,
@@ -15,4 +15,4 @@ module.exports = {
   globals: {
     IS_REACT_ACT_ENVIRONMENT: true,
   },
-};
+}

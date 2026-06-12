@@ -11,7 +11,7 @@ export const colors = {
   secondary: '#357EF1',
   secondaryPressed: '#245CB5',
   danger: '#EF4444',
-} as const;
+} as const
 
 export const spacing = {
   1: 4,
@@ -21,16 +21,16 @@ export const spacing = {
   5: 20,
   6: 24,
   8: 32,
-} as const;
+} as const
 
 export const radius = {
   sm: 6,
   md: 8,
   lg: 12,
-} as const;
+} as const
 
 export const typography = {
   fontFamily: 'SpaceGrotesk_400Regular',
   fontFamilyMedium: 'SpaceGrotesk_500Medium',
   fontFamilyBold: 'SpaceGrotesk_700Bold',
-} as const;
+} as const

@@ -1,5 +1,5 @@
-import type { ExerciseResponse } from '@gymnotebook/contracts';
-import type { Exercise } from '../domain/exercise.js';
+import type { ExerciseResponse } from '@gymnotebook/contracts'
+import type { Exercise } from '../domain/exercise.js'
 
 export function toExerciseResponse(exercise: Exercise): ExerciseResponse {
   return {
@@ -10,5 +10,5 @@ export function toExerciseResponse(exercise: Exercise): ExerciseResponse {
     type: exercise.type,
     primaryMuscleGroup: exercise.primaryMuscleGroup,
     secondaryMuscleGroup: exercise.secondaryMuscleGroup,
-  };
+  }
 }

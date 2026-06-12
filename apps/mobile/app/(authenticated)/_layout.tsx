@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import { AuthenticatedRouteGuard } from '@/features/auth/components/AuthGate';
+import { Stack } from 'expo-router'
+import { AuthenticatedRouteGuard } from '@/features/auth/components/AuthGate'
 
 export default function AuthenticatedLayout() {
   return (
@@ -13,5 +13,5 @@ export default function AuthenticatedLayout() {
         <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
       </Stack>
     </AuthenticatedRouteGuard>
-  );
+  )
 }

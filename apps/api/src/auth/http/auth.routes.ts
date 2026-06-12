@@ -4,23 +4,23 @@ import {
   LoginRequestSchema,
   MessageResponseSchema,
   SignupRequestSchema,
-} from '@gymnotebook/contracts';
-import type { FastifyInstance } from 'fastify';
-import type { ZodTypeProvider } from 'fastify-type-provider-zod';
-import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
-import { signIn } from '../application/sign-in.js';
-import { signUp } from '../application/sign-up.js';
-import { Argon2PasswordHasher } from '../infrastructure/argon2-password-hasher.js';
-import { BcryptPasswordHasher } from '../infrastructure/bcrypt-password-hasher.js';
-import { DrizzleSignUpUnitOfWork } from '../infrastructure/drizzle-sign-up-unit-of-work.js';
+} from '@gymnotebook/contracts'
+import type { FastifyInstance } from 'fastify'
+import type { ZodTypeProvider } from 'fastify-type-provider-zod'
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js'
+import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js'
+import { signIn } from '../application/sign-in.js'
+import { signUp } from '../application/sign-up.js'
+import { Argon2PasswordHasher } from '../infrastructure/argon2-password-hasher.js'
+import { BcryptPasswordHasher } from '../infrastructure/bcrypt-password-hasher.js'
+import { DrizzleSignUpUnitOfWork } from '../infrastructure/drizzle-sign-up-unit-of-work.js'
 
 export async function authRoutes(fastify: FastifyInstance) {
-  const app = fastify.withTypeProvider<ZodTypeProvider>();
-  const passwordHasher = new Argon2PasswordHasher();
-  const legacyPasswordHasher = new BcryptPasswordHasher();
-  const userRepository = new DrizzleUserRepository(fastify.db);
-  const signUpUnitOfWork = new DrizzleSignUpUnitOfWork(fastify.db);
+  const app = fastify.withTypeProvider<ZodTypeProvider>()
+  const passwordHasher = new Argon2PasswordHasher()
+  const legacyPasswordHasher = new BcryptPasswordHasher()
+  const userRepository = new DrizzleUserRepository(fastify.db)
+  const signUpUnitOfWork = new DrizzleSignUpUnitOfWork(fastify.db)
 
   app.post(
     '/signin',
@@ -51,10 +51,10 @@ export async function authRoutes(fastify: FastifyInstance) {
         tokenIssuer: {
           issue: (payload) => fastify.jwt.sign(payload),
         },
-      });
-      return reply.send(result);
+      })
+      return reply.send(result)
     },
-  );
+  )
 
   app.post(
     '/signup',
@@ -86,11 +86,11 @@ export async function authRoutes(fastify: FastifyInstance) {
           isUniqueConstraintError(error, ['users_username_unique', 'username']),
         isDuplicateEmailError: (error) =>
           isUniqueConstraintError(error, ['users_email_unique', 'email']),
-      });
+      })
 
-      return reply.code(201).send({ message: '¡Usuario registrado correctamente!' });
+      return reply.code(201).send({ message: '¡Usuario registrado correctamente!' })
     },
-  );
+  )
 
   app.get(
     '/logout',
@@ -105,7 +105,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       },
     },
     async (_request, reply) => {
-      return reply.send({ message: '¡Desconectado correctamente!' });
+      return reply.send({ message: '¡Desconectado correctamente!' })
     },
-  );
+  )
 }

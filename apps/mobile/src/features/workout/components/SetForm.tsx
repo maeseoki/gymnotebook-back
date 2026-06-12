@@ -1,12 +1,12 @@
-import type { EExerciseType } from '@gymnotebook/contracts';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { type GestureResponderEvent, Modal, Pressable, StyleSheet, View } from 'react-native';
-import { z } from 'zod';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives';
-import type { ActiveWorkoutSet } from '../schemas/active-workout-draft';
+import type { EExerciseType } from '@gymnotebook/contracts'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useEffect } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { type GestureResponderEvent, Modal, Pressable, StyleSheet, View } from 'react-native'
+import { z } from 'zod'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives'
+import type { ActiveWorkoutSet } from '../schemas/active-workout-draft'
 
 const createSetFormSchema = (exerciseType: EExerciseType) => {
   return z
@@ -73,38 +73,38 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
     .refine(
       (data) => {
         if (['TIME', 'TIME_DISTANCE'].includes(exerciseType)) {
-          const totalSeconds = (data.minutes ?? 0) * 60 + (data.seconds ?? 0);
-          return totalSeconds > 0;
+          const totalSeconds = (data.minutes ?? 0) * 60 + (data.seconds ?? 0)
+          return totalSeconds > 0
         }
-        return true;
+        return true
       },
       {
         path: ['seconds'],
         message: 'El tiempo total debe ser mayor que 0 segundos',
       },
-    );
-};
+    )
+}
 
 export type SetFormData = {
-  weightKg?: string;
-  reps?: string;
-  minutes?: string;
-  seconds?: string;
-  distanceMeters?: string;
-};
+  weightKg?: string
+  reps?: string
+  minutes?: string
+  seconds?: string
+  distanceMeters?: string
+}
 
 interface SetFormProps {
-  visible: boolean;
-  exerciseType: EExerciseType;
-  exerciseName: string;
-  editingSet?: ActiveWorkoutSet | null;
-  onClose: () => void;
+  visible: boolean
+  exerciseType: EExerciseType
+  exerciseName: string
+  editingSet?: ActiveWorkoutSet | null
+  onClose: () => void
   onSubmit: (data: {
-    weightGrams?: number | null;
-    reps?: number | null;
-    timeSeconds?: number | null;
-    distanceMeters?: number | null;
-  }) => void;
+    weightGrams?: number | null
+    reps?: number | null
+    timeSeconds?: number | null
+    distanceMeters?: number | null
+  }) => void
 }
 
 export function SetForm({
@@ -115,7 +115,7 @@ export function SetForm({
   onClose,
   onSubmit,
 }: SetFormProps) {
-  const schema = createSetFormSchema(exerciseType);
+  const schema = createSetFormSchema(exerciseType)
 
   const {
     control,
@@ -131,7 +131,7 @@ export function SetForm({
       seconds: '',
       distanceMeters: '',
     },
-  });
+  })
 
   // Prefill when modal becomes visible or editingSet changes
   useEffect(() => {
@@ -139,14 +139,14 @@ export function SetForm({
       if (editingSet) {
         const mins = editingSet.timeSeconds
           ? Math.floor(editingSet.timeSeconds / 60).toString()
-          : '';
-        const secs = editingSet.timeSeconds ? (editingSet.timeSeconds % 60).toString() : '';
+          : ''
+        const secs = editingSet.timeSeconds ? (editingSet.timeSeconds % 60).toString() : ''
 
         // Display weightGrams as kg
         const weightKgDisplay =
           editingSet.weightGrams !== undefined && editingSet.weightGrams !== null
             ? Number((editingSet.weightGrams / 1000).toFixed(3)).toString()
-            : '';
+            : ''
 
         reset({
           weightKg: weightKgDisplay,
@@ -160,7 +160,7 @@ export function SetForm({
             editingSet.distanceMeters !== undefined && editingSet.distanceMeters !== null
               ? editingSet.distanceMeters.toString()
               : '',
-        });
+        })
       } else {
         reset({
           weightKg: '',
@@ -168,40 +168,40 @@ export function SetForm({
           minutes: '',
           seconds: '',
           distanceMeters: '',
-        });
+        })
       }
     }
-  }, [visible, editingSet, reset]);
+  }, [visible, editingSet, reset])
 
   interface FormSubmitData {
-    weightKg?: number | null;
-    reps?: number | null;
-    minutes?: number;
-    seconds?: number;
-    distanceMeters?: number | null;
+    weightKg?: number | null
+    reps?: number | null
+    minutes?: number
+    seconds?: number
+    distanceMeters?: number | null
   }
 
   const onFormSubmit = (data: FormSubmitData) => {
     const timeSeconds = ['TIME', 'TIME_DISTANCE'].includes(exerciseType)
       ? (data.minutes ?? 0) * 60 + (data.seconds ?? 0)
-      : null;
+      : null
 
     // Convert weightKg input to weightGrams explicitly
-    const weightGrams = typeof data.weightKg === 'number' ? Math.round(data.weightKg * 1000) : null;
+    const weightGrams = typeof data.weightKg === 'number' ? Math.round(data.weightKg * 1000) : null
 
     onSubmit({
       weightGrams,
       reps: data.reps ?? null,
       timeSeconds,
       distanceMeters: data.distanceMeters ?? null,
-    });
-    onClose();
-  };
+    })
+    onClose()
+  }
 
-  const hasWeight = ['WEIGHT', 'WEIGHT_REPS'].includes(exerciseType);
-  const hasReps = ['REPS', 'WEIGHT_REPS'].includes(exerciseType);
-  const hasTime = ['TIME', 'TIME_DISTANCE'].includes(exerciseType);
-  const hasDistance = ['DISTANCE', 'TIME_DISTANCE'].includes(exerciseType);
+  const hasWeight = ['WEIGHT', 'WEIGHT_REPS'].includes(exerciseType)
+  const hasReps = ['REPS', 'WEIGHT_REPS'].includes(exerciseType)
+  const hasTime = ['TIME', 'TIME_DISTANCE'].includes(exerciseType)
+  const hasDistance = ['DISTANCE', 'TIME_DISTANCE'].includes(exerciseType)
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -339,7 +339,7 @@ export function SetForm({
         </Pressable>
       </Pressable>
     </Modal>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -377,4 +377,4 @@ const styles = StyleSheet.create({
     gap: spacing[4],
     marginTop: spacing[2],
   },
-});
+})

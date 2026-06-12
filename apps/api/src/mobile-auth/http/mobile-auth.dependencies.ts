@@ -1,45 +1,45 @@
-import type { FastifyInstance } from 'fastify';
-import { validateCredentials } from '../../auth/application/sign-in.js';
-import { Argon2PasswordHasher } from '../../auth/infrastructure/argon2-password-hasher.js';
-import { BcryptPasswordHasher } from '../../auth/infrastructure/bcrypt-password-hasher.js';
-import { isUniqueConstraintError } from '../../shared/persistence-errors.js';
-import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js';
-import { createMobileSession } from '../application/create-mobile-session.js';
-import { listMobileSessionsForUser } from '../application/list-mobile-sessions.js';
-import { revokeAllMobileSessionsForUser } from '../application/revoke-all-mobile-sessions.js';
+import type { FastifyInstance } from 'fastify'
+import { validateCredentials } from '../../auth/application/sign-in.js'
+import { Argon2PasswordHasher } from '../../auth/infrastructure/argon2-password-hasher.js'
+import { BcryptPasswordHasher } from '../../auth/infrastructure/bcrypt-password-hasher.js'
+import { isUniqueConstraintError } from '../../shared/persistence-errors.js'
+import { DrizzleUserRepository } from '../../users/infrastructure/drizzle-user.repository.js'
+import { createMobileSession } from '../application/create-mobile-session.js'
+import { listMobileSessionsForUser } from '../application/list-mobile-sessions.js'
+import { revokeAllMobileSessionsForUser } from '../application/revoke-all-mobile-sessions.js'
 import {
   revokeMobileSessionByIdForUser,
   revokeMobileSessionByRefreshToken,
-} from '../application/revoke-mobile-session.js';
-import { rotateMobileSession } from '../application/rotate-mobile-session.js';
-import { signUpMobile } from '../application/sign-up-mobile.js';
-import { validateActiveMobileSessionForUser } from '../application/validate-active-mobile-session.js';
-import { CryptoRefreshTokenService } from '../infrastructure/crypto-refresh-token.service.js';
-import { DrizzleMobileSessionUnitOfWork } from '../infrastructure/drizzle-mobile-session.repository.js';
-import { DrizzleMobileSignUpUnitOfWork } from '../infrastructure/drizzle-mobile-sign-up-unit-of-work.js';
-import { JwtMobileAccessTokenIssuer } from '../infrastructure/jwt-mobile-access-token.issuer.js';
+} from '../application/revoke-mobile-session.js'
+import { rotateMobileSession } from '../application/rotate-mobile-session.js'
+import { signUpMobile } from '../application/sign-up-mobile.js'
+import { validateActiveMobileSessionForUser } from '../application/validate-active-mobile-session.js'
+import { CryptoRefreshTokenService } from '../infrastructure/crypto-refresh-token.service.js'
+import { DrizzleMobileSessionUnitOfWork } from '../infrastructure/drizzle-mobile-session.repository.js'
+import { DrizzleMobileSignUpUnitOfWork } from '../infrastructure/drizzle-mobile-sign-up-unit-of-work.js'
+import { JwtMobileAccessTokenIssuer } from '../infrastructure/jwt-mobile-access-token.issuer.js'
 
 export function createMobileAuthDependencies(fastify: FastifyInstance) {
-  const passwordHasher = new Argon2PasswordHasher();
-  const legacyPasswordHasher = new BcryptPasswordHasher();
-  const userRepository = new DrizzleUserRepository(fastify.db);
-  const mobileSessionUnitOfWork = new DrizzleMobileSessionUnitOfWork(fastify.db);
-  const mobileSignUpUnitOfWork = new DrizzleMobileSignUpUnitOfWork(fastify.db);
+  const passwordHasher = new Argon2PasswordHasher()
+  const legacyPasswordHasher = new BcryptPasswordHasher()
+  const userRepository = new DrizzleUserRepository(fastify.db)
+  const mobileSessionUnitOfWork = new DrizzleMobileSessionUnitOfWork(fastify.db)
+  const mobileSignUpUnitOfWork = new DrizzleMobileSignUpUnitOfWork(fastify.db)
   const refreshTokens = new CryptoRefreshTokenService(
     fastify.config.MOBILE_REFRESH_TOKEN_PEPPER,
     fastify.config.MOBILE_REFRESH_TOKEN_BYTES,
-  );
+  )
   const accessTokens = new JwtMobileAccessTokenIssuer(
     (payload, options) => fastify.jwt.sign(payload, options),
     fastify.config.MOBILE_ACCESS_TOKEN_TTL,
-  );
-  const clock = { now: () => new Date() };
+  )
+  const clock = { now: () => new Date() }
   const isRefreshTokenHashConflict = (error: unknown) =>
-    isUniqueConstraintError(error, ['mobile_sessions_refresh_token_hash_unique']);
+    isUniqueConstraintError(error, ['mobile_sessions_refresh_token_hash_unique'])
   const isDuplicateUsernameError = (error: unknown) =>
-    isUniqueConstraintError(error, ['users_username_unique', 'username']);
+    isUniqueConstraintError(error, ['users_username_unique', 'username'])
   const isDuplicateEmailError = (error: unknown) =>
-    isUniqueConstraintError(error, ['users_email_unique', 'email']);
+    isUniqueConstraintError(error, ['users_email_unique', 'email'])
 
   return {
     validateCredentials: (input: Parameters<typeof validateCredentials>[0]) =>
@@ -76,7 +76,7 @@ export function createMobileAuthDependencies(fastify: FastifyInstance) {
         accessTokens,
         securityEvents: {
           record: async (event) => {
-            fastify.log.warn({ mobileSecurityEvent: event }, event.type);
+            fastify.log.warn({ mobileSecurityEvent: event }, event.type)
           },
         },
         clock,
@@ -114,7 +114,7 @@ export function createMobileAuthDependencies(fastify: FastifyInstance) {
         unitOfWork: mobileSessionUnitOfWork,
         clock,
       }),
-  };
+  }
 }
 
-export type MobileAuthDependencies = ReturnType<typeof createMobileAuthDependencies>;
+export type MobileAuthDependencies = ReturnType<typeof createMobileAuthDependencies>

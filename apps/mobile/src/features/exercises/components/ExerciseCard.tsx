@@ -1,16 +1,16 @@
-import type { ExerciseResponse } from '@gymnotebook/contracts';
-import { Pressable, View } from 'react-native';
-import { colors, radius, spacing } from '@/shared/theme/tokens';
-import { Card, Text } from '@/shared/ui/primitives';
+import type { ExerciseResponse } from '@gymnotebook/contracts'
+import { Pressable, View } from 'react-native'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
+import { Card, Text } from '@/shared/ui/primitives'
 
 interface ExerciseCardProps {
-  exercise: ExerciseResponse;
-  onPress: () => void;
+  exercise: ExerciseResponse
+  onPress: () => void
 }
 
 export function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
-  const typeDisplay = exercise.type.replace('_', ' & ').toLowerCase();
-  const primaryMuscle = exercise.primaryMuscleGroup.replace('_', ' ').toLowerCase();
+  const typeDisplay = exercise.type.replace('_', ' & ').toLowerCase()
+  const primaryMuscle = exercise.primaryMuscleGroup.replace('_', ' ').toLowerCase()
 
   return (
     <Pressable
@@ -58,5 +58,5 @@ export function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
         ) : null}
       </Card>
     </Pressable>
-  );
+  )
 }

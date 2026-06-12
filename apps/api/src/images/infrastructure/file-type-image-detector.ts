@@ -1,22 +1,22 @@
-import { fileTypeFromBuffer } from 'file-type';
-import { type SupportedImageMediaType, supportedImageMediaTypes } from '../domain/image.js';
-import type { DetectedImageType, ImageTypeDetector } from '../domain/image-type-detector.js';
+import { fileTypeFromBuffer } from 'file-type'
+import { type SupportedImageMediaType, supportedImageMediaTypes } from '../domain/image.js'
+import type { DetectedImageType, ImageTypeDetector } from '../domain/image-type-detector.js'
 
-const supportedTypes = new Set<string>(supportedImageMediaTypes);
+const supportedTypes = new Set<string>(supportedImageMediaTypes)
 
 export class FileTypeImageDetector implements ImageTypeDetector {
   async detect(data: Uint8Array): Promise<DetectedImageType | null> {
-    const detected = await fileTypeFromBuffer(data);
+    const detected = await fileTypeFromBuffer(data)
     if (!detected || !isSupportedMediaType(detected.mime)) {
-      return null;
+      return null
     }
     return {
       mediaType: detected.mime,
       extension: detected.ext,
-    };
+    }
   }
 }
 
 function isSupportedMediaType(mediaType: string): mediaType is SupportedImageMediaType {
-  return supportedTypes.has(mediaType);
+  return supportedTypes.has(mediaType)
 }

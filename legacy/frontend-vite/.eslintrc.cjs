@@ -4,7 +4,7 @@ module.exports = {
     'eslint:recommended',
     'plugin:@typescript-eslint/recommended',
     'plugin:react-hooks/recommended',
-    './node_modules/ts-standard/eslintrc.json'
+    './node_modules/ts-standard/eslintrc.json',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: { ecmaVersion: 'latest', sourceType: 'module', project: './tsconfig.json' },
@@ -12,13 +12,13 @@ module.exports = {
   rules: {
     'react-refresh/only-export-components': 'warn',
     '@typescript-eslint/explicit-function-return-type': 'off',
-    "@typescript-eslint/no-misused-promises": [
-      "error",
+    '@typescript-eslint/no-misused-promises': [
+      'error',
       {
-        "checksVoidReturn": false
-      }
+        checksVoidReturn: false,
+      },
     ],
-    "@typescript-eslint/strict-boolean-expressions": "off",
-    "react/jsx-max-props-per-line": [1, { "maximum": { "single": 3, "multi": 1 } }],
-  }
+    '@typescript-eslint/strict-boolean-expressions': 'off',
+    'react/jsx-max-props-per-line': [1, { maximum: { single: 3, multi: 1 } }],
+  },
 }

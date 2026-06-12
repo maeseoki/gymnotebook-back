@@ -2,17 +2,17 @@ import {
   CannotDeleteLastAdminError,
   CannotDeleteSelfError,
   UserNotFoundError,
-} from '../domain/user.errors.js';
-import type { UserRepository } from '../domain/user.repository.js';
+} from '../domain/user.errors.js'
+import type { UserRepository } from '../domain/user.repository.js'
 
 export interface DeleteUserTransactionRepositories {
-  users: UserRepository;
+  users: UserRepository
 }
 
 export interface DeleteUserDeps {
   transaction: <T>(
     work: (repositories: DeleteUserTransactionRepositories) => Promise<T>,
-  ) => Promise<T>;
+  ) => Promise<T>
 }
 
 export async function deleteUser(
@@ -21,20 +21,20 @@ export async function deleteUser(
 ): Promise<void> {
   await deps.transaction(async ({ users }) => {
     if (input.actorUserId === input.targetUserId) {
-      throw new CannotDeleteSelfError();
+      throw new CannotDeleteSelfError()
     }
 
     if (!(await users.existsById(input.targetUserId))) {
-      throw new UserNotFoundError();
+      throw new UserNotFoundError()
     }
 
     if (
       (await users.hasRole(input.targetUserId, 'ROLE_ADMIN')) &&
       (await users.countUsersByRoleForUpdate('ROLE_ADMIN')) <= 1
     ) {
-      throw new CannotDeleteLastAdminError();
+      throw new CannotDeleteLastAdminError()
     }
 
-    await users.deleteById(input.targetUserId);
-  });
+    await users.deleteById(input.targetUserId)
+  })
 }

@@ -1,6 +1,6 @@
-import { render } from '@testing-library/react-native';
-import { Text } from 'react-native';
-import { AppProviders } from '@/shared/providers';
+import { render } from '@testing-library/react-native'
+import { Text } from 'react-native'
+import { AppProviders } from '@/shared/providers'
 
 describe('AppProviders', () => {
   it('renders children after font bootstrap resolves', async () => {
@@ -8,8 +8,8 @@ describe('AppProviders', () => {
       <AppProviders>
         <Text>Ready</Text>
       </AppProviders>,
-    );
+    )
 
-    expect(view.getByText('Ready')).toBeTruthy();
-  });
-});
+    expect(view.getByText('Ready')).toBeTruthy()
+  })
+})

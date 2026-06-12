@@ -1,29 +1,29 @@
-import { and, asc, count, desc, eq, inArray } from 'drizzle-orm';
-import type { AnyMySqlColumn } from 'drizzle-orm/mysql-core';
-import * as schema from '../../../drizzle/schema.js';
-import type { DbExecutor } from '../../shared/transaction.js';
+import { and, asc, count, desc, eq, inArray } from 'drizzle-orm'
+import type { AnyMySqlColumn } from 'drizzle-orm/mysql-core'
+import * as schema from '../../../drizzle/schema.js'
+import type { DbExecutor } from '../../shared/transaction.js'
 import type {
   WorkoutGroupReadModel,
   WorkoutSetEntryReadModel,
-} from '../../workouts/domain/workout.js';
-import { mysqlUtcToIsoInstant } from '../../workouts/domain/workout-dates.js';
+} from '../../workouts/domain/workout.js'
+import { mysqlUtcToIsoInstant } from '../../workouts/domain/workout-dates.js'
 import type {
   WorkoutHistoryPageReadModel,
   WorkoutHistoryRepository,
   WorkoutHistorySortBy,
   WorkoutHistorySortDirection,
-} from '../domain/workout-history.repository.js';
+} from '../domain/workout-history.repository.js'
 
 export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository {
   constructor(private readonly db: DbExecutor) {}
 
   async getExerciseHistoryPage(input: {
-    userId: number;
-    exerciseId: number;
-    page: number;
-    pageSize: number;
-    sortBy: WorkoutHistorySortBy;
-    sortDirection: WorkoutHistorySortDirection;
+    userId: number
+    exerciseId: number
+    page: number
+    pageSize: number
+    sortBy: WorkoutHistorySortBy
+    sortDirection: WorkoutHistorySortDirection
   }): Promise<WorkoutHistoryPageReadModel | null> {
     const exerciseRows = await this.db
       .select()
@@ -31,10 +31,10 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
       .where(
         and(eq(schema.exercises.id, input.exerciseId), eq(schema.exercises.userId, input.userId)),
       )
-      .limit(1);
-    const exercise = exerciseRows[0];
+      .limit(1)
+    const exercise = exerciseRows[0]
     if (!exercise) {
-      return null;
+      return null
     }
 
     const [{ total = 0 } = { total: 0 }] = await this.db
@@ -46,10 +46,10 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
           eq(schema.workoutSets.exerciseId, input.exerciseId),
           eq(schema.workouts.userId, input.userId),
         ),
-      );
+      )
 
-    const orderColumn = getSortColumn(input.sortBy);
-    const direction = input.sortDirection === 'asc' ? asc : desc;
+    const orderColumn = getSortColumn(input.sortBy)
+    const direction = input.sortDirection === 'asc' ? asc : desc
     const groupRows = await this.db
       .select({
         group: schema.workoutSets,
@@ -64,9 +64,9 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
       )
       .orderBy(direction(orderColumn), direction(schema.workoutSets.id))
       .limit(input.pageSize)
-      .offset(input.page * input.pageSize);
+      .offset(input.page * input.pageSize)
 
-    const groupIds = groupRows.map((row) => row.group.id);
+    const groupIds = groupRows.map((row) => row.group.id)
     const setRows =
       groupIds.length === 0
         ? []
@@ -74,11 +74,11 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
             .select()
             .from(schema.sets)
             .where(inArray(schema.sets.workoutSetId, groupIds))
-            .orderBy(asc(schema.sets.startDate), asc(schema.sets.id));
+            .orderBy(asc(schema.sets.startDate), asc(schema.sets.id))
 
-    const setsByGroupId = new Map<number, WorkoutSetEntryReadModel[]>();
+    const setsByGroupId = new Map<number, WorkoutSetEntryReadModel[]>()
     for (const row of setRows) {
-      const entries = setsByGroupId.get(row.workoutSetId) ?? [];
+      const entries = setsByGroupId.get(row.workoutSetId) ?? []
       entries.push({
         id: row.id,
         reps: row.reps,
@@ -88,8 +88,8 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
         notes: row.notes,
         isDropSet: row.isDropSet,
         startDate: mysqlUtcToIsoInstant(row.startDate),
-      });
-      setsByGroupId.set(row.workoutSetId, entries);
+      })
+      setsByGroupId.set(row.workoutSetId, entries)
     }
 
     return {
@@ -114,16 +114,16 @@ export class DrizzleWorkoutHistoryRepository implements WorkoutHistoryRepository
       totalPages: Math.ceil(total / input.pageSize),
       page: input.page,
       pageSize: input.pageSize,
-    };
+    }
   }
 }
 
 function getSortColumn(sortBy: WorkoutHistorySortBy): AnyMySqlColumn {
   if (sortBy === 'endDate') {
-    return schema.workoutSets.endDate;
+    return schema.workoutSets.endDate
   }
   if (sortBy === 'id') {
-    return schema.workoutSets.id;
+    return schema.workoutSets.id
   }
-  return schema.workoutSets.startDate;
+  return schema.workoutSets.startDate
 }

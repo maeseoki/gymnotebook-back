@@ -18,7 +18,7 @@ export const muscleGroupNames: Record<MuscleGroups, string> = {
   [MuscleGroups.TRAPS]: 'Trapecios',
   [MuscleGroups.TRICEPS]: 'Tríceps',
   [MuscleGroups.UPPER_BACK]: 'Espalda Alta',
-  [MuscleGroups.OTHER]: 'Otro'
+  [MuscleGroups.OTHER]: 'Otro',
 }
 
 export const exerciseTypeNames: Record<ExerciseTypeType, string> = {
@@ -27,5 +27,5 @@ export const exerciseTypeNames: Record<ExerciseTypeType, string> = {
   [ExerciseTypeType.TIME]: 'Tiempo',
   [ExerciseTypeType.DISTANCE]: 'Distancia',
   [ExerciseTypeType.WEIGHT_REPS]: 'Peso y Repeticiones',
-  [ExerciseTypeType.TIME_DISTANCE]: 'Tiempo y Distancia'
+  [ExerciseTypeType.TIME_DISTANCE]: 'Tiempo y Distancia',
 }

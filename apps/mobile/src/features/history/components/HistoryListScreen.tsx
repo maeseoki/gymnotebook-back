@@ -1,8 +1,8 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { normalizeApiError } from '@/shared/api/errors';
-import { colors, spacing } from '@/shared/theme/tokens';
+import { useRouter } from 'expo-router'
+import { useState } from 'react'
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native'
+import { normalizeApiError } from '@/shared/api/errors'
+import { colors, spacing } from '@/shared/theme/tokens'
 import {
   Button,
   EmptyState,
@@ -10,28 +10,28 @@ import {
   LoadingIndicator,
   Screen,
   Text,
-} from '@/shared/ui/primitives';
-import { useWorkoutHistory } from '../hooks/use-workout-history';
-import { getHistoryErrorMessage } from '../utils/history-errors';
-import { formatLocalDateKey } from '../utils/history-formatters';
-import { HistoryWorkoutCard } from './HistoryWorkoutCard';
+} from '@/shared/ui/primitives'
+import { useWorkoutHistory } from '../hooks/use-workout-history'
+import { getHistoryErrorMessage } from '../utils/history-errors'
+import { formatLocalDateKey } from '../utils/history-formatters'
+import { HistoryWorkoutCard } from './HistoryWorkoutCard'
 
 export function HistoryListScreen() {
-  const router = useRouter();
-  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const router = useRouter()
+  const [currentDate, setCurrentDate] = useState(() => new Date())
 
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
+  const year = currentDate.getFullYear()
+  const month = currentDate.getMonth() + 1
 
-  const { data: workouts, isLoading, error, refetch, isFetching } = useWorkoutHistory(year, month);
+  const { data: workouts, isLoading, error, refetch, isFetching } = useWorkoutHistory(year, month)
 
   const handlePrevMonth = () => {
-    setCurrentDate(new Date(year, currentDate.getMonth() - 1, 1));
-  };
+    setCurrentDate(new Date(year, currentDate.getMonth() - 1, 1))
+  }
 
   const handleNextMonth = () => {
-    setCurrentDate(new Date(year, currentDate.getMonth() + 1, 1));
-  };
+    setCurrentDate(new Date(year, currentDate.getMonth() + 1, 1))
+  }
 
   const getMonthName = (date: Date) => {
     const months = [
@@ -47,15 +47,15 @@ export function HistoryListScreen() {
       'Octubre',
       'Noviembre',
       'Diciembre',
-    ];
-    return `${months[date.getMonth()]} ${date.getFullYear()}`;
-  };
+    ]
+    return `${months[date.getMonth()]} ${date.getFullYear()}`
+  }
 
   const navigateToDetail = (startDateStr: string) => {
-    const dateStr = formatLocalDateKey(startDateStr);
-    if (!dateStr) return;
-    router.push(`/(authenticated)/history/day/${dateStr}`);
-  };
+    const dateStr = formatLocalDateKey(startDateStr)
+    if (!dateStr) return
+    router.push(`/(authenticated)/history/day/${dateStr}`)
+  }
 
   return (
     <Screen style={styles.screen}>
@@ -124,7 +124,7 @@ export function HistoryListScreen() {
         />
       )}
     </Screen>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -166,4 +166,4 @@ const styles = StyleSheet.create({
     paddingBottom: spacing[4],
     gap: spacing[3],
   },
-});
+})

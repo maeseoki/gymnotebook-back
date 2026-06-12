@@ -1,21 +1,21 @@
-import type { ReactNode } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import { ScrollView } from 'react-native';
-import { colors, spacing } from '@/shared/theme/tokens';
-import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives';
-import { EXERCISE_TYPE_OPTIONS, MUSCLE_GROUP_OPTIONS } from '../constants/exercise-options';
-import { type ExerciseFormValues, exerciseFormResolver } from '../schemas/exercise-form';
+import type { ReactNode } from 'react'
+import { Controller, useForm } from 'react-hook-form'
+import { ScrollView } from 'react-native'
+import { colors, spacing } from '@/shared/theme/tokens'
+import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives'
+import { EXERCISE_TYPE_OPTIONS, MUSCLE_GROUP_OPTIONS } from '../constants/exercise-options'
+import { type ExerciseFormValues, exerciseFormResolver } from '../schemas/exercise-form'
 
-export type { ExerciseFormValues };
+export type { ExerciseFormValues }
 
-import { ExerciseSelectField } from './ExerciseSelectField';
+import { ExerciseSelectField } from './ExerciseSelectField'
 
 export interface ExerciseFormProps {
-  initialValues?: Partial<ExerciseFormValues>;
-  onSubmit: (values: ExerciseFormValues) => void;
-  loading?: boolean;
-  submitLabel?: string;
-  generalError?: string | null;
+  initialValues?: Partial<ExerciseFormValues>
+  onSubmit: (values: ExerciseFormValues) => void
+  loading?: boolean
+  submitLabel?: string
+  generalError?: string | null
 }
 
 export function ExerciseForm({
@@ -25,7 +25,7 @@ export function ExerciseForm({
   submitLabel = 'Save',
   generalError,
 }: ExerciseFormProps): ReactNode {
-  const cleanInitialValues = initialValues || {};
+  const cleanInitialValues = initialValues || {}
 
   const {
     control,
@@ -42,15 +42,15 @@ export function ExerciseForm({
       imageId: null,
       ...cleanInitialValues,
     },
-  });
+  })
 
   const onFormSubmit = (data: ExerciseFormValues) => {
     onSubmit({
       ...data,
       name: data.name.trim(),
       description: data.description?.trim() || null,
-    });
-  };
+    })
+  }
 
   return (
     <ScrollView contentContainerStyle={{ gap: spacing[4], paddingBottom: spacing[8] }}>
@@ -107,7 +107,7 @@ export function ExerciseForm({
             options={EXERCISE_TYPE_OPTIONS}
             onChange={(val) => {
               // Map null to a default type value or assert value types since type is non-nullable in ExerciseFormValues
-              if (val) onChange(val);
+              if (val) onChange(val)
             }}
             error={errors.type?.message}
           />
@@ -124,7 +124,7 @@ export function ExerciseForm({
             options={MUSCLE_GROUP_OPTIONS}
             onChange={(val) => {
               // Map null to a default or assert value types since primaryMuscleGroup is non-nullable
-              if (val) onChange(val);
+              if (val) onChange(val)
             }}
             error={errors.primaryMuscleGroup?.message}
           />
@@ -154,5 +154,5 @@ export function ExerciseForm({
         disabled={loading}
       />
     </ScrollView>
-  );
+  )
 }

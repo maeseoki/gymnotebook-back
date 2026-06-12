@@ -1,6 +1,6 @@
-import axios, { AxiosError } from 'axios';
-import { z } from 'zod';
-import { normalizeApiError } from '@/shared/api/errors';
+import axios, { AxiosError } from 'axios'
+import { z } from 'zod'
+import { normalizeApiError } from '@/shared/api/errors'
 
 describe('api error normalization', () => {
   it('normalizes backend application errors', () => {
@@ -10,23 +10,23 @@ describe('api error normalization', () => {
       headers: {},
       config: { headers: new axios.AxiosHeaders() },
       data: { statusCode: 400, code: 'validation_failed', message: 'Invalid body' },
-    });
+    })
 
     expect(normalizeApiError(error)).toEqual({
       kind: 'backend',
       status: 400,
       code: 'validation_failed',
       message: 'Invalid body',
-    });
-  });
+    })
+  })
 
   it('normalizes timeouts, network failures and schema mismatches', () => {
     expect(normalizeApiError(new AxiosError('timeout', 'ECONNABORTED'))).toMatchObject({
       kind: 'timeout',
-    });
+    })
     expect(normalizeApiError(new AxiosError('network'))).toMatchObject({
       kind: 'network_unavailable',
-    });
-    expect(normalizeApiError(new z.ZodError([]))).toMatchObject({ kind: 'validation' });
-  });
-});
+    })
+    expect(normalizeApiError(new z.ZodError([]))).toMatchObject({ kind: 'validation' })
+  })
+})

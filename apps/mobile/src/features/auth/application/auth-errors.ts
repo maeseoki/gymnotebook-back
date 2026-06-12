@@ -1,6 +1,6 @@
-import { MobileAuthApiError } from '@/features/auth/api/mobile-auth-api';
-import type { ApiFailure } from '@/shared/api/errors';
-import type { RefreshTokenStorageResult } from '@/shared/auth/refresh-token-storage';
+import { MobileAuthApiError } from '@/features/auth/api/mobile-auth-api'
+import type { ApiFailure } from '@/shared/api/errors'
+import type { RefreshTokenStorageResult } from '@/shared/auth/refresh-token-storage'
 
 export type AuthErrorReason =
   | 'invalid_credentials'
@@ -11,7 +11,7 @@ export type AuthErrorReason =
   | 'timeout'
   | 'secure_storage_unavailable'
   | 'validation'
-  | 'unknown';
+  | 'unknown'
 
 export class AuthServiceError extends Error {
   constructor(
@@ -19,21 +19,21 @@ export class AuthServiceError extends Error {
     message: string,
     readonly cause?: unknown,
   ) {
-    super(message);
-    this.name = 'AuthServiceError';
+    super(message)
+    this.name = 'AuthServiceError'
   }
 }
 
 export function toAuthServiceError(error: unknown): AuthServiceError {
   if (error instanceof AuthServiceError) {
-    return error;
+    return error
   }
 
   if (error instanceof MobileAuthApiError) {
-    return mapApiFailureToAuthError(error.failure, error);
+    return mapApiFailureToAuthError(error.failure, error)
   }
 
-  return new AuthServiceError('unknown', 'Something went wrong. Please try again.', error);
+  return new AuthServiceError('unknown', 'Something went wrong. Please try again.', error)
 }
 
 export function secureStorageError(
@@ -43,13 +43,13 @@ export function secureStorageError(
   const message =
     operation === 'read'
       ? 'Secure storage is unavailable. Please sign in again.'
-      : 'Your session could not be saved securely. Please try again.';
+      : 'Your session could not be saved securely. Please try again.'
 
-  return new AuthServiceError('secure_storage_unavailable', message, result);
+  return new AuthServiceError('secure_storage_unavailable', message, result)
 }
 
 export function userFacingAuthError(error: unknown): string {
-  return toAuthServiceError(error).message;
+  return toAuthServiceError(error).message
 }
 
 function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServiceError {
@@ -58,11 +58,11 @@ function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServ
       'network_unavailable',
       'Check your connection and try again.',
       cause,
-    );
+    )
   }
 
   if (failure.kind === 'timeout') {
-    return new AuthServiceError('timeout', 'The request timed out. Please try again.', cause);
+    return new AuthServiceError('timeout', 'The request timed out. Please try again.', cause)
   }
 
   if (failure.kind === 'validation') {
@@ -70,11 +70,11 @@ function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServ
       'validation',
       'The server response could not be verified. Please try again.',
       cause,
-    );
+    )
   }
 
   if (failure.kind !== 'backend') {
-    return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause);
+    return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause)
   }
 
   switch (failure.code) {
@@ -83,19 +83,19 @@ function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServ
         'invalid_credentials',
         'The username or password is incorrect.',
         cause,
-      );
+      )
     case 'username_already_exists':
-      return new AuthServiceError('username_conflict', 'That username is already in use.', cause);
+      return new AuthServiceError('username_conflict', 'That username is already in use.', cause)
     case 'email_already_exists':
-      return new AuthServiceError('email_conflict', 'That email is already in use.', cause);
+      return new AuthServiceError('email_conflict', 'That email is already in use.', cause)
     case 'invalid_mobile_session':
     case 'mobile_session_required':
       return new AuthServiceError(
         'invalid_mobile_session',
         'Your session has expired. Please sign in again.',
         cause,
-      );
+      )
     default:
-      return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause);
+      return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause)
   }
 }

@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs } from 'expo-router'
 
 export default function TabLayout() {
   return (
@@ -9,5 +9,5 @@ export default function TabLayout() {
       <Tabs.Screen name="history" options={{ title: 'History' }} />
       <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
     </Tabs>
-  );
+  )
 }
