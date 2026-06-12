@@ -47,3 +47,7 @@ jest.mock('react-native-safe-area-context', () => {
 
 const { notifyManager } = require('@tanstack/react-query');
 notifyManager.setScheduler(queueMicrotask);
+
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

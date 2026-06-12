@@ -70,15 +70,17 @@ Initial persisted workout-draft stack:
 - Zod validation
 
 **Decision:** AsyncStorage is the canonical persisted store for the active-workout draft in initial release.
-
-Rationale:
-
-- only one active workout required initially;
-- JSON graph is small enough;
-- persistence must survive process termination/app restart;
-- avoids premature SQLite schema/repository complexity;
-- compatible with older Android devices;
-- preserves migration path to SQLite later.
+- **AsyncStorage Key:** `gymnotebook.mobile.v1.activeWorkout`
+- **Draft Schema Version:** `1`
+- **Units:**
+  - Local draft weight: grams (`weightGrams`). Displayed as kilograms in the UI (converted by `weightGrams / 1000`, supporting up to 3 decimal places without silent rounding).
+  - UI weight: kg. Prefilled from and converted back to grams on save.
+  - Backend weight: grams (`CreateWorkoutRequest.workoutSets[].sets[].weight = weightGrams`).
+  - Time: seconds (`timeSeconds`).
+  - Distance: meters (`distanceMeters`).
+  - Reps: count (`reps`).
+- **Save behavior:** Empty exercises (zero sets) are filtered out. Empty workouts (zero exercises or zero sets across all exercises) are blocked and cannot be finished or saved. Saving successfully clears the draft, and saving failure preserves the draft.
+- **Known Limitations / Deferred features:** Confetti feedback on success, multiple active drafts/history/calendar sync queues, custom templates, charts, and timers are deferred to future phases.
 
 Do not describe AsyncStorage as cache storage.
 

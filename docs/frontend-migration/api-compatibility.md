@@ -44,9 +44,13 @@ Mapper requirements:
 - remove UI-only fields;
 - map exercises to `{ id }`;
 - normalize timestamps to valid ISO with offset or `Z`;
-- parse/validate integer measurements;
+- parse/validate integer measurements:
+  - Weight is mapped as grams (`weightGrams` -> `weight`). UI accepts/displays kg, converted to grams without silent rounding (e.g. `82.5 kg` -> `82500 grams`).
+  - Distance is mapped as meters (`distanceMeters` -> `distance`). Distance inputs are validated as integers.
+  - Time is mapped as seconds (`timeSeconds` -> `time`).
 - set final workout/group timestamps per product rule;
 - validate with shared request schema before request dispatch.
+- prevent empty workouts: refuse to map if exercises are empty or if total sets across all exercises is zero. Exclude empty exercises (zero sets) from the payload sent to the backend.
 
 ### Offline/auth interaction constraint
 

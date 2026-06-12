@@ -109,12 +109,35 @@ The public login and signup routes call the backend mobile auth endpoints. Authe
 - Contracts: mobile imports `@gymnotebook/contracts` through workspace resolution and Metro watch folders.
 - HTTP: Axios client with environment-derived base URL, `Accept: application/json`, timeout, access-token getter injection, and shared error normalization. It does not force a global JSON `Content-Type`, so future multipart requests can set their own boundary. No global refresh interceptor is enabled yet; restoration and explicit refresh use the refresh endpoint directly to avoid hidden retry loops during this phase.
 - Auth: username/password signin and signup through `/auth/mobile/*`, Zustand session metadata state machine, in-memory access token port, SecureStore refresh-token adapter, startup restoration, route protection, and logout.
-- Persistence: AsyncStorage key-value adapter plus versioned JSON/Zod restore and migration helper for future active-workout draft storage.
+- Persistence: AsyncStorage key-value adapter plus versioned JSON/Zod restore and migration helper for active-workout draft storage.
 - Network: Expo Network adapter exposing `online`, `offline`, or `unknown`; connected network is not treated as guaranteed internet reachability. The TanStack Query online manager treats `unknown` as online so requests are not paused solely because reachability is inconclusive.
 - Query: mobile QueryClient defaults, query-key conventions, conservative transient retry policy for queries, no global mutation retries, and Expo Network online-manager integration.
 - Forms: React Hook Form resolver example using shared Zod mobile signin schema.
 - UI: dark-first React Native primitives: Screen, KeyboardSafeScreen, Text, Button, Card, TextInput, FormField, LoadingIndicator, EmptyState, and ErrorState.
 - Styling: NativeWind 4 is configured through `nativewind/babel`, `withNativeWind` in Metro, `global.css`, and `tailwind.config.ts`. The current primitives use React Native style objects so they remain stable before product screens introduce `className` usage.
+
+## Active Workout Draft Flow
+
+The application supports an offline-first active workout draft tracking flow:
+
+1. **Start Workout:** Starts a new workout session, creating a local draft in Zustand and AsyncStorage.
+2. **Draft Storage Key:** `gymnotebook.mobile.v1.activeWorkout`
+3. **Draft Schema Version:** `1`
+4. **Units Semantics:**
+   - **Local Draft Weight:** Grams (`weightGrams`). Displayed as kilograms in the UI (e.g. `82500` grams -> `82.5` kg).
+   - **UI Weight Input:** Kilograms (kg), supporting up to 3 decimal places without silent rounding (e.g. `82.5` -> converted to `82500` grams).
+   - **Backend Weight:** Grams.
+   - **Distance:** Meters (integer inputs only).
+   - **Time:** Seconds.
+   - **Reps:** Integer count.
+5. **Backend Save Behavior:**
+   - Empty exercises (with zero sets) are excluded from the payload sent to the backend.
+   - Saving/finishing a workout requires at least one exercise and at least one set across the whole workout. Saving empty workouts is blocked.
+   - A successful save clears the local draft from AsyncStorage and redirects the user to the history tab.
+   - A save failure (e.g. network error) preserves the local draft.
+6. **Known Limitations:**
+   - Confetti success feedback, active templates, and timers are deferred.
+   - History / calendar / charts synchronization is deferred.
 
 ## Mobile Authentication
 
@@ -152,4 +175,4 @@ The backend mobile auth endpoints must be available. Automated tests use fakes a
 
 ## Deferred
 
-Global refresh interceptors, session-management UI, password recovery, workout editing/submission, exercise CRUD, image selection/camera, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.
+Global refresh interceptors, session-management UI, password recovery, workout editing, exercise CRUD, image selection/camera, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.

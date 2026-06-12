@@ -94,10 +94,10 @@ This section covers every user-visible routed page and modal/dialog.
 4. `WorkoutControls` bottom actions (add exercise, finish, discard).
 
 **Behavior highlights**
-- Finish confirms in dialog; sends workout and clears local draft.
+- Finish confirms in dialog. If there are no sets at all or no exercises added, finishing is blocked and the user is shown an alert. A successful save clears the local draft and redirects to history; save failure preserves the draft.
 - Discard confirms in dialog; clears draft.
-- On successful finish: toast + confetti.
-- On 409 duplicate UUID: shows error then still clears draft (data-loss risk).
+- On successful finish: redirects to history. Toast and confetti feedback are deferred.
+- Excludes empty exercises (with zero sets) from the payload sent to the backend.
 
 **Data/API**
 - POST `workout` when finishing.
@@ -226,7 +226,7 @@ This section covers every user-visible routed page and modal/dialog.
 
 ## Modals and dialogs
 
-1. `AddSetModal` (`Workout/AddSetModal.tsx`): dynamic fields by exercise type + drop-set switch.
+1. `SetForm` (`Workout/SetForm.tsx`): dynamic fields by exercise type. Displays and accepts weight input in kilograms (kg) and converts to grams on submit without silent rounding. Distance is labeled as `Distancia (m)` and accepts only integer values. Labels and error validation messages are localized in Spanish.
 2. `ExerciseDetailModal` (`Workout/ExerciseDetailModal.tsx`): wraps exercise history view.
 3. `DiscardWorkoutDialog`: confirms workout discard.
 4. `EndWorkoutDialog`: confirms workout finish.
