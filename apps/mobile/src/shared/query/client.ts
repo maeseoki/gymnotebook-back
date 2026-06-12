@@ -11,6 +11,12 @@ export const queryKeys = {
     list: ['mobile', 'exercises', 'list'] as const,
     detail: (id: number) => ['mobile', 'exercises', 'detail', id] as const,
   },
+  workouts: {
+    all: ['mobile', 'workouts'] as const,
+    history: (year: number, month: number) =>
+      ['mobile', 'workouts', 'history', year, month] as const,
+    detail: (date: string) => ['mobile', 'workouts', 'detail', date] as const,
+  },
 };
 
 export function createMobileQueryClient(): QueryClient {

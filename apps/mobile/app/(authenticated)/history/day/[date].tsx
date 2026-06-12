@@ -1,11 +1,10 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Screen, Text } from '@/shared/ui/primitives';
+import { HistoryWorkoutDetailScreen } from '@/features/history/components/HistoryWorkoutDetailScreen';
 
 export default function HistoryDayScreen() {
   const { date } = useLocalSearchParams<{ date: string }>();
-  return (
-    <Screen>
-      <Text>History day foundation placeholder: {date}</Text>
-    </Screen>
-  );
+
+  if (!date) return null;
+
+  return <HistoryWorkoutDetailScreen date={date} />;
 }

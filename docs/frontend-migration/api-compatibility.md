@@ -64,3 +64,10 @@ Auth expiration or temporary auth loss must not clear active/finished-unsynced w
 - User/admin: `userResponse`, role enums
 
 Recommended migration: import directly from `@gymnotebook/contracts` and keep UI-only view-models separate.
+
+### Workout History endpoints (Completed)
+
+The workout history integration utilizes:
+- `GET /workout/days/:month/:year` to retrieve calendar days with workouts.
+- `GET /workout/workouts/:date` to retrieve workouts by date.
+Both endpoints query using the user's local timezone (via `Intl.DateTimeFormat().resolvedOptions().timeZone`) to ensure correct day bounds calculation in the backend. Zod contract schemas are strictly enforced on the frontend.

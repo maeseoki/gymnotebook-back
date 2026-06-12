@@ -186,3 +186,17 @@ Creating or replacing exercise images must follow safe two-step API sequencing t
 - attempt cleanup on failure paths and report orphan-cleanup failures.
 
 See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [user-workflows.md](./user-workflows.md).
+
+## Workout History (v1 Implementation)
+
+**Decision:** Workout history is fetched dynamically from the Fastify backend using month-by-month and date-specific queries, and styled natively.
+- **Unit Conversions:**
+  - Weight: stored as grams, formatted to kg for display (e.g. `82500` -> `82.5 kg`). If weight is 0 or absent, it is not displayed for non-weight exercises to keep the UI clean.
+  - Time: stored as seconds, formatted as `Xm Ys` (or `Xs` if minutes are zero).
+  - Distance: stored as meters, formatted as `X m`.
+- **Query Caching & Invalidation:**
+  - Stable query keys under the namespace `['mobile', 'workouts']` (i.e. `['mobile', 'workouts', 'history', year, month]` and `['mobile', 'workouts', 'detail', date]`).
+  - Hierarchical invalidation: After saving an active workout, `useFinishWorkout` invalidates `['mobile', 'workouts']`, which automatically refreshes the history list and daily details.
+  - No local SQLite or AsyncStorage persistence is implemented for history in this phase.
+- **Local Timezone support:**
+  - Queries automatically forward the local user timezone from the mobile runtime via `Intl.DateTimeFormat().resolvedOptions().timeZone` to calculate correct calendar day boundaries.
