@@ -16,7 +16,13 @@ export function HistoryExerciseCard({ workoutSet }: HistoryExerciseCardProps) {
       <Text style={styles.title}>{exercise.name}</Text>
       <View style={styles.setsList}>
         {sets.map((set, idx) => (
-          <HistorySetRow key={set.id ?? idx} set={set} index={idx} exerciseType={exercise.type} />
+          <HistorySetRow
+            key={set.id ?? idx}
+            set={set}
+            index={idx}
+            exerciseType={exercise.type}
+            exerciseName={exercise.name}
+          />
         ))}
       </View>
     </Card>

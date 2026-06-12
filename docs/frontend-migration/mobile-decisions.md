@@ -201,7 +201,7 @@ See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [
 - **Local Timezone support:**
   - Queries automatically forward the local user timezone from the mobile runtime via `Intl.DateTimeFormat().resolvedOptions().timeZone` to calculate correct calendar day boundaries.
 - **Editing Saved Workouts:**
-  - The backend now supports workout deletion (`DELETE /api/workout/:workoutId`), updating completed sets (`PATCH /api/workout/sets/:setId`), and deleting completed sets (`DELETE /api/workout/sets/:setId`).
-  - All operations are strictly authenticated and user-scoped. Deleting a workout cascades to all its sets. Deleting a set will delete empty parent `workout_sets` and `workouts` if they are left empty.
-  - Adding a new set to an existing completed workout remains unsupported/deferred on the backend.
-  - Mobile UI/mutations for editing workout history can now be implemented on top of these endpoints.
+  - Implemented client wrappers under `historyMutationsApi` and mutation hooks (`useUpdateHistorySet`, `useDeleteHistorySet`, `useDeleteWorkout`).
+  - Successful mutations invalidate the `['mobile', 'workouts']` query key namespace to trigger day and list details refetches.
+  - All operations are strictly authenticated and user-scoped. Deleting a workout cascades to all its sets. Deleting a set deletes empty parent `workout_sets` and `workouts` if they are left empty.
+  - Adding a new set or a new exercise to an existing completed workout remains unsupported/deferred on the backend and is not exposed in the UI.

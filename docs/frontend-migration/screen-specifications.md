@@ -230,7 +230,7 @@ This section covers every user-visible routed page and modal/dialog.
 
 **Layout**
 1. History list tab: month selector (with previous/next buttons) + list of workout cards.
-2. Workout detail page: title with date + list of exercise cards with sets, reps, weight, time, and distance.
+2. Workout detail page: title with date + list of exercise cards with sets, reps, weight, time, and distance, plus Edit/Delete buttons per set row, and a Delete Workout button in each workout card header.
 
 **Behavior**
 - Loads workout days for month and fetches details for each day in parallel.
@@ -238,12 +238,17 @@ This section covers every user-visible routed page and modal/dialog.
 - Refreshes on pull-to-refresh.
 - Shows error state with retry option.
 - Formats weight to kg, time to m/s, distance to meters.
-- Note: Editing/deleting saved workouts or sets is not exposed in the UI because the backend API currently lacks mutation endpoints for these entities.
+- **Editing sets:** Clicking "Editar" opens a modal form allowing the user to update reps, weight in kg, time, distance, notes, and dropSet status. Prefilled values are converted from backend units. On submit, inputs are validated and converted back to backend units (weight to grams, time to seconds).
+- **Deleting sets:** Requires confirmation. Deleting a set triggers a cascade that deletes empty parent workout sets and workouts.
+- **Deleting workouts:** Clicking the delete button in the workout card header requires confirmation and deletes the entire workout.
+- **Query Invalidation:** Successful edits or deletions invalidate the `['mobile', 'workouts']` cache tree, refetching the day details dynamically.
 
 **Data/API**
 - GET `workout/days/:month/:year`
 - GET `workout/workouts/:date`
-- Note: Mutations like PUT, PATCH, or DELETE for workouts or sets are unsupported on the backend and thus omitted on the mobile client.
+- PATCH `workout/sets/:setId` (UpdateWorkoutSetRequestSchema / UpdateWorkoutSetResponseSchema)
+- DELETE `workout/sets/:setId` (DeleteWorkoutSetResponseSchema)
+- DELETE `workout/:workoutId` (DeleteWorkoutResponseSchema)
 
 ---
 
