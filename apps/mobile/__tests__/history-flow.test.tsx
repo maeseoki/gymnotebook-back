@@ -121,11 +121,11 @@ describe('History Workflows', () => {
     jest.clearAllMocks()
     activeViews = []
     activeQueryClients = []
-    jest.spyOn(Alert, 'alert').mockImplementation((title, message, buttons) => {
+    jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
       const confirmButton = buttons?.find(
         (btn) => btn.style === 'destructive' || btn.text === 'Eliminar',
       )
-      if (confirmButton && confirmButton.onPress) {
+      if (confirmButton?.onPress) {
         confirmButton.onPress()
       }
     })

@@ -1,16 +1,25 @@
 import type { CreateWorkoutRequest } from '@gymnotebook/contracts'
 import { describe, expect, it, vi } from 'vitest'
 import { createWorkout } from '../src/workouts/application/create-workout.js'
+import { deleteWorkout } from '../src/workouts/application/delete-workout.js'
+import { deleteWorkoutSet } from '../src/workouts/application/delete-workout-set.js'
 import { getWorkoutsByDate } from '../src/workouts/application/get-workouts-by-date.js'
 import { listWorkoutDays } from '../src/workouts/application/list-workout-days.js'
+import { updateWorkoutSet } from '../src/workouts/application/update-workout-set.js'
 import {
   InvalidWorkoutGroupPeriodError,
   InvalidWorkoutPeriodError,
   InvalidWorkoutSetTimeError,
+  SetNotFoundError,
   WorkoutAlreadyExistsError,
   WorkoutExerciseNotAvailableError,
+  WorkoutNotFoundError,
 } from '../src/workouts/domain/workout.errors.js'
-import type { WorkoutDraft, WorkoutReadModel, WorkoutSetEntryReadModel } from '../src/workouts/domain/workout.js'
+import type {
+  WorkoutDraft,
+  WorkoutReadModel,
+  WorkoutSetEntryReadModel,
+} from '../src/workouts/domain/workout.js'
 import type { WorkoutRepository } from '../src/workouts/domain/workout.repository.js'
 import {
   calendarDateUtcRange,
@@ -19,10 +28,6 @@ import {
   mysqlUtcToIsoInstant,
 } from '../src/workouts/domain/workout-dates.js'
 import type { WorkoutExerciseAccess } from '../src/workouts/domain/workout-exercise-access.js'
-import { deleteWorkout } from '../src/workouts/application/delete-workout.js'
-import { deleteWorkoutSet } from '../src/workouts/application/delete-workout-set.js'
-import { updateWorkoutSet } from '../src/workouts/application/update-workout-set.js'
-import { SetNotFoundError, WorkoutNotFoundError } from '../src/workouts/domain/workout.errors.js'
 
 class FakeWorkoutRepository implements WorkoutRepository {
   created: WorkoutDraft | null = null
@@ -271,171 +276,170 @@ describe('workout use cases and date policy', () => {
   })
 
   describe('workout mutation use cases', () => {
-  const createWorkoutRepositoryMock = (
-    overrides: Partial<WorkoutRepository> = {},
-  ): WorkoutRepository =>
-    ({
-      createWorkoutGraph: vi.fn(),
-      listWorkoutStartDatesByUtcRange: vi.fn(),
-      getWorkoutGraphByUtcRange: vi.fn(),
-      deleteWorkoutForUser: vi.fn(),
-      findSetByIdAndUserId: vi.fn(),
-      updateSetForUser: vi.fn(),
-      deleteSetForUser: vi.fn(),
-      getContainingBoundsForSet: vi.fn(),
-      ...overrides,
-    }) as WorkoutRepository
+    const createWorkoutRepositoryMock = (
+      overrides: Partial<WorkoutRepository> = {},
+    ): WorkoutRepository =>
+      ({
+        createWorkoutGraph: vi.fn(),
+        listWorkoutStartDatesByUtcRange: vi.fn(),
+        getWorkoutGraphByUtcRange: vi.fn(),
+        deleteWorkoutForUser: vi.fn(),
+        findSetByIdAndUserId: vi.fn(),
+        updateSetForUser: vi.fn(),
+        deleteSetForUser: vi.fn(),
+        getContainingBoundsForSet: vi.fn(),
+        ...overrides,
+      }) as WorkoutRepository
 
-  it('deletes an owned workout', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      deleteWorkoutForUser: vi.fn().mockResolvedValue(true),
+    it('deletes an owned workout', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        deleteWorkoutForUser: vi.fn().mockResolvedValue(true),
+      })
+
+      await expect(deleteWorkout({ workoutId: 10, userId: 1 }, workouts)).resolves.toBeUndefined()
+
+      expect(workouts.deleteWorkoutForUser).toHaveBeenCalledWith(10, 1)
     })
 
-    await expect(deleteWorkout({ workoutId: 10, userId: 1 }, workouts)).resolves.toBeUndefined()
+    it('throws when deleting a missing or foreign workout', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        deleteWorkoutForUser: vi.fn().mockResolvedValue(false),
+      })
 
-    expect(workouts.deleteWorkoutForUser).toHaveBeenCalledWith(10, 1)
-  })
-
-  it('throws when deleting a missing or foreign workout', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      deleteWorkoutForUser: vi.fn().mockResolvedValue(false),
+      await expect(deleteWorkout({ workoutId: 10, userId: 1 }, workouts)).rejects.toBeInstanceOf(
+        WorkoutNotFoundError,
+      )
     })
 
-    await expect(deleteWorkout({ workoutId: 10, userId: 1 }, workouts)).rejects.toBeInstanceOf(
-      WorkoutNotFoundError,
-    )
-  })
+    it('deletes an owned workout set', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        deleteSetForUser: vi.fn().mockResolvedValue({ deleted: true }),
+      })
 
-  it('deletes an owned workout set', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      deleteSetForUser: vi.fn().mockResolvedValue({ deleted: true }),
+      await expect(deleteWorkoutSet({ setId: 20, userId: 1 }, workouts)).resolves.toBeUndefined()
+
+      expect(workouts.deleteSetForUser).toHaveBeenCalledWith(20, 1)
     })
 
-    await expect(deleteWorkoutSet({ setId: 20, userId: 1 }, workouts)).resolves.toBeUndefined()
+    it('throws when deleting a missing or foreign workout set', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        deleteSetForUser: vi.fn().mockResolvedValue({ deleted: false }),
+      })
 
-    expect(workouts.deleteSetForUser).toHaveBeenCalledWith(20, 1)
-  })
-
-  it('throws when deleting a missing or foreign workout set', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      deleteSetForUser: vi.fn().mockResolvedValue({ deleted: false }),
+      await expect(deleteWorkoutSet({ setId: 20, userId: 1 }, workouts)).rejects.toBeInstanceOf(
+        SetNotFoundError,
+      )
     })
 
-    await expect(deleteWorkoutSet({ setId: 20, userId: 1 }, workouts)).rejects.toBeInstanceOf(
-      SetNotFoundError,
-    )
-  })
+    it('updates an owned workout set and validates its bounds', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        findSetByIdAndUserId: vi.fn().mockResolvedValue({
+          id: 20,
+          workoutSetId: 30,
+          reps: 8,
+          weight: 80000,
+          time: 0,
+          distance: 0,
+          notes: null,
+          isDropSet: false,
+          startDate: '2026-06-12T10:00:00.000Z',
+        }),
+        getContainingBoundsForSet: vi.fn().mockResolvedValue({
+          groupStartDate: '2026-06-12 10:00:00',
+          groupEndDate: '2026-06-12 11:00:00',
+          workoutStartDate: '2026-06-12 10:00:00',
+          workoutEndDate: '2026-06-12 11:00:00',
+        }),
+        updateSetForUser: vi.fn().mockResolvedValue({
+          id: 20,
+          reps: 10,
+          weight: 82500,
+          time: 90,
+          distance: 200,
+          notes: 'Updated',
+          isDropSet: true,
+          startDate: '2026-06-12T10:30:00.000Z',
+        }),
+      })
 
-  it('updates an owned workout set and validates its bounds', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      findSetByIdAndUserId: vi.fn().mockResolvedValue({
-        id: 20,
-        workoutSetId: 30,
-        reps: 8,
-        weight: 80000,
-        time: 0,
-        distance: 0,
-        notes: null,
-        isDropSet: false,
-        startDate: '2026-06-12T10:00:00.000Z',
-      }),
-      getContainingBoundsForSet: vi.fn().mockResolvedValue({
-        groupStartDate: '2026-06-12 10:00:00',
-        groupEndDate: '2026-06-12 11:00:00',
-        workoutStartDate: '2026-06-12 10:00:00',
-        workoutEndDate: '2026-06-12 11:00:00',
-      }),
-      updateSetForUser: vi.fn().mockResolvedValue({
-        id: 20,
-        reps: 10,
-        weight: 82500,
-        time: 90,
-        distance: 200,
-        notes: 'Updated',
-        isDropSet: true,
-        startDate: '2026-06-12T10:30:00.000Z',
-      }),
-    })
-
-    const result = await updateWorkoutSet(
-      {
-        setId: 20,
-        userId: 1,
-        reps: 10,
-        weight: 82500,
-        time: 90,
-        distance: 200,
-        notes: ' Updated ',
-        isDropSet: true,
-        startDate: '2026-06-12T10:30:00.000Z',
-      },
-      workouts,
-    )
-
-    expect(result).toMatchObject({
-      id: 20,
-      reps: 10,
-      weight: 82500,
-      notes: 'Updated',
-      isDropSet: true,
-    })
-
-    expect(workouts.updateSetForUser).toHaveBeenCalledWith(
-      20,
-      1,
-      expect.objectContaining({
-        reps: 10,
-        weight: 82500,
-        time: 90,
-        distance: 200,
-        notes: 'Updated',
-        isDropSet: true,
-      }),
-    )
-  })
-
-  it('throws when updating a missing or foreign workout set', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      findSetByIdAndUserId: vi.fn().mockResolvedValue(null),
-    })
-
-    await expect(
-      updateWorkoutSet({ setId: 20, userId: 1, reps: 10 }, workouts),
-    ).rejects.toBeInstanceOf(SetNotFoundError)
-  })
-
-  it('rejects workout set start dates outside containing bounds', async () => {
-    const workouts = createWorkoutRepositoryMock({
-      findSetByIdAndUserId: vi.fn().mockResolvedValue({
-        id: 20,
-        workoutSetId: 30,
-        reps: 8,
-        weight: 80000,
-        time: 0,
-        distance: 0,
-        notes: null,
-        isDropSet: false,
-        startDate: '2026-06-12T10:00:00.000Z',
-      }),
-      getContainingBoundsForSet: vi.fn().mockResolvedValue({
-        groupStartDate: '2026-06-12 10:00:00',
-        groupEndDate: '2026-06-12 11:00:00',
-        workoutStartDate: '2026-06-12 10:00:00',
-        workoutEndDate: '2026-06-12 11:00:00',
-      }),
-    })
-
-    await expect(
-      updateWorkoutSet(
+      const result = await updateWorkoutSet(
         {
           setId: 20,
           userId: 1,
-          startDate: '2026-06-12T12:00:00.000Z',
+          reps: 10,
+          weight: 82500,
+          time: 90,
+          distance: 200,
+          notes: ' Updated ',
+          isDropSet: true,
+          startDate: '2026-06-12T10:30:00.000Z',
         },
         workouts,
-      ),
-    ).rejects.toBeInstanceOf(InvalidWorkoutSetTimeError)
+      )
+
+      expect(result).toMatchObject({
+        id: 20,
+        reps: 10,
+        weight: 82500,
+        notes: 'Updated',
+        isDropSet: true,
+      })
+
+      expect(workouts.updateSetForUser).toHaveBeenCalledWith(
+        20,
+        1,
+        expect.objectContaining({
+          reps: 10,
+          weight: 82500,
+          time: 90,
+          distance: 200,
+          notes: 'Updated',
+          isDropSet: true,
+        }),
+      )
+    })
+
+    it('throws when updating a missing or foreign workout set', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        findSetByIdAndUserId: vi.fn().mockResolvedValue(null),
+      })
+
+      await expect(
+        updateWorkoutSet({ setId: 20, userId: 1, reps: 10 }, workouts),
+      ).rejects.toBeInstanceOf(SetNotFoundError)
+    })
+
+    it('rejects workout set start dates outside containing bounds', async () => {
+      const workouts = createWorkoutRepositoryMock({
+        findSetByIdAndUserId: vi.fn().mockResolvedValue({
+          id: 20,
+          workoutSetId: 30,
+          reps: 8,
+          weight: 80000,
+          time: 0,
+          distance: 0,
+          notes: null,
+          isDropSet: false,
+          startDate: '2026-06-12T10:00:00.000Z',
+        }),
+        getContainingBoundsForSet: vi.fn().mockResolvedValue({
+          groupStartDate: '2026-06-12 10:00:00',
+          groupEndDate: '2026-06-12 11:00:00',
+          workoutStartDate: '2026-06-12 10:00:00',
+          workoutEndDate: '2026-06-12 11:00:00',
+        }),
+      })
+
+      await expect(
+        updateWorkoutSet(
+          {
+            setId: 20,
+            userId: 1,
+            startDate: '2026-06-12T12:00:00.000Z',
+          },
+          workouts,
+        ),
+      ).rejects.toBeInstanceOf(InvalidWorkoutSetTimeError)
+    })
   })
 })
-})
-

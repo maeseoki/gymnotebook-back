@@ -71,7 +71,7 @@ jest.mock('@/shared/storage/async-storage', () => {
 describe('Active Workout Resume UX', () => {
   const queryClient = createTestQueryClient()
   let alertSpy: jest.SpyInstance
-  let activeViews: any[] = []
+  let activeViews: Array<Awaited<ReturnType<typeof render>>> = []
 
   beforeEach(async () => {
     jest.clearAllMocks()
@@ -86,10 +86,10 @@ describe('Active Workout Resume UX', () => {
     })
 
     // Default Alert spy
-    alertSpy = jest.spyOn(Alert, 'alert').mockImplementation((title, message, buttons) => {
+    alertSpy = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
       // Auto-confirm by default
       const confirmButton = buttons?.find((b: AlertButton) => b.text === 'Confirmar')
-      if (confirmButton && confirmButton.onPress) {
+      if (confirmButton?.onPress) {
         confirmButton.onPress()
       }
     })
@@ -100,7 +100,7 @@ describe('Active Workout Resume UX', () => {
     for (const v of activeViews) {
       try {
         v.unmount()
-      } catch (e) {}
+      } catch (_e) {}
     }
     activeViews = []
     await new Promise((resolve) => setTimeout(resolve, 50))
@@ -263,9 +263,9 @@ describe('Active Workout Resume UX', () => {
     useWorkoutStore.setState({ draft: testDraft })
 
     // Canceled implementation
-    alertSpy.mockImplementation((title, message, buttons) => {
+    alertSpy.mockImplementation((_title, _message, buttons) => {
       const cancelButton = buttons?.find((b: AlertButton) => b.text === 'Cancelar')
-      if (cancelButton && cancelButton.onPress) {
+      if (cancelButton?.onPress) {
         cancelButton.onPress()
       }
     })
@@ -366,7 +366,7 @@ describe('Active Workout Resume UX', () => {
     expect(result.success).toBe(true)
     if (result.success) {
       expect(result.data.startedAt).toBeTruthy()
-      expect(isNaN(Date.parse(result.data.startedAt))).toBe(false)
+      expect(Number.isNaN(Date.parse(result.data.startedAt))).toBe(false)
     }
   })
 })
