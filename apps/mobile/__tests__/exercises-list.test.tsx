@@ -87,7 +87,7 @@ describe('Exercises List Screen', () => {
     await waitFor(() => {
       expect(view.getByText('Bench Press')).toBeTruthy()
     })
-    expect(view.queryByLabelText('Loading exercises')).toBeNull()
+    expect(view.queryByLabelText('Cargando ejercicios...')).toBeNull()
     view.unmount()
   })
 
@@ -96,7 +96,9 @@ describe('Exercises List Screen', () => {
     const view = await renderWithQuery(<ExercisesScreen />)
 
     await waitFor(() => {
-      expect(view.getByText('No exercises found. Add your first exercise!')).toBeTruthy()
+      expect(
+        view.getByText('No se encontraron ejercicios. ¡Añade tu primer ejercicio!'),
+      ).toBeTruthy()
     })
     view.unmount()
   })
@@ -108,7 +110,7 @@ describe('Exercises List Screen', () => {
 
     await waitFor(() => {
       expect(
-        view.getByText('Connection problem. Please check your internet connection.'),
+        view.getByText('Problema de conexión. Por favor, comprueba tu conexión a internet.'),
       ).toBeTruthy()
     })
     view.unmount()
@@ -133,7 +135,7 @@ describe('Exercises List Screen', () => {
       expect(view.getByText('Squat')).toBeTruthy()
     })
 
-    const searchInput = view.getByPlaceholderText('Search exercises...')
+    const searchInput = view.getByPlaceholderText('Buscar ejercicios...')
     expect(searchInput).toBeTruthy()
 
     // Filter by name "squat"
@@ -155,7 +157,7 @@ describe('Exercises List Screen', () => {
     await waitFor(() => {
       expect(view.queryByText('Bench Press')).toBeNull()
       expect(view.queryByText('Squat')).toBeNull()
-      expect(view.queryByText('No exercises match your search query.')).toBeTruthy()
+      expect(view.queryByText('Ningún ejercicio coincide con tu búsqueda.')).toBeTruthy()
     })
 
     // Clear search and confirm both are back

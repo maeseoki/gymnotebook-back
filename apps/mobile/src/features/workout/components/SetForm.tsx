@@ -2,7 +2,16 @@ import type { EExerciseType } from '@gymnotebook/contracts'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { type GestureResponderEvent, Modal, Pressable, StyleSheet, View } from 'react-native'
+import {
+  type GestureResponderEvent,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native'
 import { z } from 'zod'
 import { formatDate, formatSetValues } from '@/features/history/utils/history-formatters'
 import { colors, radius, spacing } from '@/shared/theme/tokens'
@@ -257,180 +266,195 @@ export function SetForm({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={styles.modalContent}
-          onPress={(e: GestureResponderEvent) => e.stopPropagation()}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%', maxHeight: '90%' }}
         >
-          <Card style={styles.card}>
-            <Text style={styles.title}>{editingSet ? 'Editar Serie' : 'Añadir Serie'}</Text>
-            <Text style={styles.subtitle}>{exerciseName}</Text>
+          <Pressable
+            style={[styles.modalContent, { maxHeight: '100%' }]}
+            onPress={(e: GestureResponderEvent) => e.stopPropagation()}
+          >
+            <Card style={[styles.card, { maxHeight: '100%' }]}>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ gap: spacing[4] }}
+                style={{ flexShrink: 1 }}
+              >
+                <Text style={styles.title}>{editingSet ? 'Editar Serie' : 'Añadir Serie'}</Text>
+                <Text style={styles.subtitle}>{exerciseName}</Text>
 
-            <View style={styles.formContainer}>
-              {hasWeight && (
-                <Controller
-                  control={control}
-                  name="weightKg"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField label="Peso (kg)" error={errors.weightKg?.message as string}>
-                      <TextInput
-                        keyboardType="decimal-pad"
-                        placeholder="0.0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Peso"
-                      />
-                    </FormField>
-                  )}
-                />
-              )}
-
-              {hasReps && (
-                <Controller
-                  control={control}
-                  name="reps"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField label="Repeticiones" error={errors.reps?.message as string}>
-                      <TextInput
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Repeticiones"
-                      />
-                    </FormField>
-                  )}
-                />
-              )}
-
-              {hasTime && (
-                <View style={styles.timeRow}>
-                  <View style={{ flex: 1 }}>
+                <View style={styles.formContainer}>
+                  {hasWeight && (
                     <Controller
                       control={control}
-                      name="minutes"
+                      name="weightKg"
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Minutos" error={errors.minutes?.message as string}>
+                        <FormField label="Peso (kg)" error={errors.weightKg?.message as string}>
+                          <TextInput
+                            keyboardType="decimal-pad"
+                            placeholder="0.0"
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            accessibilityLabel="Input Peso"
+                          />
+                        </FormField>
+                      )}
+                    />
+                  )}
+
+                  {hasReps && (
+                    <Controller
+                      control={control}
+                      name="reps"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <FormField label="Repeticiones" error={errors.reps?.message as string}>
                           <TextInput
                             keyboardType="number-pad"
                             placeholder="0"
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value}
-                            accessibilityLabel="Input Minutos"
+                            accessibilityLabel="Input Repeticiones"
                           />
                         </FormField>
                       )}
                     />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Controller
-                      control={control}
-                      name="seconds"
-                      render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Segundos" error={errors.seconds?.message as string}>
-                          <TextInput
-                            keyboardType="number-pad"
-                            placeholder="0"
-                            onBlur={onBlur}
-                            onChangeText={onChange}
-                            value={value}
-                            accessibilityLabel="Input Segundos"
-                          />
-                        </FormField>
-                      )}
-                    />
-                  </View>
-                </View>
-              )}
-
-              {hasDistance && (
-                <Controller
-                  control={control}
-                  name="distanceMeters"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField
-                      label="Distancia (m)"
-                      error={errors.distanceMeters?.message as string}
-                    >
-                      <TextInput
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Distancia"
-                      />
-                    </FormField>
                   )}
-                />
-              )}
-            </View>
 
-            {/* Recent exercise history section */}
-            <View style={styles.historySection}>
-              <View style={styles.historyHeaderRow}>
-                <Text style={styles.historyTitle}>Últimas series</Text>
-                {feedbackVisible && (
-                  <Text style={styles.copiedFeedback}>Serie copiada al formulario.</Text>
-                )}
-              </View>
-              {isLoadingHistory ? (
-                <Text style={styles.historyStatus}>Cargando historial...</Text>
-              ) : historyError ? (
-                <Text style={styles.historyStatus}>No se pudo cargar el historial reciente.</Text>
-              ) : historyData?.content && historyData.content.length > 0 ? (
-                <View style={styles.historyList}>
-                  {historyData.content.slice(0, 2).map((workout) => (
-                    <View key={workout.id} style={styles.historyWorkout}>
-                      <Text style={styles.historyDate}>{formatDate(workout.startDate)}</Text>
-                      <View style={styles.historySets}>
-                        {workout.sets.map((set, idx) => (
-                          <View key={set.id} style={styles.historySetRow}>
-                            <Text style={styles.historySetItem}>
-                              Serie {idx + 1}: {formatSetValues(set, exerciseType)}
-                              {set.isDropSet ? ' (Drop)' : ''}
-                              {set.notes ? ` - ${set.notes}` : ''}
-                            </Text>
-                            <Pressable
-                              style={styles.useButton}
-                              onPress={() => handleUseSet(set)}
-                              accessibilityLabel={`Usar serie ${idx + 1}`}
-                            >
-                              <Text style={styles.useButtonText}>Usar</Text>
-                            </Pressable>
-                          </View>
-                        ))}
+                  {hasTime && (
+                    <View style={styles.timeRow}>
+                      <View style={{ flex: 1 }}>
+                        <Controller
+                          control={control}
+                          name="minutes"
+                          render={({ field: { onChange, onBlur, value } }) => (
+                            <FormField label="Minutos" error={errors.minutes?.message as string}>
+                              <TextInput
+                                keyboardType="number-pad"
+                                placeholder="0"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                accessibilityLabel="Input Minutos"
+                              />
+                            </FormField>
+                          )}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Controller
+                          control={control}
+                          name="seconds"
+                          render={({ field: { onChange, onBlur, value } }) => (
+                            <FormField label="Segundos" error={errors.seconds?.message as string}>
+                              <TextInput
+                                keyboardType="number-pad"
+                                placeholder="0"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                accessibilityLabel="Input Segundos"
+                              />
+                            </FormField>
+                          )}
+                        />
                       </View>
                     </View>
-                  ))}
-                </View>
-              ) : (
-                <Text style={styles.historyStatus}>Sin historial previo para este ejercicio.</Text>
-              )}
-            </View>
+                  )}
 
-            <View style={styles.buttonRow}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Cancelar"
-                  variant="outline"
-                  onPress={onClose}
-                  accessibilityLabel="Boton Cancelar Serie"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Guardar"
-                  variant="primary"
-                  onPress={handleSubmit(onFormSubmit)}
-                  accessibilityLabel="Boton Guardar Serie"
-                />
-              </View>
-            </View>
-          </Card>
-        </Pressable>
+                  {hasDistance && (
+                    <Controller
+                      control={control}
+                      name="distanceMeters"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <FormField
+                          label="Distancia (m)"
+                          error={errors.distanceMeters?.message as string}
+                        >
+                          <TextInput
+                            keyboardType="number-pad"
+                            placeholder="0"
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            accessibilityLabel="Input Distancia"
+                          />
+                        </FormField>
+                      )}
+                    />
+                  )}
+                </View>
+
+                {/* Recent exercise history section */}
+                <View style={styles.historySection}>
+                  <View style={styles.historyHeaderRow}>
+                    <Text style={styles.historyTitle}>Últimas series</Text>
+                    {feedbackVisible && (
+                      <Text style={styles.copiedFeedback}>Serie copiada al formulario.</Text>
+                    )}
+                  </View>
+                  {isLoadingHistory ? (
+                    <Text style={styles.historyStatus}>Cargando historial...</Text>
+                  ) : historyError ? (
+                    <Text style={styles.historyStatus}>
+                      No se pudo cargar el historial reciente.
+                    </Text>
+                  ) : historyData?.content && historyData.content.length > 0 ? (
+                    <View style={styles.historyList}>
+                      {historyData.content.slice(0, 2).map((workout) => (
+                        <View key={workout.id} style={styles.historyWorkout}>
+                          <Text style={styles.historyDate}>{formatDate(workout.startDate)}</Text>
+                          <View style={styles.historySets}>
+                            {workout.sets.map((set, idx) => (
+                              <View key={set.id} style={styles.historySetRow}>
+                                <Text style={styles.historySetItem}>
+                                  Serie {idx + 1}: {formatSetValues(set, exerciseType)}
+                                  {set.isDropSet ? ' (Drop)' : ''}
+                                  {set.notes ? ` - ${set.notes}` : ''}
+                                </Text>
+                                <Pressable
+                                  style={styles.useButton}
+                                  onPress={() => handleUseSet(set)}
+                                  accessibilityLabel={`Usar serie ${idx + 1}`}
+                                >
+                                  <Text style={styles.useButtonText}>Usar</Text>
+                                </Pressable>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : (
+                    <Text style={styles.historyStatus}>
+                      Sin historial previo para este ejercicio.
+                    </Text>
+                  )}
+                </View>
+
+                <View style={styles.buttonRow}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Cancelar"
+                      variant="outline"
+                      onPress={onClose}
+                      accessibilityLabel="Boton Cancelar Serie"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Guardar"
+                      variant="primary"
+                      onPress={handleSubmit(onFormSubmit)}
+                      accessibilityLabel="Boton Guardar Serie"
+                    />
+                  </View>
+                </View>
+              </ScrollView>
+            </Card>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Pressable>
     </Modal>
   )

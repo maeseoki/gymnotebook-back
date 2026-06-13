@@ -8,11 +8,11 @@ export const signupFormSchema = MobileSignUpRequestSchema.pick({
   password: true,
 })
   .extend({
-    confirmPassword: z.string().min(1, 'Confirm your password'),
+    confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
   })
   .refine((value) => value.password === value.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'Passwords must match',
+    message: 'Las contraseñas no coinciden',
   })
 
 export type SignupFormValues = z.infer<typeof signupFormSchema>

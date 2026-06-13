@@ -4,7 +4,9 @@ import { useEffect } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import {
   type GestureResponderEvent,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -212,181 +214,192 @@ export function EditHistorySetForm({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={styles.modalContent}
-          onPress={(e: GestureResponderEvent) => e.stopPropagation()}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ width: '100%', maxHeight: '90%' }}
         >
-          <Card style={styles.card}>
-            <Text style={styles.title}>Editar Serie</Text>
-            <Text style={styles.subtitle}>{exerciseName}</Text>
+          <Pressable
+            style={[styles.modalContent, { maxHeight: '100%' }]}
+            onPress={(e: GestureResponderEvent) => e.stopPropagation()}
+          >
+            <Card style={[styles.card, { maxHeight: '100%' }]}>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ gap: spacing[4] }}
+                style={{ flexShrink: 1 }}
+              >
+                <Text style={styles.title}>Editar Serie</Text>
+                <Text style={styles.subtitle}>{exerciseName}</Text>
 
-            {errorMsg ? (
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{errorMsg}</Text>
-              </View>
-            ) : null}
+                {errorMsg ? (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>{errorMsg}</Text>
+                  </View>
+                ) : null}
 
-            <ScrollView contentContainerStyle={styles.formContainer}>
-              {hasWeight && (
-                <Controller
-                  control={control}
-                  name="weightKg"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField label="Peso (kg)" error={errors.weightKg?.message as string}>
-                      <TextInput
-                        keyboardType="decimal-pad"
-                        placeholder="0.0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Peso"
-                      />
-                    </FormField>
-                  )}
-                />
-              )}
-
-              {hasReps && (
-                <Controller
-                  control={control}
-                  name="reps"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField label="Repeticiones" error={errors.reps?.message as string}>
-                      <TextInput
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Repeticiones"
-                      />
-                    </FormField>
-                  )}
-                />
-              )}
-
-              {hasTime && (
-                <View style={styles.timeRow}>
-                  <View style={{ flex: 1 }}>
+                <View style={styles.formContainer}>
+                  {hasWeight && (
                     <Controller
                       control={control}
-                      name="minutes"
+                      name="weightKg"
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Minutos" error={errors.minutes?.message as string}>
+                        <FormField label="Peso (kg)" error={errors.weightKg?.message as string}>
                           <TextInput
-                            keyboardType="number-pad"
-                            placeholder="0"
+                            keyboardType="decimal-pad"
+                            placeholder="0.0"
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value}
-                            accessibilityLabel="Input Minutos"
+                            accessibilityLabel="Input Peso"
                           />
                         </FormField>
                       )}
                     />
-                  </View>
-                  <View style={{ flex: 1 }}>
+                  )}
+
+                  {hasReps && (
                     <Controller
                       control={control}
-                      name="seconds"
+                      name="reps"
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Segundos" error={errors.seconds?.message as string}>
+                        <FormField label="Repeticiones" error={errors.reps?.message as string}>
                           <TextInput
                             keyboardType="number-pad"
                             placeholder="0"
                             onBlur={onBlur}
                             onChangeText={onChange}
                             value={value}
-                            accessibilityLabel="Input Segundos"
+                            accessibilityLabel="Input Repeticiones"
                           />
                         </FormField>
                       )}
+                    />
+                  )}
+
+                  {hasTime && (
+                    <View style={styles.timeRow}>
+                      <View style={{ flex: 1 }}>
+                        <Controller
+                          control={control}
+                          name="minutes"
+                          render={({ field: { onChange, onBlur, value } }) => (
+                            <FormField label="Minutos" error={errors.minutes?.message as string}>
+                              <TextInput
+                                keyboardType="number-pad"
+                                placeholder="0"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                accessibilityLabel="Input Minutos"
+                              />
+                            </FormField>
+                          )}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Controller
+                          control={control}
+                          name="seconds"
+                          render={({ field: { onChange, onBlur, value } }) => (
+                            <FormField label="Segundos" error={errors.seconds?.message as string}>
+                              <TextInput
+                                keyboardType="number-pad"
+                                placeholder="0"
+                                onBlur={onBlur}
+                                onChangeText={onChange}
+                                value={value}
+                                accessibilityLabel="Input Segundos"
+                              />
+                            </FormField>
+                          )}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  {hasDistance && (
+                    <Controller
+                      control={control}
+                      name="distanceMeters"
+                      render={({ field: { onChange, onBlur, value } }) => (
+                        <FormField
+                          label="Distancia (m)"
+                          error={errors.distanceMeters?.message as string}
+                        >
+                          <TextInput
+                            keyboardType="number-pad"
+                            placeholder="0"
+                            onBlur={onBlur}
+                            onChangeText={onChange}
+                            value={value}
+                            accessibilityLabel="Input Distancia"
+                          />
+                        </FormField>
+                      )}
+                    />
+                  )}
+
+                  <Controller
+                    control={control}
+                    name="notes"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <FormField label="Notas (opcional)" error={errors.notes?.message as string}>
+                        <TextInput
+                          placeholder="Ej. muy pesado al final"
+                          onBlur={onBlur}
+                          onChangeText={onChange}
+                          value={value || ''}
+                          maxLength={255}
+                          accessibilityLabel="Input Notas"
+                        />
+                      </FormField>
+                    )}
+                  />
+
+                  <Controller
+                    control={control}
+                    name="isDropSet"
+                    render={({ field: { onChange, value } }) => (
+                      <FormField label="Tipo de serie">
+                        <View style={styles.switchRow}>
+                          <Switch
+                            value={value}
+                            onValueChange={onChange}
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={value ? colors.primaryPressed : colors.surfacePressed}
+                          />
+                          <Text style={styles.switchLabel}>Serie Drop Set</Text>
+                        </View>
+                      </FormField>
+                    )}
+                  />
+                </View>
+
+                <View style={styles.buttonRow}>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Cancelar"
+                      variant="outline"
+                      onPress={onClose}
+                      disabled={loading}
+                      accessibilityLabel="Boton Cancelar Serie"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Button
+                      label="Guardar"
+                      variant="primary"
+                      onPress={handleSubmit(onFormSubmit)}
+                      loading={loading}
+                      disabled={loading}
+                      accessibilityLabel="Boton Guardar Serie"
                     />
                   </View>
                 </View>
-              )}
-
-              {hasDistance && (
-                <Controller
-                  control={control}
-                  name="distanceMeters"
-                  render={({ field: { onChange, onBlur, value } }) => (
-                    <FormField
-                      label="Distancia (m)"
-                      error={errors.distanceMeters?.message as string}
-                    >
-                      <TextInput
-                        keyboardType="number-pad"
-                        placeholder="0"
-                        onBlur={onBlur}
-                        onChangeText={onChange}
-                        value={value}
-                        accessibilityLabel="Input Distancia"
-                      />
-                    </FormField>
-                  )}
-                />
-              )}
-
-              <Controller
-                control={control}
-                name="notes"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <FormField label="Notas (opcional)" error={errors.notes?.message as string}>
-                    <TextInput
-                      placeholder="Ej. muy pesado al final"
-                      onBlur={onBlur}
-                      onChangeText={onChange}
-                      value={value || ''}
-                      maxLength={255}
-                      accessibilityLabel="Input Notas"
-                    />
-                  </FormField>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name="isDropSet"
-                render={({ field: { onChange, value } }) => (
-                  <FormField label="Tipo de serie">
-                    <View style={styles.switchRow}>
-                      <Switch
-                        value={value}
-                        onValueChange={onChange}
-                        trackColor={{ false: colors.border, true: colors.primary }}
-                        thumbColor={value ? colors.primaryPressed : colors.surfacePressed}
-                      />
-                      <Text style={styles.switchLabel}>Serie Drop Set</Text>
-                    </View>
-                  </FormField>
-                )}
-              />
-            </ScrollView>
-
-            <View style={styles.buttonRow}>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Cancelar"
-                  variant="outline"
-                  onPress={onClose}
-                  disabled={loading}
-                  accessibilityLabel="Boton Cancelar Serie"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Button
-                  label="Guardar"
-                  variant="primary"
-                  onPress={handleSubmit(onFormSubmit)}
-                  loading={loading}
-                  disabled={loading}
-                  accessibilityLabel="Boton Guardar Serie"
-                />
-              </View>
-            </View>
-          </Card>
-        </Pressable>
+              </ScrollView>
+            </Card>
+          </Pressable>
+        </KeyboardAvoidingView>
       </Pressable>
     </Modal>
   )

@@ -33,7 +33,7 @@ export function toAuthServiceError(error: unknown): AuthServiceError {
     return mapApiFailureToAuthError(error.failure, error)
   }
 
-  return new AuthServiceError('unknown', 'Something went wrong. Please try again.', error)
+  return new AuthServiceError('unknown', 'Algo salió mal. Por favor, inténtalo de nuevo.', error)
 }
 
 export function secureStorageError(
@@ -42,8 +42,8 @@ export function secureStorageError(
 ): AuthServiceError {
   const message =
     operation === 'read'
-      ? 'Secure storage is unavailable. Please sign in again.'
-      : 'Your session could not be saved securely. Please try again.'
+      ? 'El almacenamiento seguro no está disponible. Por favor, inicia sesión de nuevo.'
+      : 'No se pudo guardar tu sesión de forma segura. Por favor, inténtalo de nuevo.'
 
   return new AuthServiceError('secure_storage_unavailable', message, result)
 }
@@ -56,46 +56,58 @@ function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServ
   if (failure.kind === 'network_unavailable') {
     return new AuthServiceError(
       'network_unavailable',
-      'Check your connection and try again.',
+      'Comprueba tu conexión e inténtalo de nuevo.',
       cause,
     )
   }
 
   if (failure.kind === 'timeout') {
-    return new AuthServiceError('timeout', 'The request timed out. Please try again.', cause)
+    return new AuthServiceError(
+      'timeout',
+      'La solicitud ha expirado. Por favor, inténtalo de nuevo.',
+      cause,
+    )
   }
 
   if (failure.kind === 'validation') {
     return new AuthServiceError(
       'validation',
-      'The server response could not be verified. Please try again.',
+      'No se pudo verificar la respuesta del servidor. Por favor, inténtalo de nuevo.',
       cause,
     )
   }
 
   if (failure.kind !== 'backend') {
-    return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause)
+    return new AuthServiceError('unknown', 'Algo salió mal. Por favor, inténtalo de nuevo.', cause)
   }
 
   switch (failure.code) {
     case 'invalid_credentials':
       return new AuthServiceError(
         'invalid_credentials',
-        'The username or password is incorrect.',
+        'El usuario o la contraseña son incorrectos.',
         cause,
       )
     case 'username_already_exists':
-      return new AuthServiceError('username_conflict', 'That username is already in use.', cause)
+      return new AuthServiceError(
+        'username_conflict',
+        'Ese nombre de usuario ya está en uso.',
+        cause,
+      )
     case 'email_already_exists':
-      return new AuthServiceError('email_conflict', 'That email is already in use.', cause)
+      return new AuthServiceError('email_conflict', 'Ese correo electrónico ya está en uso.', cause)
     case 'invalid_mobile_session':
     case 'mobile_session_required':
       return new AuthServiceError(
         'invalid_mobile_session',
-        'Your session has expired. Please sign in again.',
+        'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
         cause,
       )
     default:
-      return new AuthServiceError('unknown', 'Something went wrong. Please try again.', cause)
+      return new AuthServiceError(
+        'unknown',
+        'Algo salió mal. Por favor, inténtalo de nuevo.',
+        cause,
+      )
   }
 }

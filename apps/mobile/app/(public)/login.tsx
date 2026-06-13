@@ -22,14 +22,14 @@ export default function LoginScreen() {
   const submitting = isSubmitting || signIn.isPending
 
   return (
-    <AuthFormContainer title="Sign in" subtitle="Use your Gym Notebook account.">
+    <AuthFormContainer title="Iniciar sesión" subtitle="Usa tu cuenta de Gym Notebook.">
       <Controller
         control={control}
         name="username"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Username" error={errors.username?.message ?? ''}>
+          <FormField label="Usuario" error={errors.username?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Username"
+              accessibilityLabel="Usuario"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!submitting}
@@ -46,9 +46,9 @@ export default function LoginScreen() {
         control={control}
         name="password"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Password" error={errors.password?.message ?? ''}>
+          <FormField label="Contraseña" error={errors.password?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Password"
+              accessibilityLabel="Contraseña"
               editable={!submitting}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -62,20 +62,20 @@ export default function LoginScreen() {
       />
       <AuthErrorMessage message={signIn.error ? userFacingAuthError(signIn.error) : null} />
       <Button
-        accessibilityLabel="Sign in"
+        accessibilityLabel="Iniciar sesión"
         disabled={submitting}
-        label="Sign in"
+        label="Iniciar sesión"
         loading={submitting}
         onPress={handleSubmit((values) => signIn.mutateAsync(values))}
       />
       <View style={{ alignItems: 'center', gap: spacing[2] }}>
-        <Text>Need an account?</Text>
+        <Text>¿Necesitas una cuenta?</Text>
         <Link
-          accessibilityLabel="Create account"
+          accessibilityLabel="Crear cuenta"
           href="/(public)/signup"
           style={{ color: colors.secondary }}
         >
-          Create account
+          Crear cuenta
         </Link>
       </View>
     </AuthFormContainer>

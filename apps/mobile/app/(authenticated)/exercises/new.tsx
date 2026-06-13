@@ -37,7 +37,7 @@ export default function NewExerciseScreen() {
       <ExerciseForm
         onSubmit={handleSubmit}
         loading={isPending}
-        submitLabel="Create Exercise"
+        submitLabel="Crear ejercicio"
         generalError={submitError || (error ? mapExerciseError(error) : null)}
       />
     </Screen>

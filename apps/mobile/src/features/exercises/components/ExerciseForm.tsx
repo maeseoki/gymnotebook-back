@@ -25,7 +25,7 @@ export function ExerciseForm({
   initialValues,
   onSubmit,
   loading = false,
-  submitLabel = 'Save',
+  submitLabel = 'Guardar',
   generalError,
 }: ExerciseFormProps): ReactNode {
   const cleanInitialValues = initialValues || {}
@@ -173,14 +173,14 @@ export function ExerciseForm({
         control={control}
         name="name"
         render={({ field: { onChange, onBlur, value } }) => (
-          <FormField label="Exercise Name *" error={errors.name?.message}>
+          <FormField label="Nombre del ejercicio *" error={errors.name?.message}>
             <TextInput
-              placeholder="e.g. Bench Press"
+              placeholder="ej. Press de banca"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
               editable={!loading}
-              accessibilityLabel="Exercise Name"
+              accessibilityLabel="Nombre del ejercicio"
             />
           </FormField>
         )}
@@ -190,9 +190,9 @@ export function ExerciseForm({
         control={control}
         name="description"
         render={({ field: { onChange, onBlur, value } }) => (
-          <FormField label="Description" error={errors.description?.message}>
+          <FormField label="Descripción" error={errors.description?.message}>
             <TextInput
-              placeholder="e.g. Targets chest and triceps"
+              placeholder="ej. Trabaja pecho y tríceps"
               onBlur={onBlur}
               onChangeText={onChange}
               value={value ?? ''}
@@ -200,7 +200,7 @@ export function ExerciseForm({
               numberOfLines={3}
               style={{ minHeight: 80, textAlignVertical: 'top', paddingTop: spacing[2] }}
               editable={!loading}
-              accessibilityLabel="Description"
+              accessibilityLabel="Descripción"
             />
           </FormField>
         )}
@@ -211,7 +211,7 @@ export function ExerciseForm({
         name="type"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Exercise Type *"
+            label="Tipo de ejercicio *"
             value={value}
             options={EXERCISE_TYPE_OPTIONS}
             onChange={(val) => {
@@ -228,7 +228,7 @@ export function ExerciseForm({
         name="primaryMuscleGroup"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Primary Muscle Group *"
+            label="Grupo muscular primario *"
             value={value}
             options={MUSCLE_GROUP_OPTIONS}
             onChange={(val) => {
@@ -245,12 +245,12 @@ export function ExerciseForm({
         name="secondaryMuscleGroup"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Secondary Muscle Group (Optional)"
+            label="Grupo muscular secundario (opcional)"
             value={value}
             options={MUSCLE_GROUP_OPTIONS}
             onChange={onChange}
             error={errors.secondaryMuscleGroup?.message}
-            placeholder="None"
+            placeholder="Ninguno"
             allowClear
           />
         )}

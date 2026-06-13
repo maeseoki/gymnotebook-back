@@ -88,8 +88,8 @@ describe('Exercise Detail Screen', () => {
 
     await waitFor(() => {
       expect(view.getByText('Bench Press')).toBeTruthy()
-      expect(view.getAllByText(/chest/i).length).toBeGreaterThan(0)
-      expect(view.getAllByText(/triceps/i).length).toBeGreaterThan(0)
+      expect(view.getAllByText(/pecho/i).length).toBeGreaterThan(0)
+      expect(view.getAllByText(/tríceps/i).length).toBeGreaterThan(0)
       expect(view.getByText('Chest movement')).toBeTruthy()
     })
     view.unmount()
@@ -98,7 +98,7 @@ describe('Exercise Detail Screen', () => {
   it('shows error if route ID is invalid', async () => {
     mockUseLocalSearchParams.mockReturnValue({ id: 'abc' })
     const view = await renderWithQuery(<ExerciseDetailScreen />)
-    expect(view.getByText('Invalid Exercise ID')).toBeTruthy()
+    expect(view.getByText('ID de ejercicio no válido')).toBeTruthy()
     view.unmount()
   })
 
@@ -112,12 +112,12 @@ describe('Exercise Detail Screen', () => {
       expect(view.getByText('Bench Press')).toBeTruthy()
     })
 
-    fireEvent.press(view.getByRole('button', { name: 'Delete Exercise' }))
+    fireEvent.press(view.getByRole('button', { name: 'Eliminar ejercicio' }))
 
     const alertSpy = Alert.alert as jest.Mock
     expect(alertSpy).toHaveBeenCalled()
 
-    const deleteBtn = alertSpy.mock.calls[0][2]?.find((b: AlertButton) => b.text === 'Delete')
+    const deleteBtn = alertSpy.mock.calls[0][2]?.find((b: AlertButton) => b.text === 'Eliminar')
     expect(deleteBtn).toBeTruthy()
 
     if (deleteBtn?.onPress) {

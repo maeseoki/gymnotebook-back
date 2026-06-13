@@ -107,13 +107,13 @@ describe('Exercise Edit Screen', () => {
     const view = await renderWithQuery(<ExerciseEditScreen />)
 
     await waitFor(() => {
-      expect(view.getByLabelText('Exercise Name').props.value).toBe('Bench Press')
+      expect(view.getByLabelText('Nombre del ejercicio').props.value).toBe('Bench Press')
     })
 
-    const nameInput = view.getByLabelText('Exercise Name')
+    const nameInput = view.getByLabelText('Nombre del ejercicio')
     fireEvent.changeText(nameInput, 'Heavy Bench Press')
 
-    fireEvent.press(view.getByRole('button', { name: 'Save Changes' }))
+    fireEvent.press(view.getByRole('button', { name: 'Guardar cambios' }))
 
     await waitFor(() => {
       expect(mockPut).toHaveBeenCalledWith(

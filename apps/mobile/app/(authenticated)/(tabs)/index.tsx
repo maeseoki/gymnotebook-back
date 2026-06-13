@@ -5,9 +5,9 @@ export default function HomeScreen() {
   return (
     <Screen>
       <Card>
-        <Text>Home foundation placeholder.</Text>
+        <Text>Marcador de posición de inicio.</Text>
         <Link href="/(authenticated)/(tabs)/workout" asChild>
-          <Button label="Open workout" />
+          <Button label="Abrir entrenamiento" />
         </Link>
       </Card>
     </Screen>

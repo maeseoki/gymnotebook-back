@@ -124,7 +124,7 @@ describe('Error Mapping', () => {
       code: 'unauthorized',
       message: 'Expired',
     })
-    expect(mapExerciseError(apiError)).toContain('Session expired')
+    expect(mapExerciseError(apiError)).toContain('Sesión expirada')
   })
 
   it('maps backend 404 to exercise not found', () => {
@@ -134,7 +134,7 @@ describe('Error Mapping', () => {
       code: 'not_found',
       message: 'Not Found',
     })
-    expect(mapExerciseError(apiError)).toContain('Exercise not found')
+    expect(mapExerciseError(apiError)).toContain('Ejercicio no encontrado')
   })
 
   it('maps network unavailable to connection error', () => {
@@ -142,6 +142,6 @@ describe('Error Mapping', () => {
       kind: 'network_unavailable',
       message: 'Network is down',
     })
-    expect(mapExerciseError(apiError)).toContain('Connection problem')
+    expect(mapExerciseError(apiError)).toContain('Problema de conexión')
   })
 })

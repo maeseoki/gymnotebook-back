@@ -4,8 +4,8 @@ import { Screen, Text } from '@/shared/ui/primitives'
 export default function NotFound() {
   return (
     <Screen>
-      <Text>Screen not found.</Text>
-      <Link href="/(authenticated)/(tabs)">Go home</Link>
+      <Text>Pantalla no encontrada.</Text>
+      <Link href="/(authenticated)/(tabs)">Ir al inicio</Link>
     </Screen>
   )
 }

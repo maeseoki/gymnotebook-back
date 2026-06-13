@@ -59,9 +59,9 @@ export default function ExerciseEditScreen() {
   if (!isValidId) {
     return (
       <Screen style={{ justifyContent: 'center' }}>
-        <ErrorState title="Invalid Exercise ID" />
+        <ErrorState title="ID de ejercicio no válido" />
         <Button
-          label="Back to exercises"
+          label="Volver a ejercicios"
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
@@ -71,7 +71,7 @@ export default function ExerciseEditScreen() {
   if (isLoadingDetail) {
     return (
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <LoadingIndicator label="Loading exercise data" />
+        <LoadingIndicator label="Cargando datos del ejercicio..." />
       </Screen>
     )
   }
@@ -79,9 +79,11 @@ export default function ExerciseEditScreen() {
   if (detailError || !exercise) {
     return (
       <Screen style={{ justifyContent: 'center', gap: spacing[4] }}>
-        <ErrorState title={detailError ? mapExerciseError(detailError) : 'Exercise not found.'} />
+        <ErrorState
+          title={detailError ? mapExerciseError(detailError) : 'Ejercicio no encontrado.'}
+        />
         <Button
-          label="Back to exercises"
+          label="Volver a ejercicios"
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
@@ -110,7 +112,7 @@ export default function ExerciseEditScreen() {
         initialValues={initialValues}
         onSubmit={handleSubmit}
         loading={isUpdating}
-        submitLabel="Save Changes"
+        submitLabel="Guardar cambios"
         generalError={submitError || (updateError ? mapExerciseError(updateError) : null)}
       />
     </Screen>

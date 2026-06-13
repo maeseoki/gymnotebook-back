@@ -1,29 +1,39 @@
 export const EXERCISE_TYPE_OPTIONS = [
-  { label: 'Weight & Reps', value: 'WEIGHT_REPS' },
-  { label: 'Weight Only', value: 'WEIGHT' },
-  { label: 'Reps Only', value: 'REPS' },
-  { label: 'Time Only', value: 'TIME' },
-  { label: 'Distance Only', value: 'DISTANCE' },
-  { label: 'Time & Distance', value: 'TIME_DISTANCE' },
+  { label: 'Peso y repeticiones', value: 'WEIGHT_REPS' },
+  { label: 'Solo peso', value: 'WEIGHT' },
+  { label: 'Solo repeticiones', value: 'REPS' },
+  { label: 'Solo tiempo', value: 'TIME' },
+  { label: 'Solo distancia', value: 'DISTANCE' },
+  { label: 'Tiempo y distancia', value: 'TIME_DISTANCE' },
 ] as const
 
 export const MUSCLE_GROUP_OPTIONS = [
-  { label: 'Chest', value: 'CHEST' },
-  { label: 'Biceps', value: 'BICEPS' },
-  { label: 'Triceps', value: 'TRICEPS' },
-  { label: 'Shoulders', value: 'SHOULDERS' },
-  { label: 'Upper Back', value: 'UPPER_BACK' },
-  { label: 'Lower Back', value: 'LOWER_BACK' },
-  { label: 'Lats', value: 'LATS' },
-  { label: 'Traps', value: 'TRAPS' },
-  { label: 'Quadriceps', value: 'QUADRICEPS' },
-  { label: 'Hamstrings', value: 'HAMSTRINGS' },
-  { label: 'Glutes', value: 'GLUTES' },
-  { label: 'Calves', value: 'CALVES' },
-  { label: 'Abdominus', value: 'ABDOMINALS' },
-  { label: 'Abductors', value: 'ABDUCTORS' },
-  { label: 'Forearms', value: 'FOREARMS' },
-  { label: 'Full Body', value: 'FULL_BODY' },
+  { label: 'Pecho', value: 'CHEST' },
+  { label: 'Bíceps', value: 'BICEPS' },
+  { label: 'Tríceps', value: 'TRICEPS' },
+  { label: 'Hombros', value: 'SHOULDERS' },
+  { label: 'Espalda superior', value: 'UPPER_BACK' },
+  { label: 'Espalda inferior', value: 'LOWER_BACK' },
+  { label: 'Dorsales', value: 'LATS' },
+  { label: 'Trapecios', value: 'TRAPS' },
+  { label: 'Cuádriceps', value: 'QUADRICEPS' },
+  { label: 'Femorales', value: 'HAMSTRINGS' },
+  { label: 'Glúteos', value: 'GLUTES' },
+  { label: 'Gemelos', value: 'CALVES' },
+  { label: 'Abdominales', value: 'ABDOMINALS' },
+  { label: 'Aductores', value: 'ABDUCTORS' },
+  { label: 'Antebrazos', value: 'FOREARMS' },
+  { label: 'Cuerpo completo', value: 'FULL_BODY' },
   { label: 'Cardio', value: 'CARDIO' },
-  { label: 'Other', value: 'OTHER' },
+  { label: 'Otro', value: 'OTHER' },
 ] as const
+
+export function getExerciseTypeLabel(type: string): string {
+  const option = EXERCISE_TYPE_OPTIONS.find((o) => o.value === type)
+  return option ? option.label : type
+}
+
+export function getMuscleGroupLabel(group: string): string {
+  const option = MUSCLE_GROUP_OPTIONS.find((o) => o.value === group)
+  return option ? option.label : group
+}

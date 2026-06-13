@@ -22,7 +22,7 @@ export default function ExercisesScreen() {
   if (isLoading) {
     return (
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <LoadingIndicator label="Loading exercises" />
+        <LoadingIndicator label="Cargando ejercicios..." />
       </Screen>
     )
   }
@@ -31,7 +31,7 @@ export default function ExercisesScreen() {
     return (
       <Screen style={{ gap: spacing[4], justifyContent: 'center' }}>
         <ErrorState title={mapExerciseError(error)} />
-        <Button label="Retry" onPress={() => void refetch()} />
+        <Button label="Reintentar" onPress={() => void refetch()} />
       </Screen>
     )
   }
@@ -43,8 +43,8 @@ export default function ExercisesScreen() {
   if (!exercises || exercises.length === 0) {
     return (
       <Screen style={{ gap: spacing[4], justifyContent: 'center' }}>
-        <EmptyState title="No exercises found. Add your first exercise!" />
-        <Button label="Create Exercise" onPress={handleCreateNew} />
+        <EmptyState title="No se encontraron ejercicios. ¡Añade tu primer ejercicio!" />
+        <Button label="Crear ejercicio" onPress={handleCreateNew} />
       </Screen>
     )
   }
@@ -68,11 +68,11 @@ export default function ExercisesScreen() {
           marginBottom: spacing[4],
         }}
       >
-        <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24 }}>Exercises</Text>
-        <Button label="New" onPress={handleCreateNew} variant="primary" />
+        <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24 }}>Ejercicios</Text>
+        <Button label="Nuevo" onPress={handleCreateNew} variant="primary" />
       </View>
       <TextInput
-        placeholder="Search exercises..."
+        placeholder="Buscar ejercicios..."
         value={searchQuery}
         onChangeText={setSearchQuery}
         style={{ marginBottom: spacing[4] }}
@@ -86,7 +86,7 @@ export default function ExercisesScreen() {
             onPress={() => router.push(`/(authenticated)/exercises/${item.id}`)}
           />
         )}
-        ListEmptyComponent={<EmptyState title="No exercises match your search query." />}
+        ListEmptyComponent={<EmptyState title="Ningún ejercicio coincide con tu búsqueda." />}
         refreshing={isRefetching}
         onRefresh={refetch}
         contentContainerStyle={{ paddingBottom: spacing[4] }}

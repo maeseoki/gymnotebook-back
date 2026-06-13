@@ -14,18 +14,18 @@ export default function ProfileScreen() {
       <View style={{ gap: spacing[4] }}>
         <Card>
           <View style={{ gap: spacing[2] }}>
-            <Text style={{ fontFamily: typography.fontFamilyBold, fontSize: 24 }}>Profile</Text>
-            <Text>Username: {user?.username ?? 'Unknown'}</Text>
-            <Text>Email: {user?.email ?? 'Unknown'}</Text>
-            <Text>Roles: {user?.roles.join(', ') || 'None'}</Text>
+            <Text style={{ fontFamily: typography.fontFamilyBold, fontSize: 24 }}>Perfil</Text>
+            <Text>Usuario: {user?.username ?? 'Desconocido'}</Text>
+            <Text>Correo electrónico: {user?.email ?? 'Desconocido'}</Text>
+            <Text>Roles: {user?.roles.join(', ') || 'Ninguno'}</Text>
           </View>
         </Card>
         <Link href="/(authenticated)/settings" asChild>
-          <Button label="Settings" variant="outline" />
+          <Button label="Ajustes" variant="outline" />
         </Link>
         <Button
-          accessibilityLabel="Log out"
-          label="Log out"
+          accessibilityLabel="Cerrar sesión"
+          label="Cerrar sesión"
           loading={logout.isPending}
           onPress={() => logout.mutate()}
           variant="secondary"

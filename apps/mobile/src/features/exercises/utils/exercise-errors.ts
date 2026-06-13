@@ -20,25 +20,25 @@ export function mapExerciseError(error: unknown): string {
   if (failure) {
     if (failure.kind === 'backend') {
       if (failure.status === 401) {
-        return 'Session expired. Please sign in again.'
+        return 'Sesión expirada. Por favor, inicia sesión de nuevo.'
       }
       if (failure.status === 404) {
-        return 'Exercise not found.'
+        return 'Ejercicio no encontrado.'
       }
       if (failure.status === 409) {
-        return failure.message || 'This exercise cannot be deleted because it is currently in use.'
+        return failure.message || 'Este ejercicio no se puede eliminar porque está en uso.'
       }
-      return failure.message || 'A server error occurred.'
+      return failure.message || 'Ocurrió un error en el servidor.'
     }
     if (failure.kind === 'validation') {
-      return failure.message || 'Validation error.'
+      return failure.message || 'Error de validación.'
     }
     if (failure.kind === 'network_unavailable') {
-      return 'Connection problem. Please check your internet connection.'
+      return 'Problema de conexión. Por favor, comprueba tu conexión a internet.'
     }
     if (failure.kind === 'timeout') {
-      return 'The request timed out. Please try again.'
+      return 'La solicitud ha expirado. Por favor, inténtalo de nuevo.'
     }
   }
-  return 'An unexpected error occurred. Please try again.'
+  return 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'
 }

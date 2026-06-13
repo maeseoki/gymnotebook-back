@@ -4,20 +4,22 @@ import { getPublicImageUri } from '@/features/images/api/images-api'
 import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Card, Text } from '@/shared/ui/primitives'
 
+import { getExerciseTypeLabel, getMuscleGroupLabel } from '../constants/exercise-options'
+
 interface ExerciseCardProps {
   exercise: ExerciseResponse
   onPress: () => void
 }
 
 export function ExerciseCard({ exercise, onPress }: ExerciseCardProps) {
-  const typeDisplay = exercise.type.replace('_', ' & ').toLowerCase()
-  const primaryMuscle = exercise.primaryMuscleGroup.replace('_', ' ').toLowerCase()
+  const typeDisplay = getExerciseTypeLabel(exercise.type)
+  const primaryMuscle = getMuscleGroupLabel(exercise.primaryMuscleGroup)
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Exercise: ${exercise.name}`}
+      accessibilityLabel={`Ejercicio: ${exercise.name}`}
     >
       <Card style={{ marginBottom: spacing[2], gap: spacing[1] }}>
         <View style={{ flexDirection: 'row', gap: spacing[3], alignItems: 'center' }}>

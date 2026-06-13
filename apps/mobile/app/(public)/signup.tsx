@@ -27,14 +27,14 @@ export default function SignupScreen() {
   const submitting = isSubmitting || signUp.isPending
 
   return (
-    <AuthFormContainer title="Create account" subtitle="Start tracking with a mobile session.">
+    <AuthFormContainer title="Crear cuenta" subtitle="Comienza a registrar con una sesión móvil.">
       <Controller
         control={control}
         name="username"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Username" error={errors.username?.message ?? ''}>
+          <FormField label="Usuario" error={errors.username?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Username"
+              accessibilityLabel="Usuario"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!submitting}
@@ -50,9 +50,9 @@ export default function SignupScreen() {
         control={control}
         name="email"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Email" error={errors.email?.message ?? ''}>
+          <FormField label="Correo electrónico" error={errors.email?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Email"
+              accessibilityLabel="Correo electrónico"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!submitting}
@@ -70,9 +70,9 @@ export default function SignupScreen() {
         control={control}
         name="password"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Password" error={errors.password?.message ?? ''}>
+          <FormField label="Contraseña" error={errors.password?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Password"
+              accessibilityLabel="Contraseña"
               editable={!submitting}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -87,9 +87,9 @@ export default function SignupScreen() {
         control={control}
         name="confirmPassword"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Confirm password" error={errors.confirmPassword?.message ?? ''}>
+          <FormField label="Confirmar contraseña" error={errors.confirmPassword?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Confirm password"
+              accessibilityLabel="Confirmar contraseña"
               editable={!submitting}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -102,20 +102,20 @@ export default function SignupScreen() {
       />
       <AuthErrorMessage message={signUp.error ? userFacingAuthError(signUp.error) : null} />
       <Button
-        accessibilityLabel="Create account"
+        accessibilityLabel="Crear cuenta"
         disabled={submitting}
-        label="Create account"
+        label="Crear cuenta"
         loading={submitting}
         onPress={handleSubmit((values) => signUp.mutateAsync(values))}
       />
       <View style={{ alignItems: 'center', gap: spacing[2] }}>
-        <Text>Already have an account?</Text>
+        <Text>¿Ya tienes una cuenta?</Text>
         <Link
-          accessibilityLabel="Back to login"
+          accessibilityLabel="Volver al inicio de sesión"
           href="/(public)/login"
           style={{ color: colors.secondary }}
         >
-          Back to login
+          Volver al inicio de sesión
         </Link>
       </View>
     </AuthFormContainer>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Pressable, StyleSheet, View } from 'react-native'
+import { getExerciseTypeLabel } from '@/features/exercises/constants/exercise-options'
 import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, Text } from '@/shared/ui/primitives'
 import type { ActiveWorkoutExercise, ActiveWorkoutSet } from '../schemas/active-workout-draft'
@@ -66,7 +67,7 @@ export function WorkoutExerciseCard({
         <View style={styles.headerLeft}>
           <Text style={styles.name}>{exercise.exerciseName}</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{exercise.exerciseType}</Text>
+            <Text style={styles.badgeText}>{getExerciseTypeLabel(exercise.exerciseType)}</Text>
           </View>
         </View>
 

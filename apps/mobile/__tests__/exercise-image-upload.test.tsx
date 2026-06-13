@@ -177,7 +177,7 @@ describe('exercise image upload', () => {
 
       expect(await view.findByText('No se pudo subir la imagen.')).toBeTruthy()
 
-      fireEvent.changeText(view.getByLabelText('Exercise Name'), 'Pullup')
+      fireEvent.changeText(view.getByLabelText('Nombre del ejercicio'), 'Pullup')
       fireEvent.press(view.getByLabelText('Create Exercise'))
 
       await waitFor(() => {

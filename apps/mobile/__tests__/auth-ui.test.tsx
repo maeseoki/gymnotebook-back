@@ -72,11 +72,11 @@ describe('auth UI', () => {
   it('shows authenticated profile metadata and invokes logout', async () => {
     const view = await renderWithQuery(<ProfileScreen />)
 
-    expect(view.getByText('Username: victor')).toBeTruthy()
-    expect(view.getByText('Email: victor@example.test')).toBeTruthy()
+    expect(view.getByText('Usuario: victor')).toBeTruthy()
+    expect(view.getByText('Correo electrónico: victor@example.test')).toBeTruthy()
     expect(view.getByText('Roles: ROLE_USER')).toBeTruthy()
 
-    fireEvent.press(view.getByRole('button', { name: 'Log out' }))
+    fireEvent.press(view.getByRole('button', { name: 'Cerrar sesión' }))
 
     await waitFor(() => expect(mockLogoutMutate).toHaveBeenCalledTimes(1))
   })

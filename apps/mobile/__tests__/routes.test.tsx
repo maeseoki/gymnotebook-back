@@ -23,7 +23,7 @@ describe('route skeleton', () => {
       user: { id: 1, username: 'victor', email: 'victor@example.test', roles: ['ROLE_USER'] },
     })
     const authenticatedView = await render(<HomeScreen />)
-    expect(authenticatedView.getByText('Home foundation placeholder.')).toBeTruthy()
+    expect(authenticatedView.getByText('Marcador de posición de inicio.')).toBeTruthy()
   })
 
   it('protects authenticated routes by auth status', async () => {

@@ -54,7 +54,7 @@ describe('exercise image upload success', () => {
     await waitFor(() => {
       expect(mockUploadImage).toHaveBeenCalled()
     })
-    fireEvent.changeText(view.getByLabelText('Exercise Name'), 'Squat')
+    fireEvent.changeText(view.getByLabelText('Nombre del ejercicio'), 'Squat')
     fireEvent.press(view.getByLabelText('Create Exercise'))
 
     await waitFor(() => {

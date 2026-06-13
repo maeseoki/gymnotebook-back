@@ -158,7 +158,7 @@ export function FormField({
   )
 }
 
-export function LoadingIndicator({ label = 'Loading' }: { label?: string }): ReactNode {
+export function LoadingIndicator({ label = 'Cargando...' }: { label?: string }): ReactNode {
   return <ActivityIndicator accessibilityLabel={label} color={colors.primary} />
 }
 

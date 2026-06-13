@@ -91,7 +91,7 @@ describe('Create Exercise Screen', () => {
 
   it('displays validation error when name is empty', async () => {
     const view = await renderWithQuery(<NewExerciseScreen />)
-    fireEvent.press(view.getByRole('button', { name: 'Create Exercise' }))
+    fireEvent.press(view.getByRole('button', { name: 'Crear ejercicio' }))
 
     await waitFor(() => {
       expect(view.getByText(/characters/i)).toBeTruthy()
@@ -111,9 +111,9 @@ describe('Create Exercise Screen', () => {
     })
     const view = await renderWithQuery(<NewExerciseScreen />)
 
-    const nameInput = view.getByLabelText('Exercise Name')
+    const nameInput = view.getByLabelText('Nombre del ejercicio')
     fireEvent.changeText(nameInput, 'Deadlift')
-    fireEvent.press(view.getByRole('button', { name: 'Create Exercise' }))
+    fireEvent.press(view.getByRole('button', { name: 'Crear ejercicio' }))
 
     await waitFor(() => {
       expect(mockPost).toHaveBeenCalledWith(
@@ -122,7 +122,7 @@ describe('Create Exercise Screen', () => {
           name: 'Deadlift',
         }),
       )
-      const btn = view.getByRole('button', { name: 'Create Exercise' })
+      const btn = view.getByRole('button', { name: 'Crear ejercicio' })
       expect(btn.props.accessibilityState.busy).toBe(false)
       expect(mockReplace).toHaveBeenCalledWith('/(authenticated)/exercises/3')
     })

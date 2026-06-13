@@ -209,7 +209,7 @@ describe('auth service', () => {
     })
 
     await expect(service.signIn({ username: 'victor', password: 'bad' })).rejects.toMatchObject({
-      message: 'The username or password is incorrect.',
+      message: 'El usuario o la contraseña son incorrectos.',
       reason: 'invalid_credentials',
     })
   })
