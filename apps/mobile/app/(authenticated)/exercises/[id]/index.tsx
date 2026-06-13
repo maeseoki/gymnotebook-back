@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Alert, Image, View } from 'react-native'
+import { ExerciseStatsCard } from '@/features/exercises/components/ExerciseStatsCard'
 import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail'
 import { useDeleteExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
 import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
@@ -126,6 +127,8 @@ export default function ExerciseDetailScreen() {
           </View>
         ) : null}
       </Card>
+
+      <ExerciseStatsCard exerciseId={numericId} exerciseType={exercise.type} />
 
       <View style={{ gap: spacing[3], marginTop: 'auto' }}>
         <Button

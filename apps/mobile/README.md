@@ -175,6 +175,24 @@ The application supports viewing historical workouts loaded from the backend:
   - Successful edits or deletions automatically invalidate query keys starting with `['mobile', 'workouts']`, updating details/list screen states dynamically.
   - Adding new sets or exercises to completed workouts remains unsupported/deferred on the backend and is not exposed in the UI.
 
+## Exercise Detail Screen Statistics
+
+The exercise detail screen includes a compact "Estadísticas" section:
+
+1. **Data Source:** Statistics are derived dynamically from the existing exercise history endpoint (`GET /api/workout-sets/exercise/:exerciseId`). No new backend endpoints or recommendation/charting engines are introduced.
+2. **Computed Stats:**
+   - **Última vez:** The date of the most recent workout in the exercise history, formatted in Spanish (e.g. `12 jun 2026`).
+   - **Total de series:** Total count of all sets across all workouts in the history.
+   - **Mejor peso:** The highest weight value in grams converted to kilograms (e.g. `82500` grams -> `82.5 kg`), preserving decimals without rounding. Only displayed for `WEIGHT` and `WEIGHT_REPS` exercises.
+   - **Mejor volumen:** The highest volume per set (`weightKg * reps`) displayed in `kg`. Only computed when weight and reps are both available (`WEIGHT_REPS`).
+   - **Mejor tiempo:** The highest `time` value in seconds, formatted using the existing time formatter (e.g. `1m 30s`). Only displayed for `TIME` and `TIME_DISTANCE` exercises.
+   - **Mejor distancia:** The highest `distance` value in meters (e.g. `2000 m`). Only displayed for `DISTANCE` and `TIME_DISTANCE` exercises.
+3. **UI States:**
+   - **Loading:** Displays `Cargando estadísticas...` inside the card.
+   - **Error:** Displays `No se pudieron cargar las estadísticas.` inside the card without blocking the rest of the exercise detail screen.
+   - **Empty:** Displays `Aún no hay estadísticas para este ejercicio.` if no history exists.
+4. **Integration:** Placed between the main exercise info/image card and the action buttons.
+
 ## Mobile Authentication
 
 Implemented flow:

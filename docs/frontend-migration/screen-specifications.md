@@ -150,22 +150,30 @@ This section covers every user-visible routed page and modal/dialog.
 ---
 
 ### 6) Exercise detail (`/exercises/:id` and modal variant)
-- **Source:** `components/Exercises/ExerciseDetail.tsx`
-- **Purpose:** show exercise workout history (grouped by workout set/date).
+- **Source:** `apps/mobile/app/(authenticated)/exercises/[id]/index.tsx`
+- **Purpose:** show exercise info, calculated statistics from recent history, and actions.
 
 **Layout**
-1. Header with exercise name.
-2. Optional “Editar ejercicio” link when routed page (not modal).
-3. List of cards by workout date.
-4. Table per card: dynamic headers by exercise type + rows.
+1. Main Card with exercise name, image (if uploaded), type, primary muscle, secondary muscle (optional), and description.
+2. Compact Statistics Card ("Estadísticas"):
+   - title
+   - Última vez: date of most recent workout
+   - Total de series: count of all sets
+   - Mejor peso: max weight in kg (for WEIGHT/WEIGHT_REPS)
+   - Mejor volumen: max volume in kg (for WEIGHT_REPS)
+   - Mejor tiempo: max time (for TIME/TIME_DISTANCE)
+   - Mejor distancia: max distance (for DISTANCE/TIME_DISTANCE)
+3. Action buttons: "Edit Exercise" and "Delete Exercise".
 
 **Behavior**
-- Fetch history on mount/`exerciseId` change.
-- Loading text only; no empty/error differentiated UI.
-- Uses index-based keys for set rows.
+- Fetch exercise details on mount.
+- Fetch exercise history dynamically to calculate and display statistics.
+- Loading/error states for statistics card do not block the rest of the detail screen (displaying fallback messages `Cargando estadísticas...` or `No se pudieron cargar las estadísticas.`).
+- If no history exists, shows `Aún no hay estadísticas para este ejercicio.`.
 
 **Data/API**
-- GET `workout-sets/exercise/:id` with legacy pagination params.
+- GET `exercise/:id` (details)
+- GET `workout-sets/exercise/:id` (history for stats calculations)
 
 ---
 

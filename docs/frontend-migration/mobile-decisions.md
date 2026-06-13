@@ -233,3 +233,20 @@ See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [
 - **States:** Gracefully displays loading, empty, and friendly error states without blocking set entry.
 - **Unit Conversions:** Utilizes standard formatting utilities to convert weight (grams -> kg), time (seconds -> min/sec), and distance (meters).
 - **Scope Limit:** Displays only. Automatic suggestions/auto-fill or progression recommendations are deferred.
+
+## Exercise Detail Screen Statistics
+
+**Decision:** Add a simple "Estadísticas" section to the exercise detail screen.
+- **Data Source:** Statistics are calculated dynamically from the existing exercise history endpoint (`GET /api/workout-sets/exercise/:exerciseId`).
+- **Calculations & Unit Conversions:**
+  - **Última vez:** Date of the most recent workout in the exercise history, formatted using local date string with short month name in Spanish.
+  - **Total de series:** Simple count of all sets returned in the history page.
+  - **Mejor peso:** Highest weight in grams converted to kg without destructive rounding (e.g. `82500` grams -> `82.5 kg`). Only displayed for `WEIGHT` and `WEIGHT_REPS` exercises.
+  - **Mejor volumen:** Highest volume per set calculated as `weightKg * reps` in kg. Only displayed for `WEIGHT_REPS` exercises.
+  - **Mejor tiempo:** Highest time in seconds, formatted using the standard formatter (e.g. `1m 30s`). Only displayed for `TIME` and `TIME_DISTANCE` exercises.
+  - **Mejor distancia:** Highest distance in meters. Only displayed for `DISTANCE` and `TIME_DISTANCE` exercises.
+- **UI States:**
+  - Loading: `Cargando estadísticas...`
+  - Error: `No se pudieron cargar las estadísticas.` (rendered within the card, does not block the rest of the detail screen).
+  - Empty: `Aún no hay estadísticas para este ejercicio.`
+- **Scope Limit:** Only display calculated stats derived from history. Recommendations, charts, PR systems, or templates remain deferred.
