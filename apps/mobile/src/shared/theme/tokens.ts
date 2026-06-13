@@ -11,6 +11,7 @@ export const colors = {
   secondary: '#357EF1',
   secondaryPressed: '#245CB5',
   danger: '#EF4444',
+  success: '#10B981',
 } as const
 
 export const spacing = {

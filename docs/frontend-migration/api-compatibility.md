@@ -21,8 +21,8 @@ References used:
 | `createExercise` | `POST /api/exercise` | same path, response changed | frontend expects void | returns created `ExerciseResponse` (201) | auth | Compatible with mismatch | consume response optionally; keep strict payload fields only |
 | `updateExercise` | `PUT /api/exercise/:id` | same | frontend expects body (already okay) | returns updated `ExerciseResponse` (200) | auth | Compatible | ensure strict body (no unknown props) |
 | `deleteExercise` | `DELETE /api/exercise/:id` | same | no body expected | returns 204; may return `409 exercise_in_use` | auth | Compatible with new conflict | show user-facing conflict handling |
-| `uploadImage` | `POST /api/image` | same | frontend expects numeric id directly | now returns `{ id }`; strict type/format checks (jpeg/png/webp) | auth | **Incompatible** | parse `response.id`; enforce allowed file formats |
-| `getImage/getImageAsUrl` | `GET /api/image/:id` | same | expects blob/public URL | still public; now safer headers + standardized 404 | public | Compatible | keep fallback handling |
+| `uploadImage` | `POST /api/image` | same | frontend expects numeric id directly | now returns `{ id }`; strict type/format checks (jpeg/png/webp) | auth | **Incompatible** | Implemented in mobile with multipart `FormData`; parse `response.id`; do not store base64 |
+| `getImage/getImageAsUrl` | `GET /api/image/:id` | same | expects blob/public URL | still public; now safer headers + standardized 404 | public | Compatible | Implemented in mobile with `EXPO_PUBLIC_API_URL + /image/:id`; revisit if retrieval becomes authenticated |
 | `saveWorkout` | `POST /api/workout` | same | sends full nested exercise object in `workoutSet.exercise`; Date objects serialized | contract requires strict `exercise: { id }`; strict ISO with offset/Z; nonnegative integer measures | auth | **Incompatible (critical)** | map local draft to request contract and validate before submit |
 | `getWorkoutDaysForMonth` | `GET /api/workout/days/:month/:year` | same + timezone support | no timezone query | supports optional `timezone`; returns local day numbers based on timezone | auth | Compatible with enhancement | send user timezone for correctness |
 | `getWorkoutsByDate` | `GET /api/workout/workouts/:date` | same path with stricter param | frontend sends ISO datetime via `toISOString()` | new route requires strict `YYYY-MM-DD`; optional timezone query | auth | **Incompatible** | send date-only param and timezone query |
@@ -78,3 +78,11 @@ The workout history integration utilizes:
 - `DELETE /workout/sets/:setId` to delete a set.
 - `DELETE /workout/:workoutId` to delete an entire workout.
 Queries utilize the user's local timezone (via `Intl.DateTimeFormat().resolvedOptions().timeZone`) for day bounds. Zod contract schemas are strictly enforced on the frontend. Query invalidation is performed under `['mobile', 'workouts']`.
+
+### Exercise image upload endpoints (Mobile)
+
+Mobile exercise create/edit uses `expo-image-picker` for gallery and camera selection, then uploads the selected file to `POST /api/image` through the authenticated Axios client. The mobile client base URL is configured with `/api`, so the request path is `/image`.
+
+The upload response is parsed with `ImageUploadResponseSchema` and only the returned numeric `imageId` is submitted to `POST /api/exercise` or `PUT /api/exercise/:id`. The exercise contracts explicitly allow `imageId: null`, so image removal is represented by submitting `null`.
+
+No base64 image payload is stored in form state or local persistence. Local device URIs are used only for immediate previews of newly selected/captured images. Existing backend images are displayed through the public `GET /api/image/:id` endpoint; no authenticated-image URL workaround is invented.

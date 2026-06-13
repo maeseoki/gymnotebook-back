@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
-import { Alert, View } from 'react-native'
+import { Alert, Image, View } from 'react-native'
 import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail'
 import { useDeleteExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
 import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
-import { colors, spacing } from '@/shared/theme/tokens'
+import { getPublicImageUri } from '@/features/images/api/images-api'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function ExerciseDetailScreen() {
@@ -86,6 +87,19 @@ export default function ExerciseDetailScreen() {
       ) : null}
 
       <Card style={{ gap: spacing[3] }}>
+        {exercise.imageId ? (
+          <Image
+            source={{ uri: getPublicImageUri(exercise.imageId) }}
+            style={{
+              width: '100%',
+              height: 180,
+              borderRadius: radius.md,
+              marginBottom: spacing[2],
+            }}
+            resizeMode="cover"
+            accessibilityLabel="Imagen de ejercicio"
+          />
+        ) : null}
         <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24 }}>{exercise.name}</Text>
 
         <View style={{ gap: spacing[1] }}>

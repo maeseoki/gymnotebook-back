@@ -13,6 +13,7 @@ Expo mobile application foundation for Android and iOS. This package includes ap
 - TanStack Query: `5.101.0`, Zustand: `5.0.14`, Zod: `4.4.3`.
 - React Hook Form: `7.78.0`, `@hookform/resolvers`: `5.4.0`.
 - Axios: `1.17.0`.
+- Expo Image Picker: `56.0.17`, used for native gallery selection and camera capture in the exercise form.
 - Jest Expo: `56.0.4`, React Native Testing Library: `14.0.0`.
 - Tailwind CSS: `3.4.19`, latest stable Tailwind 3.4 release in npm metadata.
 - NativeWind: `4.2.5`, stable NativeWind line compatible with Tailwind 3.4. NativeWind 5 is the Tailwind 4 line, but it is still preview/prerelease, so this foundation deliberately avoids it until a stable release is available.
@@ -208,6 +209,16 @@ EXPO_PUBLIC_APP_ENV=development EXPO_PUBLIC_API_URL=http://10.0.2.2:8080/api pnp
 
 The backend mobile auth endpoints must be available. Automated tests use fakes and do not require a live backend.
 
+## Exercise Images
+
+The exercise create/edit form supports selecting an image from the device gallery and taking a new photo with the camera through `expo-image-picker`. Permission denial is shown inline and does not block the rest of the exercise form.
+
+Selected or captured images are uploaded immediately with multipart `POST /image` using the authenticated mobile API client. The backend returns `{ id }`; the form stores and submits only that `imageId` in the shared exercise create/update contract. Base64 image data is not stored in React state, Zustand, SecureStore, AsyncStorage, or logs.
+
+Newly selected images use the local device URI only for the in-form preview while the upload is in progress or after it succeeds. Existing backend images use the public `GET /image/:id` route, built from `EXPO_PUBLIC_API_URL` which already includes `/api`. If backend image retrieval becomes authenticated later, mobile image display must switch to an authenticated fetch/blob strategy instead of inventing unauthenticated URLs.
+
+When editing an exercise, replacing or removing an image submits the new `imageId` or `null` first. The old image is deleted only after the exercise update succeeds. If create/update fails after a new upload, the app attempts to delete the newly uploaded orphan image; remaining orphan cleanup is best-effort and may require backend/admin cleanup if that deletion also fails.
+
 ## Deferred
 
-Global refresh interceptors, session-management UI, password recovery, workout editing, exercise CRUD, image selection/camera, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.
+Global refresh interceptors, session-management UI, password recovery, workout editing, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.

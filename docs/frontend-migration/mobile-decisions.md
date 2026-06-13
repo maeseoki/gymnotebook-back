@@ -192,6 +192,12 @@ Creating or replacing exercise images must follow safe two-step API sequencing t
 - never delete previous image before successful exercise update,
 - attempt cleanup on failure paths and report orphan-cleanup failures.
 
+Mobile implements this with `expo-image-picker` for gallery selection and camera capture. The exercise form uploads the selected local URI to authenticated `POST /api/image` as multipart form data and stores only the returned `imageId`. Base64 image data must not be stored in React state, Zustand, SecureStore, AsyncStorage, or logs.
+
+Create and edit exercise requests submit `imageId` through the shared exercise contracts. Removing an image submits `imageId: null`, which is supported by `CreateExerciseRequestSchema` and `UpdateExerciseRequestSchema`. Existing backend image display uses the public `GET /api/image/:id` route; if that endpoint becomes authenticated, mobile must replace direct `<Image uri>` rendering with an authenticated retrieval strategy.
+
+Current deferred cleanup: if a newly uploaded image becomes orphaned and the best-effort delete also fails, there is no mobile retry queue for orphan image cleanup.
+
 See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [user-workflows.md](./user-workflows.md).
 
 ## Workout History (v1 Implementation)

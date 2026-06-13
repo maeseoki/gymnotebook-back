@@ -4,6 +4,7 @@ import { ExerciseForm, type ExerciseFormValues } from '@/features/exercises/comp
 import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail'
 import { useUpdateExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
 import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
+import { imagesApi } from '@/features/images/api/images-api'
 import { spacing } from '@/shared/theme/tokens'
 import { Button, ErrorState, LoadingIndicator, Screen } from '@/shared/ui/primitives'
 
@@ -18,22 +19,41 @@ export default function ExerciseEditScreen() {
     error: detailError,
   } = useExerciseDetail(numericId)
   const {
-    mutate: updateExercise,
+    mutateAsync: updateExercise,
     isPending: isUpdating,
     error: updateError,
   } = useUpdateExerciseMutation(numericId)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const handleSubmit = (values: ExerciseFormValues) => {
+  const handleSubmit = async (values: ExerciseFormValues) => {
+    if (!exercise) return
     setSubmitError(null)
-    updateExercise(values, {
-      onSuccess: () => {
-        router.replace(`/(authenticated)/exercises/${numericId}`)
-      },
-      onError: (err) => {
-        setSubmitError(mapExerciseError(err))
-      },
-    })
+    const oldImageId = exercise.imageId
+    const newImageId = values.imageId
+    const isImageChanged = newImageId !== oldImageId
+
+    try {
+      await updateExercise(values)
+      if (isImageChanged && oldImageId) {
+        try {
+          await imagesApi.delete(oldImageId)
+        } catch {
+          // The exercise update already succeeded; leave navigation behavior unchanged.
+        }
+      }
+      router.replace(`/(authenticated)/exercises/${numericId}`)
+    } catch (err) {
+      const originalErrorMsg = mapExerciseError(err)
+      setSubmitError(originalErrorMsg)
+
+      if (isImageChanged && newImageId) {
+        try {
+          await imagesApi.delete(newImageId)
+        } catch {
+          setSubmitError(`${originalErrorMsg} (No se pudo limpiar la imagen huérfana).`)
+        }
+      }
+    }
   }
 
   if (!isValidId) {
@@ -68,17 +88,26 @@ export default function ExerciseEditScreen() {
     )
   }
 
+  const initialValues: Partial<ExerciseFormValues> = {}
+  if (exercise) {
+    initialValues.name = exercise.name
+    initialValues.type = exercise.type
+    initialValues.primaryMuscleGroup = exercise.primaryMuscleGroup
+    if (exercise.description !== undefined) {
+      initialValues.description = exercise.description
+    }
+    if (exercise.secondaryMuscleGroup !== undefined) {
+      initialValues.secondaryMuscleGroup = exercise.secondaryMuscleGroup
+    }
+    if (exercise.imageId !== undefined) {
+      initialValues.imageId = exercise.imageId
+    }
+  }
+
   return (
     <Screen>
       <ExerciseForm
-        initialValues={{
-          name: exercise.name,
-          description: exercise.description,
-          type: exercise.type,
-          primaryMuscleGroup: exercise.primaryMuscleGroup,
-          secondaryMuscleGroup: exercise.secondaryMuscleGroup,
-          imageId: exercise.imageId,
-        }}
+        initialValues={initialValues}
         onSubmit={handleSubmit}
         loading={isUpdating}
         submitLabel="Save Changes"

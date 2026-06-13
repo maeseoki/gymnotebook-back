@@ -194,7 +194,14 @@ This section covers every user-visible routed page and modal/dialog.
 
 **Mobile considerations**
 - Dropzone is web-specific.
-- Native camera/gallery replacement required.
+- Native camera/gallery replacement is implemented with `expo-image-picker`.
+- Gallery action requests media-library permission and opens the image library.
+- Camera action requests camera permission and launches camera capture.
+- Selected/captured files upload immediately to authenticated `POST /api/image`; create/edit submits only the returned `imageId`.
+- The form stores no base64 data. Local device URI is used only for immediate preview of the newly selected/captured image.
+- Existing backend images are represented by their associated `imageId` and can be displayed through public `GET /api/image/:id`. If image retrieval becomes authenticated, direct `<Image uri>` rendering must be replaced by an authenticated fetch strategy.
+- Removing an image submits `imageId: null`, supported by the shared exercise contract.
+- Replacing/removing an image deletes the old backend image only after the exercise update succeeds. Cleanup of newly uploaded orphan images is best-effort if create/update fails.
 
 ---
 
@@ -271,4 +278,3 @@ This section covers every user-visible routed page and modal/dialog.
 4. `EndWorkoutDialog`: confirms workout finish.
 5. `LogOut` alert dialog: confirms logout.
 6. `AdminUsers` delete-user dialog.
-

@@ -3,26 +3,33 @@ import { useState } from 'react'
 import { ExerciseForm, type ExerciseFormValues } from '@/features/exercises/components/ExerciseForm'
 import { useCreateExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
 import { mapExerciseError } from '@/features/exercises/utils/exercise-errors'
+import { imagesApi } from '@/features/images/api/images-api'
 import { Screen } from '@/shared/ui/primitives'
 
 export default function NewExerciseScreen() {
-  const { mutate, isPending, error } = useCreateExerciseMutation()
+  const { mutateAsync, isPending, error } = useCreateExerciseMutation()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const handleSubmit = (values: ExerciseFormValues) => {
+  const handleSubmit = async (values: ExerciseFormValues) => {
     setSubmitError(null)
-    mutate(values, {
-      onSuccess: (data) => {
-        if (data && typeof data.id === 'number') {
-          router.replace(`/(authenticated)/exercises/${data.id}`)
-        } else {
-          router.replace('/(authenticated)/(tabs)/exercises')
+    try {
+      const data = await mutateAsync(values)
+      if (data && typeof data.id === 'number') {
+        router.replace(`/(authenticated)/exercises/${data.id}`)
+      } else {
+        router.replace('/(authenticated)/(tabs)/exercises')
+      }
+    } catch (err) {
+      const originalErrorMsg = mapExerciseError(err)
+      setSubmitError(originalErrorMsg)
+      if (values.imageId) {
+        try {
+          await imagesApi.delete(values.imageId)
+        } catch {
+          setSubmitError(`${originalErrorMsg} (No se pudo limpiar la imagen huérfana).`)
         }
-      },
-      onError: (err) => {
-        setSubmitError(mapExerciseError(err))
-      },
-    })
+      }
+    }
   }
 
   return (
