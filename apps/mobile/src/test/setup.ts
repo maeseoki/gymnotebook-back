@@ -1,5 +1,3 @@
-export {}
-
 // @ts-expect-error - IS_REACT_ACT_ENVIRONMENT is a global flag for React testing
 global.IS_REACT_ACT_ENVIRONMENT = true
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -38,3 +36,9 @@ notifyManager.setScheduler(queueMicrotask)
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 )
+
+jest.mock('expo-localization', () => ({
+  getLocales: () => [{ languageCode: 'es' }],
+}))
+
+import '@/shared/i18n'

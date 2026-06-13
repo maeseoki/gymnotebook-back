@@ -114,6 +114,7 @@ The public login and signup routes call the backend mobile auth endpoints. Authe
 - Network: Expo Network adapter exposing `online`, `offline`, or `unknown`; connected network is not treated as guaranteed internet reachability. The TanStack Query online manager treats `unknown` as online so requests are not paused solely because reachability is inconclusive.
 - Query: mobile QueryClient defaults, query-key conventions, conservative transient retry policy for queries, no global mutation retries, and Expo Network online-manager integration.
 - Forms: React Hook Form resolver example using shared Zod mobile signin schema.
+- i18n: Lightweight localization module using `i18next` and `react-i18next`, with device locale detection via `expo-localization` and persisted manual settings. Supported languages are Spanish (`es`) and English (`en`), with English (`en`) being the default/fallback language. Manual language selection is persisted in AsyncStorage and overrides device language; if no preference is saved, the app uses device language when supported or falls back to English.
 - UI: dark-first React Native primitives: Screen, KeyboardSafeScreen, Text, Button, Card, TextInput, FormField, LoadingIndicator, EmptyState, and ErrorState.
 - Styling: NativeWind 4 is configured through `nativewind/babel`, `withNativeWind` in Metro, `global.css`, and `tailwind.config.ts`. The current primitives use React Native style objects so they remain stable before product screens introduce `className` usage.
 

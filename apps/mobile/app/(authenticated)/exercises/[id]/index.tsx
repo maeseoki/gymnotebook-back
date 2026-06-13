@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, Image, ScrollView, View } from 'react-native'
 import { ExerciseStatsCard } from '@/features/exercises/components/ExerciseStatsCard'
 import {
@@ -14,6 +15,7 @@ import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function ExerciseDetailScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const numericId = Number(id)
   const isValidId = id !== undefined && !Number.isNaN(numericId) && numericId > 0
@@ -35,22 +37,18 @@ export default function ExerciseDetailScreen() {
   }
 
   const showConfirmDelete = () => {
-    Alert.alert(
-      'Eliminar ejercicio',
-      '¿Estás seguro de que quieres eliminar este ejercicio? Esta acción no se puede deshacer.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: handleDelete },
-      ],
-    )
+    Alert.alert(t('exerciseDetail.confirmDeleteTitle'), t('exerciseDetail.confirmDeleteMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: handleDelete },
+    ])
   }
 
   if (!isValidId) {
     return (
       <Screen style={{ justifyContent: 'center' }}>
-        <ErrorState title="ID de ejercicio no válido" />
+        <ErrorState title={t('exerciseDetail.invalidId')} />
         <Button
-          label="Volver a ejercicios"
+          label={t('exerciseDetail.backToExercises')}
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
@@ -60,7 +58,7 @@ export default function ExerciseDetailScreen() {
   if (isLoading) {
     return (
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <LoadingIndicator label="Cargando detalles del ejercicio..." />
+        <LoadingIndicator label={t('exerciseDetail.loading')} />
       </Screen>
     )
   }
@@ -68,19 +66,21 @@ export default function ExerciseDetailScreen() {
   if (error || !exercise) {
     return (
       <Screen style={{ justifyContent: 'center', gap: spacing[4] }}>
-        <ErrorState title={error ? mapExerciseError(error) : 'Ejercicio no encontrado.'} />
+        <ErrorState
+          title={error ? mapExerciseError(error) : t('exercisesScreen.errors.notFound')}
+        />
         <Button
-          label="Volver a ejercicios"
+          label={t('exerciseDetail.backToExercises')}
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
     )
   }
 
-  const typeDisplay = getExerciseTypeLabel(exercise.type)
-  const primaryMuscle = getMuscleGroupLabel(exercise.primaryMuscleGroup)
+  const typeDisplay = getExerciseTypeLabel(exercise.type, t)
+  const primaryMuscle = getMuscleGroupLabel(exercise.primaryMuscleGroup, t)
   const secondaryMuscle = exercise.secondaryMuscleGroup
-    ? getMuscleGroupLabel(exercise.secondaryMuscleGroup)
+    ? getMuscleGroupLabel(exercise.secondaryMuscleGroup, t)
     : null
 
   return (
@@ -103,25 +103,29 @@ export default function ExerciseDetailScreen() {
                 marginBottom: spacing[2],
               }}
               resizeMode="cover"
-              accessibilityLabel="Imagen de ejercicio"
+              accessibilityLabel={t('exerciseDetail.imageLabel')}
             />
           ) : null}
           <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24 }}>{exercise.name}</Text>
 
           <View style={{ gap: spacing[1] }}>
-            <Text style={{ color: colors.textMuted, fontSize: 14 }}>Tipo</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 14 }}>
+              {t('exerciseDetail.type')}
+            </Text>
             <Text style={{ fontSize: 16 }}>{typeDisplay}</Text>
           </View>
 
           <View style={{ gap: spacing[1] }}>
-            <Text style={{ color: colors.textMuted, fontSize: 14 }}>Grupo muscular primario</Text>
+            <Text style={{ color: colors.textMuted, fontSize: 14 }}>
+              {t('exerciseDetail.primaryMuscle')}
+            </Text>
             <Text style={{ fontSize: 16 }}>{primaryMuscle}</Text>
           </View>
 
           {secondaryMuscle ? (
             <View style={{ gap: spacing[1] }}>
               <Text style={{ color: colors.textMuted, fontSize: 14 }}>
-                Grupo muscular secundario
+                {t('exerciseDetail.secondaryMuscle')}
               </Text>
               <Text style={{ fontSize: 16 }}>{secondaryMuscle}</Text>
             </View>
@@ -129,7 +133,9 @@ export default function ExerciseDetailScreen() {
 
           {exercise.description ? (
             <View style={{ gap: spacing[1] }}>
-              <Text style={{ color: colors.textMuted, fontSize: 14 }}>Descripción</Text>
+              <Text style={{ color: colors.textMuted, fontSize: 14 }}>
+                {t('exerciseDetail.description')}
+              </Text>
               <Text style={{ fontSize: 16 }}>{exercise.description}</Text>
             </View>
           ) : null}
@@ -139,13 +145,13 @@ export default function ExerciseDetailScreen() {
 
         <View style={{ gap: spacing[3], marginTop: 'auto' }}>
           <Button
-            label="Editar ejercicio"
+            label={t('exerciseDetail.editExercise')}
             variant="outline"
             onPress={() => router.push(`/(authenticated)/exercises/${numericId}/edit`)}
             disabled={isDeleting}
           />
           <Button
-            label="Eliminar ejercicio"
+            label={t('exerciseDetail.deleteExercise')}
             variant="secondary"
             onPress={showConfirmDelete}
             loading={isDeleting}

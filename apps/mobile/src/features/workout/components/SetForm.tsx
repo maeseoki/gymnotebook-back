@@ -2,6 +2,7 @@ import type { EExerciseType } from '@gymnotebook/contracts'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import {
   type GestureResponderEvent,
   KeyboardAvoidingView,
@@ -19,15 +20,15 @@ import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives
 import { useExerciseSetHistory } from '../hooks/use-exercise-set-history'
 import type { ActiveWorkoutSet } from '../schemas/active-workout-draft'
 
-const createSetFormSchema = (exerciseType: EExerciseType) => {
+const createSetFormSchema = (exerciseType: EExerciseType, t: (key: string) => string) => {
   return z
     .object({
       weightKg: ['WEIGHT', 'WEIGHT_REPS'].includes(exerciseType)
         ? z
             .string()
-            .refine((val) => val.trim() !== '', { message: 'El peso es obligatorio' })
+            .refine((val) => val.trim() !== '', { message: t('setForm.validation.weightRequired') })
             .refine((val) => /^\d+(\.\d{1,3})?$/.test(val.trim()), {
-              message: 'El peso debe ser un número no negativo con hasta 3 decimales',
+              message: t('setForm.validation.weightInvalid'),
             })
             .transform((val) => Number(val))
         : z
@@ -37,9 +38,9 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
       reps: ['REPS', 'WEIGHT_REPS'].includes(exerciseType)
         ? z
             .string()
-            .refine((val) => val.trim() !== '', { message: 'Las repeticiones son obligatorias' })
+            .refine((val) => val.trim() !== '', { message: t('setForm.validation.repsRequired') })
             .refine((val) => /^\d+$/.test(val.trim()), {
-              message: 'Las repeticiones deben ser un número entero no negativo',
+              message: t('setForm.validation.repsInvalid'),
             })
             .transform((val) => Number(val))
         : z
@@ -51,7 +52,7 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
             .string()
             .transform((val) => (val.trim() === '' ? 0 : Number(val)))
             .refine((val) => !Number.isNaN(val) && Number.isInteger(val) && val >= 0, {
-              message: 'Los minutos deben ser un número entero no negativo',
+              message: t('setForm.validation.minutesInvalid'),
             })
         : z
             .string()
@@ -62,7 +63,7 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
             .string()
             .transform((val) => (val.trim() === '' ? 0 : Number(val)))
             .refine((val) => !Number.isNaN(val) && Number.isInteger(val) && val >= 0 && val < 60, {
-              message: 'Los segundos deben ser un número entero no negativo entre 0 y 59',
+              message: t('setForm.validation.secondsInvalid'),
             })
         : z
             .string()
@@ -71,9 +72,11 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
       distanceMeters: ['DISTANCE', 'TIME_DISTANCE'].includes(exerciseType)
         ? z
             .string()
-            .refine((val) => val.trim() !== '', { message: 'La distancia es obligatoria' })
+            .refine((val) => val.trim() !== '', {
+              message: t('setForm.validation.distanceRequired'),
+            })
             .refine((val) => /^\d+$/.test(val.trim()), {
-              message: 'La distancia debe ser un número entero no negativo',
+              message: t('setForm.validation.distanceInvalid'),
             })
             .transform((val) => Number(val))
         : z
@@ -91,7 +94,7 @@ const createSetFormSchema = (exerciseType: EExerciseType) => {
       },
       {
         path: ['seconds'],
-        message: 'El tiempo total debe ser mayor que 0 segundos',
+        message: t('setForm.validation.timeSecondsMin'),
       },
     )
 }
@@ -128,7 +131,8 @@ export function SetForm({
   onClose,
   onSubmit,
 }: SetFormProps) {
-  const schema = createSetFormSchema(exerciseType)
+  const { t } = useTranslation()
+  const schema = createSetFormSchema(exerciseType, t)
 
   const {
     data: historyData,
@@ -280,7 +284,9 @@ export function SetForm({
                 contentContainerStyle={{ gap: spacing[4] }}
                 style={{ flexShrink: 1 }}
               >
-                <Text style={styles.title}>{editingSet ? 'Editar Serie' : 'Añadir Serie'}</Text>
+                <Text style={styles.title}>
+                  {editingSet ? t('setForm.editSet') : t('setForm.addSet')}
+                </Text>
                 <Text style={styles.subtitle}>{exerciseName}</Text>
 
                 <View style={styles.formContainer}>
@@ -289,7 +295,10 @@ export function SetForm({
                       control={control}
                       name="weightKg"
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Peso (kg)" error={errors.weightKg?.message as string}>
+                        <FormField
+                          label={t('setForm.weightLabel')}
+                          error={errors.weightKg?.message as string}
+                        >
                           <TextInput
                             keyboardType="decimal-pad"
                             placeholder="0.0"
@@ -308,7 +317,10 @@ export function SetForm({
                       control={control}
                       name="reps"
                       render={({ field: { onChange, onBlur, value } }) => (
-                        <FormField label="Repeticiones" error={errors.reps?.message as string}>
+                        <FormField
+                          label={t('setForm.repsLabel')}
+                          error={errors.reps?.message as string}
+                        >
                           <TextInput
                             keyboardType="number-pad"
                             placeholder="0"
@@ -329,7 +341,10 @@ export function SetForm({
                           control={control}
                           name="minutes"
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormField label="Minutos" error={errors.minutes?.message as string}>
+                            <FormField
+                              label={t('setForm.minutesLabel')}
+                              error={errors.minutes?.message as string}
+                            >
                               <TextInput
                                 keyboardType="number-pad"
                                 placeholder="0"
@@ -347,7 +362,10 @@ export function SetForm({
                           control={control}
                           name="seconds"
                           render={({ field: { onChange, onBlur, value } }) => (
-                            <FormField label="Segundos" error={errors.seconds?.message as string}>
+                            <FormField
+                              label={t('setForm.secondsLabel')}
+                              error={errors.seconds?.message as string}
+                            >
                               <TextInput
                                 keyboardType="number-pad"
                                 placeholder="0"
@@ -369,7 +387,7 @@ export function SetForm({
                       name="distanceMeters"
                       render={({ field: { onChange, onBlur, value } }) => (
                         <FormField
-                          label="Distancia (m)"
+                          label={t('setForm.distanceLabel')}
                           error={errors.distanceMeters?.message as string}
                         >
                           <TextInput
@@ -389,17 +407,15 @@ export function SetForm({
                 {/* Recent exercise history section */}
                 <View style={styles.historySection}>
                   <View style={styles.historyHeaderRow}>
-                    <Text style={styles.historyTitle}>Últimas series</Text>
+                    <Text style={styles.historyTitle}>{t('setForm.recentSets')}</Text>
                     {feedbackVisible && (
-                      <Text style={styles.copiedFeedback}>Serie copiada al formulario.</Text>
+                      <Text style={styles.copiedFeedback}>{t('setForm.copiedFeedback')}</Text>
                     )}
                   </View>
                   {isLoadingHistory ? (
-                    <Text style={styles.historyStatus}>Cargando historial...</Text>
+                    <Text style={styles.historyStatus}>{t('setForm.loadingHistory')}</Text>
                   ) : historyError ? (
-                    <Text style={styles.historyStatus}>
-                      No se pudo cargar el historial reciente.
-                    </Text>
+                    <Text style={styles.historyStatus}>{t('setForm.historyError')}</Text>
                   ) : historyData?.content && historyData.content.length > 0 ? (
                     <View style={styles.historyList}>
                       {historyData.content.slice(0, 2).map((workout) => (
@@ -409,7 +425,8 @@ export function SetForm({
                             {workout.sets.map((set, idx) => (
                               <View key={set.id} style={styles.historySetRow}>
                                 <Text style={styles.historySetItem}>
-                                  Serie {idx + 1}: {formatSetValues(set, exerciseType)}
+                                  {t('setForm.series', { num: idx + 1 })}:{' '}
+                                  {formatSetValues(set, exerciseType)}
                                   {set.isDropSet ? ' (Drop)' : ''}
                                   {set.notes ? ` - ${set.notes}` : ''}
                                 </Text>
@@ -418,7 +435,7 @@ export function SetForm({
                                   onPress={() => handleUseSet(set)}
                                   accessibilityLabel={`Usar serie ${idx + 1}`}
                                 >
-                                  <Text style={styles.useButtonText}>Usar</Text>
+                                  <Text style={styles.useButtonText}>{t('setForm.useSet')}</Text>
                                 </Pressable>
                               </View>
                             ))}
@@ -427,16 +444,14 @@ export function SetForm({
                       ))}
                     </View>
                   ) : (
-                    <Text style={styles.historyStatus}>
-                      Sin historial previo para este ejercicio.
-                    </Text>
+                    <Text style={styles.historyStatus}>{t('setForm.noHistory')}</Text>
                   )}
                 </View>
 
                 <View style={styles.buttonRow}>
                   <View style={{ flex: 1 }}>
                     <Button
-                      label="Cancelar"
+                      label={t('common.cancel')}
                       variant="outline"
                       onPress={onClose}
                       accessibilityLabel="Boton Cancelar Serie"
@@ -444,7 +459,7 @@ export function SetForm({
                   </View>
                   <View style={{ flex: 1 }}>
                     <Button
-                      label="Guardar"
+                      label={t('common.save')}
                       variant="primary"
                       onPress={handleSubmit(onFormSubmit)}
                       accessibilityLabel="Boton Guardar Serie"

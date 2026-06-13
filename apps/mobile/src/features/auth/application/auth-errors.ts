@@ -1,6 +1,7 @@
 import { MobileAuthApiError } from '@/features/auth/api/mobile-auth-api'
 import type { ApiFailure } from '@/shared/api/errors'
 import type { RefreshTokenStorageResult } from '@/shared/auth/refresh-token-storage'
+import i18n from '@/shared/i18n'
 
 export type AuthErrorReason =
   | 'invalid_credentials'
@@ -33,7 +34,7 @@ export function toAuthServiceError(error: unknown): AuthServiceError {
     return mapApiFailureToAuthError(error.failure, error)
   }
 
-  return new AuthServiceError('unknown', 'Algo salió mal. Por favor, inténtalo de nuevo.', error)
+  return new AuthServiceError('unknown', i18n.t('auth.errors.unknown'), error)
 }
 
 export function secureStorageError(
@@ -42,8 +43,8 @@ export function secureStorageError(
 ): AuthServiceError {
   const message =
     operation === 'read'
-      ? 'El almacenamiento seguro no está disponible. Por favor, inicia sesión de nuevo.'
-      : 'No se pudo guardar tu sesión de forma segura. Por favor, inténtalo de nuevo.'
+      ? i18n.t('auth.errors.secureStorageRead')
+      : i18n.t('auth.errors.secureStorageWrite')
 
   return new AuthServiceError('secure_storage_unavailable', message, result)
 }
@@ -56,58 +57,46 @@ function mapApiFailureToAuthError(failure: ApiFailure, cause: unknown): AuthServ
   if (failure.kind === 'network_unavailable') {
     return new AuthServiceError(
       'network_unavailable',
-      'Comprueba tu conexión e inténtalo de nuevo.',
+      i18n.t('auth.errors.networkUnavailable'),
       cause,
     )
   }
 
   if (failure.kind === 'timeout') {
-    return new AuthServiceError(
-      'timeout',
-      'La solicitud ha expirado. Por favor, inténtalo de nuevo.',
-      cause,
-    )
+    return new AuthServiceError('timeout', i18n.t('auth.errors.timeout'), cause)
   }
 
   if (failure.kind === 'validation') {
-    return new AuthServiceError(
-      'validation',
-      'No se pudo verificar la respuesta del servidor. Por favor, inténtalo de nuevo.',
-      cause,
-    )
+    return new AuthServiceError('validation', i18n.t('auth.errors.validation'), cause)
   }
 
   if (failure.kind !== 'backend') {
-    return new AuthServiceError('unknown', 'Algo salió mal. Por favor, inténtalo de nuevo.', cause)
+    return new AuthServiceError('unknown', i18n.t('auth.errors.unknown'), cause)
   }
 
   switch (failure.code) {
     case 'invalid_credentials':
       return new AuthServiceError(
         'invalid_credentials',
-        'El usuario o la contraseña son incorrectos.',
+        i18n.t('auth.errors.invalidCredentials'),
         cause,
       )
     case 'username_already_exists':
       return new AuthServiceError(
         'username_conflict',
-        'Ese nombre de usuario ya está en uso.',
+        i18n.t('auth.errors.usernameConflict'),
         cause,
       )
     case 'email_already_exists':
-      return new AuthServiceError('email_conflict', 'Ese correo electrónico ya está en uso.', cause)
+      return new AuthServiceError('email_conflict', i18n.t('auth.errors.emailConflict'), cause)
     case 'invalid_mobile_session':
     case 'mobile_session_required':
       return new AuthServiceError(
         'invalid_mobile_session',
-        'Tu sesión ha expirado. Por favor, inicia sesión de nuevo.',
+        i18n.t('auth.errors.invalidMobileSession'),
         cause,
       )
     default:
-      return new AuthServiceError(
-        'unknown',
-        'Algo salió mal. Por favor, inténtalo de nuevo.',
-        cause,
-      )
+      return new AuthServiceError('unknown', i18n.t('auth.errors.unknown'), cause)
   }
 }

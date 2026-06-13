@@ -1,5 +1,6 @@
 import { Link } from 'expo-router'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { View } from 'react-native'
 import { userFacingAuthError } from '@/features/auth/application/auth-errors'
 import { AuthErrorMessage } from '@/features/auth/components/AuthErrorMessage'
@@ -10,6 +11,7 @@ import { colors, spacing } from '@/shared/theme/tokens'
 import { Button, FormField, Text, TextInput } from '@/shared/ui/primitives'
 
 export default function LoginScreen() {
+  const { t } = useTranslation()
   const signIn = useSignInAction()
   const {
     control,
@@ -22,14 +24,14 @@ export default function LoginScreen() {
   const submitting = isSubmitting || signIn.isPending
 
   return (
-    <AuthFormContainer title="Iniciar sesión" subtitle="Usa tu cuenta de Gym Notebook.">
+    <AuthFormContainer title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')}>
       <Controller
         control={control}
         name="username"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Usuario" error={errors.username?.message ?? ''}>
+          <FormField label={t('auth.username')} error={errors.username?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Usuario"
+              accessibilityLabel={t('auth.username')}
               autoCapitalize="none"
               autoCorrect={false}
               editable={!submitting}
@@ -46,9 +48,9 @@ export default function LoginScreen() {
         control={control}
         name="password"
         render={({ field: { onBlur, onChange, value } }) => (
-          <FormField label="Contraseña" error={errors.password?.message ?? ''}>
+          <FormField label={t('auth.password')} error={errors.password?.message ?? ''}>
             <TextInput
-              accessibilityLabel="Contraseña"
+              accessibilityLabel={t('auth.password')}
               editable={!submitting}
               onBlur={onBlur}
               onChangeText={onChange}
@@ -62,20 +64,20 @@ export default function LoginScreen() {
       />
       <AuthErrorMessage message={signIn.error ? userFacingAuthError(signIn.error) : null} />
       <Button
-        accessibilityLabel="Iniciar sesión"
+        accessibilityLabel={t('auth.loginTitle')}
         disabled={submitting}
-        label="Iniciar sesión"
+        label={t('auth.loginTitle')}
         loading={submitting}
         onPress={handleSubmit((values) => signIn.mutateAsync(values))}
       />
       <View style={{ alignItems: 'center', gap: spacing[2] }}>
-        <Text>¿Necesitas una cuenta?</Text>
+        <Text>{t('auth.needAccount')}</Text>
         <Link
-          accessibilityLabel="Crear cuenta"
+          accessibilityLabel={t('auth.signupTitle')}
           href="/(public)/signup"
           style={{ color: colors.secondary }}
         >
-          Crear cuenta
+          {t('auth.signupTitle')}
         </Link>
       </View>
     </AuthFormContainer>

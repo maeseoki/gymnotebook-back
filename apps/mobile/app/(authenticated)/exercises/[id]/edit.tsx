@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ExerciseForm, type ExerciseFormValues } from '@/features/exercises/components/ExerciseForm'
 import { useExerciseDetail } from '@/features/exercises/hooks/use-exercise-detail'
 import { useUpdateExerciseMutation } from '@/features/exercises/hooks/use-exercise-mutations'
@@ -9,6 +10,7 @@ import { spacing } from '@/shared/theme/tokens'
 import { Button, ErrorState, LoadingIndicator, Screen } from '@/shared/ui/primitives'
 
 export default function ExerciseEditScreen() {
+  const { t } = useTranslation()
   const { id } = useLocalSearchParams<{ id: string }>()
   const numericId = Number(id)
   const isValidId = id !== undefined && !Number.isNaN(numericId) && numericId > 0
@@ -50,7 +52,7 @@ export default function ExerciseEditScreen() {
         try {
           await imagesApi.delete(newImageId)
         } catch {
-          setSubmitError(`${originalErrorMsg} (No se pudo limpiar la imagen huérfana).`)
+          setSubmitError(`${originalErrorMsg} ${t('exercisesScreen.errors.orphanCleanFailed')}`)
         }
       }
     }
@@ -59,9 +61,9 @@ export default function ExerciseEditScreen() {
   if (!isValidId) {
     return (
       <Screen style={{ justifyContent: 'center' }}>
-        <ErrorState title="ID de ejercicio no válido" />
+        <ErrorState title={t('exerciseDetail.invalidId')} />
         <Button
-          label="Volver a ejercicios"
+          label={t('exerciseDetail.backToExercises')}
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
@@ -71,7 +73,7 @@ export default function ExerciseEditScreen() {
   if (isLoadingDetail) {
     return (
       <Screen style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <LoadingIndicator label="Cargando datos del ejercicio..." />
+        <LoadingIndicator label={t('exerciseDetail.loading')} />
       </Screen>
     )
   }
@@ -80,10 +82,10 @@ export default function ExerciseEditScreen() {
     return (
       <Screen style={{ justifyContent: 'center', gap: spacing[4] }}>
         <ErrorState
-          title={detailError ? mapExerciseError(detailError) : 'Ejercicio no encontrado.'}
+          title={detailError ? mapExerciseError(detailError) : t('exercisesScreen.errors.notFound')}
         />
         <Button
-          label="Volver a ejercicios"
+          label={t('exerciseDetail.backToExercises')}
           onPress={() => router.replace('/(authenticated)/(tabs)/exercises')}
         />
       </Screen>
@@ -112,7 +114,7 @@ export default function ExerciseEditScreen() {
         initialValues={initialValues}
         onSubmit={handleSubmit}
         loading={isUpdating}
-        submitLabel="Guardar cambios"
+        submitLabel={t('common.saveChanges')}
         generalError={submitError || (updateError ? mapExerciseError(updateError) : null)}
       />
     </Screen>

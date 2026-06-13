@@ -1,5 +1,5 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderResult, render, waitFor } from '@testing-library/react-native'
+import { render, waitFor } from '@testing-library/react-native'
 import type React from 'react'
 import { mobileApiClient } from '@/features/auth/api/mobile-auth-api'
 import { workoutsApi } from '@/features/workout/api/workouts-api'

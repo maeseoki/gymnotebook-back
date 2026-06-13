@@ -1,20 +1,19 @@
 import { MobileSignUpRequestSchema } from '@gymnotebook/contracts'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-export const signupFormSchema = MobileSignUpRequestSchema.pick({
-  username: true,
-  email: true,
-  password: true,
-})
-  .extend({
-    confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
+export function createSignupFormSchema(t: (key: string) => string) {
+  return MobileSignUpRequestSchema.pick({
+    username: true,
+    email: true,
+    password: true,
   })
-  .refine((value) => value.password === value.confirmPassword, {
-    path: ['confirmPassword'],
-    message: 'Las contraseñas no coinciden',
-  })
+    .extend({
+      confirmPassword: z.string().min(1, t('auth.errors.confirmPasswordRequired')),
+    })
+    .refine((value) => value.password === value.confirmPassword, {
+      path: ['confirmPassword'],
+      message: t('auth.errors.passwordsDoNotMatch'),
+    })
+}
 
-export type SignupFormValues = z.infer<typeof signupFormSchema>
-
-export const signupFormResolver = zodResolver(signupFormSchema)
+export type SignupFormValues = z.infer<ReturnType<typeof createSignupFormSchema>>

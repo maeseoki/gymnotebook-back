@@ -28,12 +28,18 @@ export const MUSCLE_GROUP_OPTIONS = [
   { label: 'Otro', value: 'OTHER' },
 ] as const
 
-export function getExerciseTypeLabel(type: string): string {
+export function getExerciseTypeLabel(type: string, t?: (key: string) => string): string {
+  if (t) {
+    return t(`exercises.types.${type}`)
+  }
   const option = EXERCISE_TYPE_OPTIONS.find((o) => o.value === type)
   return option ? option.label : type
 }
 
-export function getMuscleGroupLabel(group: string): string {
+export function getMuscleGroupLabel(group: string, t?: (key: string) => string): string {
+  if (t) {
+    return t(`exercises.muscles.${group}`)
+  }
   const option = MUSCLE_GROUP_OPTIONS.find((o) => o.value === group)
   return option ? option.label : group
 }

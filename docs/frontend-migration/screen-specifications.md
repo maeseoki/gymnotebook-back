@@ -278,6 +278,20 @@ This section covers every user-visible routed page and modal/dialog.
 
 ---
 
+### 11) Settings (`/settings`)
+- **Source:** `app/(authenticated)/settings/index.tsx`
+- **Purpose:** configure user preferences, including language settings.
+
+**Layout**
+- Settings card displaying current locale option.
+- Language switcher button group supporting Spanish (`es`) and English (`en`).
+
+**Behavior**
+- Displays current app language selector.
+- Clicking a language button dynamically calls the persisted helper to change the active language, updating all application strings and persisting the selection in AsyncStorage.
+
+---
+
 ## Modals and dialogs
 
 1. `SetForm` (`Workout/SetForm.tsx`): dynamic fields by exercise type. Displays and accepts weight input in kilograms (kg) and converts to grams on submit without silent rounding. Distance is labeled as `Distancia (m)` and accepts only integer values. Labels and error validation messages are localized in Spanish. Includes a compact "Últimas series" section showing the last 2 previous workout sets for the selected exercise, fetched from `/workout-sets/exercise/:exerciseId`. Displays date, set values, notes, and drop set marker. Show loading state ("Cargando historial..."), empty state ("Sin historial previo para este ejercicio."), and error state ("No se pudo cargar el historial reciente.") safely without blocking the active workout form. Suggestions and auto-fill are deferred.

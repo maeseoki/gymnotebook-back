@@ -1,4 +1,5 @@
 import type { ApiFailure } from '@/shared/api/errors'
+import i18n from '@/shared/i18n'
 import { ExercisesApiError } from '../api/exercises-api'
 
 export function mapExerciseError(error: unknown): string {
@@ -20,25 +21,25 @@ export function mapExerciseError(error: unknown): string {
   if (failure) {
     if (failure.kind === 'backend') {
       if (failure.status === 401) {
-        return 'Sesión expirada. Por favor, inicia sesión de nuevo.'
+        return i18n.t('exercisesScreen.errors.sessionExpired')
       }
       if (failure.status === 404) {
-        return 'Ejercicio no encontrado.'
+        return i18n.t('exercisesScreen.errors.notFound')
       }
       if (failure.status === 409) {
-        return failure.message || 'Este ejercicio no se puede eliminar porque está en uso.'
+        return failure.message || i18n.t('exercisesScreen.errors.conflict')
       }
-      return failure.message || 'Ocurrió un error en el servidor.'
+      return failure.message || i18n.t('exercisesScreen.errors.serverError')
     }
     if (failure.kind === 'validation') {
-      return failure.message || 'Error de validación.'
+      return failure.message || i18n.t('exercisesScreen.errors.validationError')
     }
     if (failure.kind === 'network_unavailable') {
-      return 'Problema de conexión. Por favor, comprueba tu conexión a internet.'
+      return i18n.t('exercisesScreen.errors.networkError')
     }
     if (failure.kind === 'timeout') {
-      return 'La solicitud ha expirado. Por favor, inténtalo de nuevo.'
+      return i18n.t('exercisesScreen.errors.timeoutError')
     }
   }
-  return 'Ocurrió un error inesperado. Por favor, inténtalo de nuevo.'
+  return i18n.t('exercisesScreen.errors.unexpectedError')
 }

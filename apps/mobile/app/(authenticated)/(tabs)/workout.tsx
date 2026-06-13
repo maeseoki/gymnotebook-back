@@ -1,5 +1,6 @@
 import type { ExerciseResponse } from '@gymnotebook/contracts'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 import { ExercisePicker } from '@/features/workout/components/ExercisePicker'
 import { WorkoutExerciseCard } from '@/features/workout/components/WorkoutExerciseCard'
@@ -9,6 +10,7 @@ import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, ErrorState, LoadingIndicator, Screen, Text } from '@/shared/ui/primitives'
 
 export default function WorkoutScreen() {
+  const { t } = useTranslation()
   const {
     draft,
     isLoading,
@@ -46,16 +48,16 @@ export default function WorkoutScreen() {
       }
     } else {
       Alert.alert(title, message, [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Confirmar', style: 'destructive', onPress: onConfirm },
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.confirm'), style: 'destructive', onPress: onConfirm },
       ])
     }
   }
 
   const handleDiscard = () => {
     confirmAction(
-      '¿Descartar entrenamiento?',
-      'Se perderán las series registradas en este entrenamiento.',
+      t('workoutScreen.discardConfirmTitle'),
+      t('workoutScreen.discardConfirmMsg'),
       () => {
         discardWorkout()
       },
@@ -64,8 +66,8 @@ export default function WorkoutScreen() {
 
   const handleStartNewWithConfirmation = () => {
     confirmAction(
-      '¿Descartar entrenamiento?',
-      'Se perderán las series registradas en este entrenamiento.',
+      t('workoutScreen.discardConfirmTitle'),
+      t('workoutScreen.discardConfirmMsg'),
       async () => {
         await discardWorkout()
         await startWorkout()
@@ -81,8 +83,8 @@ export default function WorkoutScreen() {
 
     if (draft.exercises.length === 0 || totalSets === 0) {
       confirmAction(
-        'Entrenamiento vacío',
-        'No puedes guardar un entrenamiento sin series registradas. ¿Quieres descartarlo?',
+        t('workoutScreen.emptyWorkoutTitle'),
+        t('workoutScreen.emptyWorkoutMsg'),
         () => {
           discardWorkout()
         },
@@ -91,8 +93,8 @@ export default function WorkoutScreen() {
     }
 
     confirmAction(
-      '¿Finalizar entrenamiento?',
-      '¿Deseas guardar y finalizar el entrenamiento actual?',
+      t('workoutScreen.finishConfirmTitle'),
+      t('workoutScreen.finishConfirmMsg'),
       () => {
         finishMutation.mutate()
       },
@@ -121,7 +123,7 @@ export default function WorkoutScreen() {
   if (isLoading) {
     return (
       <Screen style={styles.center}>
-        <LoadingIndicator label="Cargando entrenamiento..." />
+        <LoadingIndicator label={t('workoutScreen.loading')} />
       </Screen>
     )
   }
@@ -131,14 +133,12 @@ export default function WorkoutScreen() {
     return (
       <Screen style={styles.center}>
         <Card style={styles.corruptedCard}>
-          <Text style={styles.corruptedTitle}>Entrenamiento corrupto</Text>
-          <Text style={styles.corruptedDescription}>
-            Se ha detectado un borrador de entrenamiento corrupto o incompatible localmente.
-          </Text>
+          <Text style={styles.corruptedTitle}>{t('workoutScreen.corruptedTitle')}</Text>
+          <Text style={styles.corruptedDescription}>{t('workoutScreen.corruptedDescription')}</Text>
           <Button
-            label="Descartar borrador y empezar de nuevo"
+            label={t('workoutScreen.discardDraft')}
             onPress={discardWorkout}
-            accessibilityLabel="Descartar borrador corrupto"
+            accessibilityLabel={t('workoutScreen.discardDraft')}
           />
         </Card>
       </Screen>
@@ -150,14 +150,12 @@ export default function WorkoutScreen() {
     return (
       <Screen style={styles.center}>
         <Card style={styles.emptyCard}>
-          <Text style={styles.emptyTitle}>¿Listo para entrenar?</Text>
-          <Text style={styles.emptyDescription}>
-            Empieza a registrar tus series, repeticiones y pesos en tiempo real.
-          </Text>
+          <Text style={styles.emptyTitle}>{t('workoutScreen.readyToTrain')}</Text>
+          <Text style={styles.emptyDescription}>{t('workoutScreen.readyToTrainDesc')}</Text>
           <Button
-            label="Comenzar Entrenamiento"
+            label={t('workoutScreen.startWorkout')}
             onPress={handleStartWorkout}
-            accessibilityLabel="Comenzar Entrenamiento"
+            accessibilityLabel={t('workoutScreen.startWorkout')}
           />
         </Card>
       </Screen>
@@ -170,25 +168,25 @@ export default function WorkoutScreen() {
     return (
       <Screen style={styles.center}>
         <Card style={styles.resumeCard}>
-          <Text style={styles.resumeTitle}>Entrenamiento en curso</Text>
-          <Text style={styles.resumeSubtitle}>Tienes un entrenamiento sin finalizar.</Text>
+          <Text style={styles.resumeTitle}>{t('workoutScreen.activeTitle')}</Text>
+          <Text style={styles.resumeSubtitle}>{t('workoutScreen.activeSubtitle')}</Text>
 
           <View style={styles.summaryContainer}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Ejercicios:</Text>
+              <Text style={styles.summaryLabel}>{t('workoutScreen.exercisesLabel')}</Text>
               <Text style={styles.summaryValue}>{draft.exercises.length}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Series totales:</Text>
+              <Text style={styles.summaryLabel}>{t('workoutScreen.totalSets')}</Text>
               <Text style={styles.summaryValue}>{totalSets}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Iniciado:</Text>
+              <Text style={styles.summaryLabel}>{t('workoutScreen.startedLabel')}</Text>
               <Text style={styles.summaryValue}>{formatStartedTime(draft.startedAt)}</Text>
             </View>
             {draft.updatedAt && draft.updatedAt !== draft.startedAt && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Última actualización:</Text>
+                <Text style={styles.summaryLabel}>{t('workoutScreen.lastUpdate')}</Text>
                 <Text style={styles.summaryValue}>{formatStartedTime(draft.updatedAt)}</Text>
               </View>
             )}
@@ -196,27 +194,27 @@ export default function WorkoutScreen() {
 
           <View style={styles.resumeControls}>
             <Button
-              label="Continuar entrenamiento"
+              label={t('workoutScreen.continueWorkout')}
               onPress={() => setIsEditing(true)}
-              accessibilityLabel="Continuar entrenamiento"
+              accessibilityLabel={t('workoutScreen.continueWorkout')}
             />
             <Button
-              label="Descartar entrenamiento"
+              label={t('workoutScreen.discardWorkout')}
               onPress={handleDiscard}
               variant="outline"
-              accessibilityLabel="Descartar entrenamiento"
+              accessibilityLabel={t('workoutScreen.discardWorkout')}
             />
           </View>
 
           <Pressable
             onPress={handleStartNewWithConfirmation}
-            accessibilityLabel="Iniciar nuevo entrenamiento"
+            accessibilityLabel={t('workoutScreen.startNewWorkoutClean')}
             style={({ pressed }: { pressed: boolean }) => [
               styles.startNewButton,
               pressed && { opacity: 0.7 },
             ]}
           >
-            <Text style={styles.startNewText}>Iniciar un nuevo entrenamiento</Text>
+            <Text style={styles.startNewText}>{t('workoutScreen.startNewWorkout')}</Text>
           </Pressable>
         </Card>
       </Screen>
@@ -231,23 +229,21 @@ export default function WorkoutScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Entrenamiento en marcha</Text>
-            <Text style={styles.timeText}>Iniciado: {formatStartedTime(draft.startedAt)}</Text>
+            <Text style={styles.title}>{t('workoutScreen.title')}</Text>
+            <Text style={styles.timeText}>
+              {t('workoutScreen.startedAt', { time: formatStartedTime(draft.startedAt) })}
+            </Text>
           </View>
         </View>
 
         {finishMutation.isError && (
-          <ErrorState
-            title={finishMutation.error?.message || 'Error al guardar el entrenamiento'}
-          />
+          <ErrorState title={finishMutation.error?.message || t('workoutScreen.saveError')} />
         )}
 
         <View style={styles.exercisesContainer}>
           {draft.exercises.length === 0 ? (
             <Card style={styles.noExercisesCard}>
-              <Text style={styles.noExercisesText}>
-                No has añadido ningún ejercicio. ¡Añade uno para empezar a registrar series!
-              </Text>
+              <Text style={styles.noExercisesText}>{t('workoutScreen.noExercises')}</Text>
             </Card>
           ) : (
             draft.exercises.map((exercise) => (
@@ -267,7 +263,7 @@ export default function WorkoutScreen() {
 
         <View style={styles.controls}>
           <Button
-            label="Añadir Ejercicio"
+            label={t('workoutScreen.addExercise')}
             onPress={() => setPickerVisible(true)}
             variant="secondary"
             accessibilityLabel="Boton Añadir Ejercicio"
@@ -276,7 +272,7 @@ export default function WorkoutScreen() {
           <View style={styles.actionRow}>
             <View style={{ flex: 1 }}>
               <Button
-                label="Descartar"
+                label={t('workoutScreen.discard')}
                 onPress={handleDiscard}
                 variant="outline"
                 accessibilityLabel="Boton Descartar Entrenamiento"
@@ -284,7 +280,7 @@ export default function WorkoutScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Button
-                label="Finalizar"
+                label={t('workoutScreen.finish')}
                 onPress={handleFinish}
                 loading={finishMutation.isPending}
                 accessibilityLabel="Boton Finalizar Entrenamiento"

@@ -2,16 +2,16 @@ import * as ImagePicker from 'expo-image-picker'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { Image, ScrollView, View } from 'react-native'
 import { useUploadImage } from '@/features/images/hooks/use-upload-image'
 import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives'
 import { EXERCISE_TYPE_OPTIONS, MUSCLE_GROUP_OPTIONS } from '../constants/exercise-options'
 import { type ExerciseFormValues, exerciseFormResolver } from '../schemas/exercise-form'
+import { ExerciseSelectField } from './ExerciseSelectField'
 
 export type { ExerciseFormValues }
-
-import { ExerciseSelectField } from './ExerciseSelectField'
 
 export interface ExerciseFormProps {
   initialValues?: Partial<ExerciseFormValues>
@@ -28,6 +28,7 @@ export function ExerciseForm({
   submitLabel = 'Guardar',
   generalError,
 }: ExerciseFormProps): ReactNode {
+  const { t } = useTranslation()
   const cleanInitialValues = initialValues || {}
   const sanitizedInitialValues = { ...cleanInitialValues }
   for (const key of Object.keys(sanitizedInitialValues) as Array<keyof ExerciseFormValues>) {
@@ -62,7 +63,7 @@ export function ExerciseForm({
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
       if (status !== 'granted') {
-        setImageError('No se pudo acceder a la galería.')
+        setImageError(t('exerciseForm.errors.galleryAccess'))
         return
       }
 
@@ -94,11 +95,11 @@ export function ExerciseForm({
         },
         onError: () => {
           setLocalUri(null)
-          setImageError('No se pudo subir la imagen.')
+          setImageError(t('exerciseForm.errors.uploadFailed'))
         },
       })
     } catch (_err) {
-      setImageError('No se pudo acceder a la galería.')
+      setImageError(t('exerciseForm.errors.galleryAccess'))
     }
   }
 
@@ -107,7 +108,7 @@ export function ExerciseForm({
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync()
       if (status !== 'granted') {
-        setImageError('No se pudo acceder a la cámara.')
+        setImageError(t('exerciseForm.errors.cameraAccess'))
         return
       }
 
@@ -139,11 +140,11 @@ export function ExerciseForm({
         },
         onError: () => {
           setLocalUri(null)
-          setImageError('No se pudo subir la imagen.')
+          setImageError(t('exerciseForm.errors.uploadFailed'))
         },
       })
     } catch (_err) {
-      setImageError('No se pudo acceder a la cámara.')
+      setImageError(t('exerciseForm.errors.cameraAccess'))
     }
   }
 
@@ -161,6 +162,18 @@ export function ExerciseForm({
     })
   }
 
+  const translatedTypeOptions = EXERCISE_TYPE_OPTIONS.map((opt) => ({
+    ...opt,
+    label: t(`exercises.types.${opt.value}`),
+  }))
+
+  const translatedMuscleOptions = MUSCLE_GROUP_OPTIONS.map((opt) => ({
+    ...opt,
+    label: t(`exercises.muscles.${opt.value}`),
+  }))
+
+  const actualSubmitLabel = submitLabel === 'Guardar' ? t('common.save') : submitLabel
+
   return (
     <ScrollView contentContainerStyle={{ gap: spacing[4], paddingBottom: spacing[8] }}>
       {generalError ? (
@@ -173,14 +186,14 @@ export function ExerciseForm({
         control={control}
         name="name"
         render={({ field: { onChange, onBlur, value } }) => (
-          <FormField label="Nombre del ejercicio *" error={errors.name?.message}>
+          <FormField label={t('exerciseForm.nameLabel')} error={errors.name?.message}>
             <TextInput
-              placeholder="ej. Press de banca"
+              placeholder={t('exerciseForm.namePlaceholder')}
               onBlur={onBlur}
               onChangeText={onChange}
               value={value}
               editable={!loading}
-              accessibilityLabel="Nombre del ejercicio"
+              accessibilityLabel={t('exerciseForm.nameLabelClean')}
             />
           </FormField>
         )}
@@ -190,9 +203,9 @@ export function ExerciseForm({
         control={control}
         name="description"
         render={({ field: { onChange, onBlur, value } }) => (
-          <FormField label="Descripción" error={errors.description?.message}>
+          <FormField label={t('exerciseForm.descriptionLabel')} error={errors.description?.message}>
             <TextInput
-              placeholder="ej. Trabaja pecho y tríceps"
+              placeholder={t('exerciseForm.descriptionPlaceholder')}
               onBlur={onBlur}
               onChangeText={onChange}
               value={value ?? ''}
@@ -200,7 +213,7 @@ export function ExerciseForm({
               numberOfLines={3}
               style={{ minHeight: 80, textAlignVertical: 'top', paddingTop: spacing[2] }}
               editable={!loading}
-              accessibilityLabel="Descripción"
+              accessibilityLabel={t('exerciseForm.descriptionLabel')}
             />
           </FormField>
         )}
@@ -211,11 +224,10 @@ export function ExerciseForm({
         name="type"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Tipo de ejercicio *"
+            label={t('exerciseForm.typeLabel')}
             value={value}
-            options={EXERCISE_TYPE_OPTIONS}
+            options={translatedTypeOptions}
             onChange={(val) => {
-              // Map null to a default type value or assert value types since type is non-nullable in ExerciseFormValues
               if (val) onChange(val)
             }}
             error={errors.type?.message}
@@ -228,11 +240,10 @@ export function ExerciseForm({
         name="primaryMuscleGroup"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Grupo muscular primario *"
+            label={t('exerciseForm.primaryMuscleLabel')}
             value={value}
-            options={MUSCLE_GROUP_OPTIONS}
+            options={translatedMuscleOptions}
             onChange={(val) => {
-              // Map null to a default or assert value types since primaryMuscleGroup is non-nullable
               if (val) onChange(val)
             }}
             error={errors.primaryMuscleGroup?.message}
@@ -245,12 +256,12 @@ export function ExerciseForm({
         name="secondaryMuscleGroup"
         render={({ field: { onChange, value } }) => (
           <ExerciseSelectField
-            label="Grupo muscular secundario (opcional)"
+            label={t('exerciseForm.secondaryMuscleLabel')}
             value={value}
-            options={MUSCLE_GROUP_OPTIONS}
+            options={translatedMuscleOptions}
             onChange={onChange}
             error={errors.secondaryMuscleGroup?.message}
-            placeholder="Ninguno"
+            placeholder={t('common.none')}
             allowClear
           />
         )}
@@ -264,7 +275,7 @@ export function ExerciseForm({
           return (
             <Card style={{ gap: spacing[3] }}>
               <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 16 }}>
-                Imagen del Ejercicio
+                {t('exerciseForm.imageTitle')}
               </Text>
 
               {localUri ? (
@@ -300,7 +311,7 @@ export function ExerciseForm({
                       }}
                     >
                       <Text style={{ color: colors.primary, fontFamily: 'SpaceGrotesk_700Bold' }}>
-                        Subiendo...
+                        {t('exerciseForm.uploading')}
                       </Text>
                     </View>
                   )}
@@ -328,10 +339,10 @@ export function ExerciseForm({
                       fontSize: 16,
                     }}
                   >
-                    ✓ Imagen Guardada
+                    {t('exerciseForm.imageSaved')}
                   </Text>
                   <Text style={{ color: colors.textMuted, fontSize: 12 }}>
-                    ID del Servidor: {value}
+                    {t('exerciseForm.serverId', { id: value })}
                   </Text>
                 </View>
               ) : (
@@ -349,7 +360,7 @@ export function ExerciseForm({
                   }}
                 >
                   <Text style={{ color: colors.textMuted, fontSize: 14 }}>
-                    Sin imagen seleccionada
+                    {t('exerciseForm.noImage')}
                   </Text>
                 </View>
               )}
@@ -366,31 +377,31 @@ export function ExerciseForm({
               <View style={{ flexDirection: 'row', gap: spacing[2] }}>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Elegir de galería"
+                    label={t('exerciseForm.chooseGallery')}
                     variant="outline"
                     onPress={() => handleSelectGallery(onChange)}
                     disabled={loading || isUploading}
-                    accessibilityLabel="Elegir de galería"
+                    accessibilityLabel={t('exerciseForm.chooseGallery')}
                   />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Button
-                    label="Sacar foto"
+                    label={t('exerciseForm.takePhoto')}
                     variant="outline"
                     onPress={() => handleTakeCamera(onChange)}
                     disabled={loading || isUploading}
-                    accessibilityLabel="Sacar foto"
+                    accessibilityLabel={t('exerciseForm.takePhoto')}
                   />
                 </View>
               </View>
 
               {hasImage ? (
                 <Button
-                  label="Quitar imagen"
+                  label={t('exerciseForm.removeImage')}
                   variant="secondary"
                   onPress={() => handleRemoveImage(onChange)}
                   disabled={loading || isUploading}
-                  accessibilityLabel="Quitar imagen"
+                  accessibilityLabel={t('exerciseForm.removeImage')}
                 />
               ) : null}
             </Card>
@@ -399,7 +410,7 @@ export function ExerciseForm({
       />
 
       <Button
-        label={submitLabel}
+        label={actualSubmitLabel}
         onPress={handleSubmit(onFormSubmit)}
         loading={loading}
         disabled={loading || isUploading}

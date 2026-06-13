@@ -250,3 +250,14 @@ See [browser-specific-dependencies.md](./browser-specific-dependencies.md) and [
   - Error: `No se pudieron cargar las estadísticas.` (rendered within the card, does not block the rest of the detail screen).
   - Empty: `Aún no hay estadísticas para este ejercicio.`
 - **Scope Limit:** Only display calculated stats derived from history. Recommendations, charts, PR systems, or templates remain deferred.
+
+## Internationalization (i18n) Foundation
+
+**Decision:** Establish a lightweight, flexible internationalization foundation for multi-language support.
+- **Libraries:** Built on `i18next` and `react-i18next` for translation and React hooks, using `expo-localization` for device language detection.
+- **Languages:** Initial languages supported are Spanish (`es`) and English (`en`).
+- **Defaults & Fallbacks:** English (`en`) is the system-wide default and fallback language. If the device locale is not supported, the app falls back to English.
+- **Language Detection & Persistence:** Dynamically detects the primary device language code on startup. If the user has manually selected a language via the Settings screen, this saved preference is persisted using AsyncStorage and overrides the device locale.
+- **Manual Switching:** Minimal language selector option is provided under the Settings screen to manually override, persist, and toggle between Spanish and English.
+- **Resource structure:** Organized in unified key-value files (`es.ts` and `en.ts`) conforming to a typed schema `I18nResource` to guarantee language key parity.
+

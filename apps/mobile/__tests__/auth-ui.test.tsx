@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, waitFor } from '@testing-library/react-native'
 import type { ReactNode } from 'react'
 import { loginFormSchema } from '@/features/auth/schemas/login-form'
-import { signupFormSchema } from '@/features/auth/schemas/signup-form'
+import { createSignupFormSchema } from '@/features/auth/schemas/signup-form'
 import { useAuthSessionStore } from '@/shared/auth/session-store'
 import { createTestQueryClient } from '@/shared/query/client'
 import ProfileScreen from '../app/(authenticated)/(tabs)/profile'
@@ -50,6 +50,7 @@ describe('auth UI', () => {
   })
 
   it('validates signup confirm password locally without sending it to the API schema', () => {
+    const signupFormSchema = createSignupFormSchema((k) => k)
     expect(
       signupFormSchema.safeParse({
         username: 'victor',

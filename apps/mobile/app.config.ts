@@ -72,6 +72,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       'expo-secure-store',
       'expo-dev-client',
       'expo-font',
+      'expo-localization',
       [
         'expo-splash-screen',
         {

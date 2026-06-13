@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Pressable, StyleSheet, View } from 'react-native'
 import { getExerciseTypeLabel } from '@/features/exercises/constants/exercise-options'
 import { colors, radius, spacing } from '@/shared/theme/tokens'
@@ -35,6 +36,7 @@ export function WorkoutExerciseCard({
   onUpdateSet,
   onDeleteSet,
 }: WorkoutExerciseCardProps) {
+  const { t } = useTranslation()
   const [modalVisible, setModalVisible] = useState(false)
   const [editingSet, setEditingSet] = useState<ActiveWorkoutSet | null>(null)
 
@@ -83,7 +85,7 @@ export function WorkoutExerciseCard({
 
       <View style={styles.setsList}>
         {exercise.sets.length === 0 ? (
-          <Text style={styles.emptyText}>No hay series registradas.</Text>
+          <Text style={styles.emptyText}>{t('setForm.noSetsRecorded')}</Text>
         ) : (
           exercise.sets.map((set, index) => (
             <WorkoutSetRow
@@ -99,10 +101,10 @@ export function WorkoutExerciseCard({
       </View>
 
       <Button
-        label="Añadir Serie"
+        label={t('setForm.addSet')}
         variant="outline"
         onPress={handleOpenAdd}
-        accessibilityLabel={`Añadir Serie a ${exercise.exerciseName}`}
+        accessibilityLabel={t('setForm.addSetToExercise', { name: exercise.exerciseName })}
       />
 
       <SetForm

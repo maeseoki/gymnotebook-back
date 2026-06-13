@@ -1,0 +1,225 @@
+export interface I18nResource {
+  common: {
+    loading: string
+    retry: string
+    cancel: string
+    delete: string
+    save: string
+    saveChanges: string
+    edit: string
+    empty: string
+    error: string
+    confirm: string
+    yes: string
+    no: string
+    unknown: string
+    none: string
+  }
+  auth: {
+    loginTitle: string
+    loginSubtitle: string
+    signupTitle: string
+    signupSubtitle: string
+    email: string
+    username: string
+    password: string
+    confirmPassword: string
+    needAccount: string
+    haveAccount: string
+    backToLogin: string
+    errors: {
+      unknown: string
+      secureStorageRead: string
+      secureStorageWrite: string
+      networkUnavailable: string
+      timeout: string
+      validation: string
+      invalidCredentials: string
+      usernameConflict: string
+      emailConflict: string
+      invalidMobileSession: string
+      confirmPasswordRequired: string
+      passwordsDoNotMatch: string
+    }
+  }
+  tabs: {
+    home: string
+    workout: string
+    exercises: string
+    history: string
+    profile: string
+  }
+  homeScreen: {
+    placeholder: string
+    openWorkout: string
+  }
+  profileScreen: {
+    title: string
+    username: string
+    email: string
+    roles: string
+    settings: string
+    logout: string
+  }
+  settingsScreen: {
+    title: string
+    placeholder: string
+    language: string
+    selectLanguage: string
+    spanish: string
+    english: string
+  }
+  historyScreen: {
+    dayHistoryTitle: string
+  }
+  exercisesScreen: {
+    title: string
+    loading: string
+    searchPlaceholder: string
+    emptyState: string
+    emptySearchResult: string
+    createButton: string
+    newButton: string
+    newExerciseTitle: string
+    errors: {
+      sessionExpired: string
+      notFound: string
+      conflict: string
+      serverError: string
+      validationError: string
+      networkError: string
+      timeoutError: string
+      unexpectedError: string
+      orphanCleanFailed: string
+    }
+  }
+  exerciseDetail: {
+    title: string
+    loading: string
+    invalidId: string
+    backToExercises: string
+    type: string
+    primaryMuscle: string
+    secondaryMuscle: string
+    description: string
+    editExercise: string
+    deleteExercise: string
+    confirmDeleteTitle: string
+    confirmDeleteMessage: string
+    imageLabel: string
+  }
+  exerciseForm: {
+    nameLabel: string
+    nameLabelClean: string
+    namePlaceholder: string
+    descriptionLabel: string
+    descriptionPlaceholder: string
+    typeLabel: string
+    primaryMuscleLabel: string
+    secondaryMuscleLabel: string
+    imageTitle: string
+    uploading: string
+    imageSaved: string
+    serverId: string
+    noImage: string
+    chooseGallery: string
+    takePhoto: string
+    removeImage: string
+    errors: {
+      galleryAccess: string
+      cameraAccess: string
+      uploadFailed: string
+    }
+  }
+  workoutScreen: {
+    title: string
+    startedAt: string
+    loading: string
+    corruptedTitle: string
+    corruptedDescription: string
+    discardDraft: string
+    readyToTrain: string
+    readyToTrainDesc: string
+    startWorkout: string
+    activeTitle: string
+    activeSubtitle: string
+    exercisesLabel: string
+    totalSets: string
+    startedLabel: string
+    lastUpdate: string
+    continueWorkout: string
+    discardWorkout: string
+    startNewWorkout: string
+    startNewWorkoutClean: string
+    saveError: string
+    noExercises: string
+    addExercise: string
+    discard: string
+    finish: string
+    discardConfirmTitle: string
+    discardConfirmMsg: string
+    emptyWorkoutTitle: string
+    emptyWorkoutMsg: string
+    finishConfirmTitle: string
+    finishConfirmMsg: string
+  }
+  setForm: {
+    addSet: string
+    addSetToExercise: string
+    noSetsRecorded: string
+    editSet: string
+    weightLabel: string
+    repsLabel: string
+    minutesLabel: string
+    secondsLabel: string
+    distanceLabel: string
+    recentSets: string
+    copiedFeedback: string
+    loadingHistory: string
+    historyError: string
+    noHistory: string
+    useSet: string
+    series: string
+    validation: {
+      weightRequired: string
+      weightInvalid: string
+      repsRequired: string
+      repsInvalid: string
+      minutesInvalid: string
+      secondsInvalid: string
+      distanceRequired: string
+      distanceInvalid: string
+      timeSecondsMin: string
+    }
+  }
+  exercises: {
+    types: {
+      WEIGHT_REPS: string
+      WEIGHT: string
+      REPS: string
+      TIME: string
+      DISTANCE: string
+      TIME_DISTANCE: string
+    }
+    muscles: {
+      CHEST: string
+      BICEPS: string
+      TRICEPS: string
+      SHOULDERS: string
+      UPPER_BACK: string
+      LOWER_BACK: string
+      LATS: string
+      TRAPS: string
+      QUADRICEPS: string
+      HAMSTRINGS: string
+      GLUTES: string
+      CALVES: string
+      ABDOMINALS: string
+      ABDUCTORS: string
+      FOREARMS: string
+      FULL_BODY: string
+      CARDIO: string
+      OTHER: string
+    }
+  }
+}
