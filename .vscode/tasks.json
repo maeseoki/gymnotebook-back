@@ -1,0 +1,93 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API dev",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/api dev",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile start",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/mobile start",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile Android",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/mobile android",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile iOS",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/mobile ios",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile web",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/mobile web",
+      "group": "none",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mobile test",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/mobile test",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "API test",
+      "type": "shell",
+      "command": "pnpm --filter @gymnotebook/api test",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "pnpm check",
+      "type": "shell",
+      "command": "pnpm check",
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

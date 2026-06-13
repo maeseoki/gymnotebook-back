@@ -238,6 +238,27 @@ Newly selected images use the local device URI only for the in-form preview whil
 
 When editing an exercise, replacing or removing an image submits the new `imageId` or `null` first. The old image is deleted only after the exercise update succeeds. If create/update fails after a new upload, the app attempts to delete the newly uploaded orphan image; remaining orphan cleanup is best-effort and may require backend/admin cleanup if that deletion also fails.
 
+## Local Debugging & VSCode Integration
+
+VSCode launch configurations and tasks are configured in the workspace root `.vscode/` directory.
+
+### Starting Dev Servers
+- **API Backend**: run `pnpm --filter @gymnotebook/api dev` or use the VSCode task `API dev`.
+- **Mobile App**: run `pnpm --filter @gymnotebook/mobile start` or use the VSCode task `Mobile start`.
+
+### VSCode Debug Configurations
+Select from the **Run and Debug** panel in VSCode:
+- **API: debug dev**: Starts the Fastify dev API server with the Node inspector attached, allowing breakpoints in backend code.
+- **API: debug unit tests**: Runs Vitest unit tests in `apps/api` with inspector attached.
+- **API: debug integration tests**: Runs Vitest integration tests (requires Docker).
+- **Mobile: debug Jest tests**: Runs React Native / Expo Jest tests in `apps/mobile` in-band with inspector attached.
+- **Mobile: Expo start**: Boots the Expo Metro server in integrated terminal.
+
+### Debugging Runtime Code
+- **API Backend**: Breakpoints set in TS files inside `apps/api/src` will be hit when running the `API: debug dev` configuration.
+- **Mobile Expo Runtime**: The Javascript/Typescript code running inside the actual Android Emulator or iOS Simulator / physical device is compiled and served by Metro. Debugging the native runtime must be performed using the official Expo/React Native developer tools. Press `j` in the Metro terminal or use the Expo developer menu in your simulator/device to open debugger options (Chrome DevTools / React DevTools).
+
 ## Deferred
 
 Global refresh interceptors, session-management UI, password recovery, workout editing, history/calendar UI, Google/Apple authentication, push notifications, SQLite, and native project generation are intentionally deferred.
+

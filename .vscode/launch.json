@@ -1,0 +1,80 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API: debug dev",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "dev"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "API: debug unit tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "test"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "API: debug integration tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "test:integration"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Mobile: debug Jest tests",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "test"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Mobile: Expo start",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/apps/mobile",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "start"
+      ],
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    }
+  ]
+}
