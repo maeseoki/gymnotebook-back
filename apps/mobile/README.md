@@ -148,7 +148,7 @@ The application supports an offline-first active workout draft tracking flow:
    - Fetches recent sets using the `GET /api/workout-sets/exercise/:exerciseId` endpoint.
    - Uses formatting utilities for weight (grams to kg), time (seconds to min/sec), and distance (meters).
    - Handles loading ("Cargando historial..."), empty ("Sin historial previo para este ejercicio."), and error ("No se pudo cargar el historial reciente.") states without blocking the active workout form.
-   - Auto-progression/auto-fill or suggestions are intentionally deferred (display-only MVP).
+   - Supports manual copy/prefill of previous sets into the form via the "Usar" action (copied values are fully editable, no automatic submission, and unit conversion rules like grams to kg are preserved). Automated recommendations or suggestions remain deferred.
 8. **Known Limitations:**
    - Confetti success feedback, active templates, and timers (workout duration countdown/elapsed clocks) are deferred.
    - History / calendar / charts synchronization is deferred.

@@ -1,5 +1,5 @@
 import { type QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { type RenderResult, render, waitFor } from '@testing-library/react-native'
+import { fireEvent, type RenderResult, render, waitFor } from '@testing-library/react-native'
 import type React from 'react'
 import { workoutsApi } from '@/features/workout/api/workouts-api'
 import { SetForm } from '@/features/workout/components/SetForm'
@@ -36,9 +36,11 @@ const mockGetExerciseHistory = workoutsApi.getExerciseHistory as jest.Mock
 
 describe('SetForm Exercise History UI', () => {
   let queryClient: QueryClient
-  let activeViews: RenderResult[] = []
+  type TestRenderResult = Awaited<ReturnType<typeof render>>
 
-  async function renderWithQuery(ui: React.ReactElement) {
+  let activeViews: TestRenderResult[] = []
+
+  async function renderWithQuery(ui: React.ReactElement): Promise<RenderResult> {
     const view = await render(ui)
     activeViews.push(view)
     return view
@@ -50,12 +52,15 @@ describe('SetForm Exercise History UI', () => {
     activeViews = []
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    await queryClient.cancelQueries()
+
     for (const view of activeViews) {
       try {
-        view.unmount()
+        await view.unmount()
       } catch (_e) {}
     }
+
     activeViews = []
     queryClient.clear()
   })
@@ -70,7 +75,13 @@ describe('SetForm Exercise History UI', () => {
   }
 
   it('renders "Últimas series" and loading state initially', async () => {
-    mockGetExerciseHistory.mockReturnValue(new Promise(() => {}))
+    let resolveHistory!: (value: unknown) => void
+
+    mockGetExerciseHistory.mockReturnValue(
+      new Promise((resolve) => {
+        resolveHistory = resolve
+      }),
+    )
 
     const { getByText } = await renderWithQuery(
       <QueryClientProvider client={queryClient}>
@@ -80,6 +91,18 @@ describe('SetForm Exercise History UI', () => {
 
     expect(getByText('Últimas series')).toBeTruthy()
     expect(getByText('Cargando historial...')).toBeTruthy()
+
+    resolveHistory({
+      content: [],
+      totalElements: 0,
+      totalPages: 0,
+      page: 0,
+      pageSize: 20,
+    })
+
+    await waitFor(() => {
+      expect(getByText('Sin historial previo para este ejercicio.')).toBeTruthy()
+    })
   })
 
   it('renders empty state when no history exists', async () => {
@@ -225,5 +248,196 @@ describe('SetForm Exercise History UI', () => {
     expect(queryByText(/auto/i)).toBeNull()
     expect(queryByText(/siguiente/i)).toBeNull()
     expect(queryByText(/progression/i)).toBeNull()
+  })
+
+  it('renders "Usar" action button next to recent sets', async () => {
+    mockGetExerciseHistory.mockResolvedValue({
+      content: [
+        {
+          id: 101,
+          startDate: '2026-06-11T12:00:00Z',
+          endDate: '2026-06-11T13:00:00Z',
+          exercise: { id: 1, name: 'Bench Press', type: 'WEIGHT_REPS' },
+          sets: [
+            {
+              id: 201,
+              reps: 8,
+              weight: 82500,
+              time: 0,
+              distance: 0,
+              notes: 'Felt heavy',
+              isDropSet: true,
+            },
+          ],
+        },
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      page: 0,
+      pageSize: 20,
+    })
+
+    const { getByText, getAllByText } = await renderWithQuery(
+      <QueryClientProvider client={queryClient}>
+        <SetForm {...defaultProps} />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(getByText(/Serie 1:/)).toBeTruthy()
+    })
+
+    const usarButtons = getAllByText('Usar')
+    expect(usarButtons.length).toBe(1)
+  })
+
+  it('prefills time and distance values correctly for TIME_DISTANCE exercise type', async () => {
+    mockGetExerciseHistory.mockResolvedValue({
+      content: [
+        {
+          id: 102,
+          startDate: '2026-06-11T12:00:00Z',
+          endDate: '2026-06-11T13:00:00Z',
+          exercise: { id: 2, name: 'Run', type: 'TIME_DISTANCE' },
+          sets: [
+            {
+              id: 301,
+              reps: 0,
+              weight: 0,
+              time: 95, // 1m 35s
+              distance: 2500,
+              notes: null,
+              isDropSet: false,
+            },
+          ],
+        },
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      page: 0,
+      pageSize: 20,
+    })
+
+    const onSubmitMock = jest.fn()
+    const { getByText, getByLabelText } = await renderWithQuery(
+      <QueryClientProvider client={queryClient}>
+        <SetForm
+          {...defaultProps}
+          exerciseType="TIME_DISTANCE"
+          exerciseName="Run"
+          onSubmit={onSubmitMock}
+        />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(getByText(/Serie 1:/)).toBeTruthy()
+    })
+
+    const usarButton = getByText('Usar')
+    fireEvent.press(usarButton)
+
+    // Check prefilled values for time (minutes/seconds) and distance
+    const minutesInput = getByLabelText('Input Minutos')
+    const secondsInput = getByLabelText('Input Segundos')
+    const distanceInput = getByLabelText('Input Distancia')
+
+    await waitFor(() => {
+      expect(minutesInput.props.value).toBe('1')
+      expect(secondsInput.props.value).toBe('35')
+      expect(distanceInput.props.value).toBe('2500')
+    })
+  })
+
+  it('does not fetch exercise history when modal is closed', async () => {
+    await renderWithQuery(
+      <QueryClientProvider client={queryClient}>
+        <SetForm {...defaultProps} visible={false} />
+      </QueryClientProvider>,
+    )
+
+    expect(mockGetExerciseHistory).not.toHaveBeenCalled()
+  })
+
+  it('prefills form on pressing "Usar", preserves decimal weight, does not submit automatically, and allows editing', async () => {
+    mockGetExerciseHistory.mockResolvedValue({
+      content: [
+        {
+          id: 101,
+          startDate: '2026-06-11T12:00:00Z',
+          endDate: '2026-06-11T13:00:00Z',
+          exercise: { id: 1, name: 'Bench Press', type: 'WEIGHT_REPS' },
+          sets: [
+            {
+              id: 201,
+              reps: 8,
+              weight: 82500,
+              time: 0,
+              distance: 0,
+              notes: 'Felt heavy',
+              isDropSet: true,
+            },
+          ],
+        },
+      ],
+      totalElements: 1,
+      totalPages: 1,
+      page: 0,
+      pageSize: 20,
+    })
+
+    const onSubmitMock = jest.fn()
+    const { getByText, getByLabelText } = await renderWithQuery(
+      <QueryClientProvider client={queryClient}>
+        <SetForm {...defaultProps} onSubmit={onSubmitMock} />
+      </QueryClientProvider>,
+    )
+
+    await waitFor(() => {
+      expect(getByText(/Serie 1:/)).toBeTruthy()
+    })
+
+    const usarButton = getByText('Usar')
+
+    // Check initial values are empty
+    const weightInput = getByLabelText('Input Peso')
+    const repsInput = getByLabelText('Input Repeticiones')
+    expect(weightInput.props.value).toBe('')
+    expect(repsInput.props.value).toBe('')
+
+    // Press Usar
+    fireEvent.press(usarButton)
+
+    // Check prefilled values (preserving decimal conversion: 82500 grams -> 82.5 kg)
+    await waitFor(() => {
+      expect(weightInput.props.value).toBe('82.5')
+      expect(repsInput.props.value).toBe('8')
+      // Show inline confirmation feedback
+      expect(getByText('Serie copiada al formulario.')).toBeTruthy()
+    })
+
+    // Confirm that it did not submit automatically
+    expect(onSubmitMock).not.toHaveBeenCalled()
+
+    // User can edit copied values
+    fireEvent.changeText(weightInput, '85')
+    fireEvent.changeText(repsInput, '6')
+    await waitFor(() => {
+      expect(weightInput.props.value).toBe('85')
+      expect(repsInput.props.value).toBe('6')
+    })
+
+    // Click Guardar to submit edited values
+    const saveButton = getByLabelText('Boton Guardar Serie')
+    fireEvent.press(saveButton)
+
+    await waitFor(() => {
+      expect(onSubmitMock).toHaveBeenCalledWith({
+        weightGrams: 85000,
+        reps: 6,
+        timeSeconds: null,
+        distanceMeters: null,
+      })
+    })
   })
 })

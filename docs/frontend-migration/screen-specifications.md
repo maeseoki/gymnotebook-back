@@ -112,7 +112,7 @@ This section covers every user-visible routed page and modal/dialog.
 
 **Data/API**
 - POST `workout` when finishing.
-- Exercise details modal inside workout fetches history page.
+- Exercise details modal inside workout fetches history page. The modal displays a list of recent sets with a "Usar" action. Pressing "Usar" copies compatible set values (weight kg, reps, time, distance) into the active form fields. The form remains fully editable, and no automatic submission occurs.
 
 **Mobile considerations**
 - Heavy modal usage.

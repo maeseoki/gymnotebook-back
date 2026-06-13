@@ -87,6 +87,11 @@ Initial persisted workout-draft stack:
   - Distance: meters (`distanceMeters`).
   - Reps: count (`reps`).
 - **Save behavior:** Empty exercises (zero sets) are filtered out. Empty workouts (zero exercises or zero sets across all exercises) are blocked and cannot be finished or saved. Saving successfully clears the draft, and saving failure preserves the draft.
+- **Recent Set Copying / Prefill:**
+  - Users can manually prefill the active set form with values from recent sets by tapping "Usar".
+  - It copies compatible fields based on exercise type (weight, reps, time, and/or distance) into form values.
+  - Copied values remain editable before saving; no automatic submission is performed.
+  - Unit conversion rules (e.g., grams to kg without rounding, time seconds to minutes/seconds) are strictly preserved.
 - **Known Limitations / Deferred features:** Confetti feedback on success, multiple active drafts/history/calendar sync queues, custom templates, charts, and timers are deferred to future phases.
 
 Do not describe AsyncStorage as cache storage.

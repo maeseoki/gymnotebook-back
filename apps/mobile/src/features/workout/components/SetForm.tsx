@@ -1,11 +1,11 @@
 import type { EExerciseType } from '@gymnotebook/contracts'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { type GestureResponderEvent, Modal, Pressable, StyleSheet, View } from 'react-native'
 import { z } from 'zod'
 import { formatDate, formatSetValues } from '@/features/history/utils/history-formatters'
-import { colors, spacing } from '@/shared/theme/tokens'
+import { colors, radius, spacing } from '@/shared/theme/tokens'
 import { Button, Card, FormField, Text, TextInput } from '@/shared/ui/primitives'
 import { useExerciseSetHistory } from '../hooks/use-exercise-set-history'
 import type { ActiveWorkoutSet } from '../schemas/active-workout-draft'
@@ -213,6 +213,47 @@ export function SetForm({
   const hasTime = ['TIME', 'TIME_DISTANCE'].includes(exerciseType)
   const hasDistance = ['DISTANCE', 'TIME_DISTANCE'].includes(exerciseType)
 
+  const [feedbackVisible, setFeedbackVisible] = useState(false)
+
+  useEffect(() => {
+    if (!visible) {
+      setFeedbackVisible(false)
+    }
+  }, [visible])
+
+  const handleUseSet = (set: {
+    reps?: number | null
+    weight?: number | null
+    time?: number | null
+    distance?: number | null
+  }) => {
+    const mins = hasTime && set.time ? Math.floor(set.time / 60).toString() : ''
+    const secs = hasTime && set.time ? (set.time % 60).toString() : ''
+
+    const weightKgDisplay =
+      hasWeight && set.weight !== undefined && set.weight !== null
+        ? Number((set.weight / 1000).toFixed(3)).toString()
+        : ''
+
+    const repsDisplay =
+      hasReps && set.reps !== undefined && set.reps !== null ? set.reps.toString() : ''
+
+    const distanceDisplay =
+      hasDistance && set.distance !== undefined && set.distance !== null
+        ? set.distance.toString()
+        : ''
+
+    reset({
+      weightKg: weightKgDisplay,
+      reps: repsDisplay,
+      minutes: mins,
+      seconds: secs,
+      distanceMeters: distanceDisplay,
+    })
+
+    setFeedbackVisible(true)
+  }
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
@@ -329,7 +370,12 @@ export function SetForm({
 
             {/* Recent exercise history section */}
             <View style={styles.historySection}>
-              <Text style={styles.historyTitle}>Últimas series</Text>
+              <View style={styles.historyHeaderRow}>
+                <Text style={styles.historyTitle}>Últimas series</Text>
+                {feedbackVisible && (
+                  <Text style={styles.copiedFeedback}>Serie copiada al formulario.</Text>
+                )}
+              </View>
               {isLoadingHistory ? (
                 <Text style={styles.historyStatus}>Cargando historial...</Text>
               ) : historyError ? (
@@ -341,11 +387,20 @@ export function SetForm({
                       <Text style={styles.historyDate}>{formatDate(workout.startDate)}</Text>
                       <View style={styles.historySets}>
                         {workout.sets.map((set, idx) => (
-                          <Text key={set.id} style={styles.historySetItem}>
-                            Serie {idx + 1}: {formatSetValues(set, exerciseType)}
-                            {set.isDropSet ? ' (Drop)' : ''}
-                            {set.notes ? ` - ${set.notes}` : ''}
-                          </Text>
+                          <View key={set.id} style={styles.historySetRow}>
+                            <Text style={styles.historySetItem}>
+                              Serie {idx + 1}: {formatSetValues(set, exerciseType)}
+                              {set.isDropSet ? ' (Drop)' : ''}
+                              {set.notes ? ` - ${set.notes}` : ''}
+                            </Text>
+                            <Pressable
+                              style={styles.useButton}
+                              onPress={() => handleUseSet(set)}
+                              accessibilityLabel={`Usar serie ${idx + 1}`}
+                            >
+                              <Text style={styles.useButtonText}>Usar</Text>
+                            </Pressable>
+                          </View>
                         ))}
                       </View>
                     </View>
@@ -423,10 +478,20 @@ const styles = StyleSheet.create({
     paddingTop: spacing[3],
     gap: spacing[2],
   },
+  historyHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   historyTitle: {
     fontSize: 14,
     fontFamily: 'SpaceGrotesk_700Bold',
     color: colors.primary,
+  },
+  copiedFeedback: {
+    fontSize: 12,
+    color: colors.success,
+    fontFamily: 'SpaceGrotesk_500Medium',
   },
   historyStatus: {
     fontSize: 13,
@@ -448,8 +513,29 @@ const styles = StyleSheet.create({
     paddingLeft: spacing[2],
     gap: 2,
   },
+  historySetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing[1],
+    gap: spacing[2],
+  },
   historySetItem: {
+    flex: 1,
     fontSize: 12,
     color: colors.textMuted,
+  },
+  useButton: {
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
+    backgroundColor: colors.surfaceMuted,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  useButtonText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontFamily: 'SpaceGrotesk_700Bold',
   },
 })
